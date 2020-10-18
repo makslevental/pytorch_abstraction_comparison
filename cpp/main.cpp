@@ -55,6 +55,8 @@ int main() {
     auto const kNoiseSize = 100;
     auto const kBatchSize = 32;
     auto const kNumberOfEpochs = 10;
+    auto const kCheckpointEvery = 1000;
+
     torch::Device device = torch::kCPU;
     if (torch::cuda::is_available()) {
         std::cout << "CUDA is available! Training on GPU." << std::endl;
@@ -82,6 +84,7 @@ int main() {
         discriminator->parameters(),
         torch::optim::AdamOptions(5e-4).betas(std::make_tuple(0.5, 0.999)));
 
+    auto checkpoint_counter = 0;
     for (int64_t epoch = 1; epoch <= kNumberOfEpochs; ++epoch) {
         int64_t batch_index = 0;
         for (torch::data::Example<> &batch : *data_loader) {
@@ -116,6 +119,20 @@ int main() {
             std::printf("\r[%2ld/%2ld][%3ld/%3ld] D_loss: %.4f | G_loss: %.4f", epoch,
                         kNumberOfEpochs, ++batch_index, batches_per_epoch, d_loss.item<float>(),
                         g_loss.item<float>());
+
+            if (batch_index % kCheckpointEvery == 0) {
+                // Checkpoint the model and optimizer state.
+                torch::save(generator, "generator-checkpoint.pt");
+                torch::save(generator_optimizer, "generator-optimizer-checkpoint.pt");
+                torch::save(discriminator, "discriminator-checkpoint.pt");
+                torch::save(discriminator_optimizer, "discriminator-optimizer-checkpoint.pt");
+                // Sample the generator and save the images.
+                torch::Tensor samples =
+                    generator->forward(torch::randn({8, kNoiseSize, 1, 1}, device));
+                torch::save((samples + 1.0) / 2.0,
+                            torch::str("dcgan-sample-", checkpoint_counter++, ".pt"));
+                std::cout << "\n-> checkpoint " << ++checkpoint_counter << '\n';
+            }
         }
     }
 }
