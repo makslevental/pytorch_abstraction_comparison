@@ -1,0 +1,4 @@
+---
+BreakBeforeBraces: Attach
+IndentWidth: 4
+AccessModifierOffset: -4
