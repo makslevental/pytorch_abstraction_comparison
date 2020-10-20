@@ -212,17 +212,17 @@ template <class Block> struct ResNet : Module {
     void initialize_weights() {
         for (auto m : this->modules()) {
             if (m.get()->name() == "torch::nn::Conv2dImpl") {
-                for (auto p : m.get()->parameters()) {
-                    if (p.name() == "weight") {
-                        torch::nn::init::kaiming_normal_(p, 0.0, torch::kFanOut, torch::kReLU);
+                for (auto p : m.get()->named_parameters()) {
+                    if (p.key() == "weight") {
+                        torch::nn::init::kaiming_normal_(p.value(), 0.0, torch::kFanOut, torch::kReLU);
                     }
                 }
-            } else if (m.get()->name() == "torch::nn::BatchNormImpl") {
-                for (auto p : m.get()->parameters()) {
-                    if (p.name() == "weight") {
-                        torch::nn::init::constant_(p, 1);
-                    } else if (p.name() == "bias") {
-                        torch::nn::init::constant_(p, 0);
+            } else if (m.get()->name() == "torch::nn::BatchNorm2dImpl") {
+                for (auto p : m.get()->named_parameters()) {
+                    if (p.key() == "weight") {
+                        torch::nn::init::constant_(p.value(), 1);
+                    } else if (p.key() == "bias") {
+                        torch::nn::init::constant_(p.value(), 0);
                     }
                 }
             }

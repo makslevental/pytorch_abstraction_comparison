@@ -102,10 +102,9 @@ int main() {
     torch::Tensor t = torch::rand({2, 3, 224, 224}).to(device);
 
     auto resnet = resnet50(10);
-    print_modules(resnet.ptr());
-    
-    // resnet->initialize_weights();
-    // resnet->to(device);
-    // t = resnet->forward(t);
-    // std::cout << t.sizes() << std::endl;
+    // print_modules(resnet.ptr());
+    resnet->initialize_weights();
+    resnet->to(device);
+    t = resnet->forward(t);
+    std::cout << t.sizes() << std::endl;
 }
