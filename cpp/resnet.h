@@ -40,6 +40,7 @@ struct BasicBlock : Module {
     Conv2d conv2 = nullptr;
     BatchNorm2d bn2 = nullptr;
     Sequential downsample;
+    ReLU relu = nullptr;
 
     BasicBlock(
         int64_t in_planes,
@@ -57,12 +58,13 @@ struct BasicBlock : Module {
 
         this->conv1 = conv3x3(in_planes, planes, stride);
         this->bn1 = BatchNorm2d(planes);
-        // relu
+        this->relu = ReLU(ReLUOptions(true));
         this->conv2 = conv3x3(planes, planes);
         this->bn2 = BatchNorm2d(planes);
         this->downsample = downsample;
         register_module("conv1", conv1);
         register_module("bn1", bn1);
+        register_module("relu", this->relu);
         register_module("conv2", conv2);
         register_module("bn2", bn2);
         if (!downsample->is_empty()) {
@@ -75,14 +77,14 @@ struct BasicBlock : Module {
 
         auto out = conv1->forward(x);
         out = bn1->forward(out);
-        out = relu(out);
+        out = this->relu(out);
         out = conv2->forward(out);
         out = bn2->forward(out);
         if (!downsample->is_empty())
             identity = downsample->forward(out);
 
         out += identity;
-        out = torch::relu(out);
+        out = this->relu(out);
 
         return out;
     }
@@ -96,6 +98,7 @@ struct BottleNeck : Module {
     BatchNorm2d bn2 = nullptr;
     Conv2d conv3 = nullptr;
     BatchNorm2d bn3 = nullptr;
+    ReLU relu = nullptr;
     Sequential downsample;
 
     BottleNeck(
@@ -111,9 +114,9 @@ struct BottleNeck : Module {
         this->bn1 = BatchNorm2d(width);
         this->conv2 = conv3x3(width, width, stride, groups, dilation);
         this->bn2 = BatchNorm2d(width);
-        this->conv3 = conv3x3(width, planes * this->expansion);
+        this->conv3 = conv1x1(width, planes * this->expansion);
         this->bn3 = BatchNorm2d(planes * this->expansion);
-        // relu
+        this->relu = ReLU(ReLUOptions(true));
         this->downsample = downsample;
 
         register_module("conv1", conv1);
@@ -122,6 +125,7 @@ struct BottleNeck : Module {
         register_module("bn2", bn2);
         register_module("conv3", conv3);
         register_module("bn3", bn3);
+        register_module("relu", this->relu);
         if (!downsample->is_empty()) {
             register_module("downsample", downsample);
         }
@@ -132,10 +136,10 @@ struct BottleNeck : Module {
 
         auto out = conv1->forward(x);
         out = bn1->forward(out);
-        out = relu(out);
+        out = this->relu(out);
         out = conv2->forward(out);
         out = bn2->forward(out);
-        out = relu(out);
+        out = this->relu(out);
         out = conv3->forward(out);
         out = bn3->forward(out);
 
@@ -143,7 +147,7 @@ struct BottleNeck : Module {
             identity = downsample->forward(identity);
 
         out += identity;
-        out = torch::relu(out);
+        out = this->relu(out);
 
         return out;
     }
@@ -158,10 +162,13 @@ template <class Block> struct ResNet : Module {
 
     Conv2d conv1 = nullptr;
     BatchNorm2d bn1 = nullptr;
+    ReLU relu = nullptr;
+    MaxPool2d maxpool = nullptr;
     Sequential layer1;
     Sequential layer2;
     Sequential layer3;
     Sequential layer4;
+    AdaptiveAvgPool2d avgpool = nullptr;
     Linear fc = nullptr;
 
     ResNet(
@@ -181,21 +188,24 @@ template <class Block> struct ResNet : Module {
 
         this->conv1 = Conv2d(Conv2dOptions(3, this->in_planes, 7).stride(2).padding(3).bias(false));
         this->bn1 = BatchNorm2d(this->in_planes);
-        // relu
-        // maxpool
+        this->relu = ReLU(ReLUOptions(true));
+        this->maxpool = MaxPool2d(MaxPool2dOptions(3).stride(2).padding(1));
         this->layer1 = this->make_layer(64, layers[0]);
         this->layer2 = this->make_layer(128, layers[1], 2, replace_stride_with_dilation[0]);
         this->layer3 = this->make_layer(256, layers[2], 2, replace_stride_with_dilation[1]);
         this->layer4 = this->make_layer(512, layers[3], 2, replace_stride_with_dilation[2]);
-        // avgpool
+        this->avgpool = AdaptiveAvgPool2d(1);
         this->fc = Linear(512 * Block::expansion, num_classes);
 
         register_module("conv1", conv1);
         register_module("bn1", bn1);
+        register_module("relu", this->relu);
+        register_module("maxpool", this->maxpool);
         register_module("layer1", layer1);
         register_module("layer2", layer2);
         register_module("layer3", layer3);
         register_module("layer4", layer4);
+        register_module("avgpool", this->avgpool);
         register_module("fc", fc);
     }
 
@@ -223,15 +233,15 @@ template <class Block> struct ResNet : Module {
 
         x = conv1->forward(x);
         x = bn1->forward(x);
-        x = torch::relu(x);
-        x = torch::max_pool2d(x, 3, 2, 1);
+        x = this->relu(x);
+        x = this->maxpool(x);
 
         x = layer1->forward(x);
         x = layer2->forward(x);
         x = layer3->forward(x);
         x = layer4->forward(x);
 
-        x = torch::adaptive_avg_pool2d(x, (1, 1));
+        x = this->avgpool(x);
         x = x.view({x.sizes()[0], -1});
         x = fc->forward(x);
 
@@ -262,7 +272,7 @@ private:
             this->base_width,
             previous_dilation));
         this->in_planes = planes * Block::expansion;
-        for (int64_t i = 0; i < blocks; i++) {
+        for (int64_t i = 0; i < blocks-1; i++) {
             layers->push_back(Block(
                 this->in_planes,
                 planes,
@@ -288,6 +298,12 @@ ResNetBasic resnet18(int num_classes = 1000) {
 ResNetBasic resnet34(int num_classes = 1000) {
     int layers[] = {3, 4, 6, 3};
     ResNetBasic model(layers, num_classes);
+    return model;
+}
+
+ResNet<BottleNeck> _resnet50(int num_classes = 1000) {
+    int layers[] = {3, 4, 6, 3};
+    ResNet<BottleNeck> model(layers, num_classes);
     return model;
 }
 

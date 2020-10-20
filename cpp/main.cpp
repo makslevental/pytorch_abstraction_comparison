@@ -1,6 +1,8 @@
 #include "resnet.h"
 #include <iostream>
 #include <torch/torch.h>
+#include "util.h"
+
 
 using namespace torch;
 
@@ -98,9 +100,12 @@ int main() {
     std::cout << device << std::endl;
 
     torch::Tensor t = torch::rand({2, 3, 224, 224}).to(device);
+
     auto resnet = resnet50(10);
-    resnet->initialize_weights();
-    resnet->to(device);
-    t = resnet->forward(t);
-    std::cout << t.sizes() << std::endl;
+    print_modules(resnet.ptr());
+    
+    // resnet->initialize_weights();
+    // resnet->to(device);
+    // t = resnet->forward(t);
+    // std::cout << t.sizes() << std::endl;
 }
