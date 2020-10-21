@@ -1,5 +1,5 @@
 build
-lib_torch/build
+cpp/build
 .vscode
 python/venv
 data/*
