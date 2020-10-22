@@ -1,8 +1,8 @@
 #include "resnet.h"
+#include "util.h"
+#include "resnet_cudnn.h"
 #include <iostream>
 #include <torch/torch.h>
-#include "util.h"
-
 
 using namespace torch;
 
@@ -92,19 +92,21 @@ using namespace torch;
 //     }
 // }
 
-int main() {
-    torch::Device device("cpu");
-    if (torch::cuda::is_available()) {
-        device = torch::Device("cuda:0");
-    }
-    std::cout << device << std::endl;
+// int main() {
+//     torch::Device device("cpu");
+//     if (torch::cuda::is_available()) {
+//         device = torch::Device("cuda:0");
+//     }
+//     std::cout << device << std::endl;
 
-    torch::Tensor t = torch::rand({2, 3, 224, 224}).to(device);
+//     torch::Tensor t = torch::rand({2, 3, 224, 224}).to(device);
 
-    auto resnet = resnet50(10);
-    // print_modules(resnet.ptr());
-    resnet->initialize_weights();
-    resnet->to(device);
-    t = resnet->forward(t);
-    std::cout << t.sizes() << std::endl;
-}
+//     auto resnet = resnet50(10);
+//     // print_modules(resnet.ptr());
+//     resnet->initialize_weights();
+//     resnet->to(device);
+//     t = resnet->forward(t);
+//     std::cout << t.sizes() << std::endl;
+// }
+
+
