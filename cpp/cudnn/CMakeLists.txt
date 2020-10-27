@@ -21,7 +21,7 @@ endif()
 set(CUDA_PROPAGATE_HOST_FLAGS OFF)
 include_directories($ENV{CUDNN_PATH} $ENV{CUDNN_PATH}/include)
 link_directories($ENV{CUDNN_PATH} $ENV{CUDNN_PATH}/lib $ENV{CUDNN_PATH}/lib64)
-cuda_add_executable(main_cudnn lenet_cudnn.cu)
+cuda_add_executable(main_cudnn resnet.cu)
 cuda_add_cublas_to_target(main_cudnn)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")

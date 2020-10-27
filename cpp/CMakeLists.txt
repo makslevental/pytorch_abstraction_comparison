@@ -9,4 +9,4 @@ set(EXECUTABLE_OUTPUT_PATH "${CMAKE_BINARY_DIR}/bin" CACHE PATH "Output director
 
 include_directories("generic_utils")
 add_subdirectory(cudnn)
-add_subdirectory(lib_torch)
+#add_subdirectory(lib_torch)
