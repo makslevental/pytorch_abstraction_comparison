@@ -7,5 +7,6 @@ set(CMAKE_VERBOSE_MAKEFILE OFF)
 # Save libs and executables in the same place
 set(EXECUTABLE_OUTPUT_PATH "${CMAKE_BINARY_DIR}/bin" CACHE PATH "Output directory for applications")
 
+include_directories("generic_utils")
 add_subdirectory(cudnn)
 add_subdirectory(lib_torch)

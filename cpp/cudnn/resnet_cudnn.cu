@@ -10,7 +10,6 @@
 
 #include "helper_cuda.h"
 #include "readubyte.h"
-// #include "prettyprint.h"
 
 // Block width for CUDA kernels
 // https://stackoverflow.com/questions/9985912/how-do-i-choose-grid-and-block-dimensions-for-cuda-kernels
