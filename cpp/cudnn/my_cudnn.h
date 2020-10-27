@@ -35,7 +35,7 @@ void save_image(const char *output_filename, float *buffer, int height, int widt
     cv::imwrite(output_filename, output_image);
 }
 
-int main(int argc, char const *argv[]) {
+int train_my_cudnn() {
     cudnnHandle_t cudnn;
     cudnnCreate(&cudnn);
 

@@ -1,6 +1,3 @@
-#ifndef RESNET_CUDNN
-#define RESNET_CUDNN
-
 #include <chrono>
 #include <iostream>
 
@@ -57,12 +54,6 @@ struct ConvBiasLayer {
         in_height = in_h_;
         out_width = in_w_ - kernel_size_ + 1;
         out_height = in_h_ - kernel_size_ + 1;
-    }
-
-    std::ostream &operator<<(
-        std::ostream &os) {
-        os << (in_channels, out_channels, kernel_size, in_width, in_height, out_width, out_height);
-        return os;
     }
 };
 
@@ -952,7 +943,7 @@ int main(int argc, char **argv) {
         "Done. Training dataset size: %d, Test dataset size: %d\n",
         (int)train_size,
         (int)test_size);
-    printf("Batch size: %lld, iterations: %d\n", FLAGS_batch_size, FLAGS_iterations);
+    printf("Batch size: %d, iterations: %d\n", FLAGS_batch_size, FLAGS_iterations);
 
     // This code snippet saves a random image and its label
     /*
@@ -1418,5 +1409,3 @@ int main(int argc, char **argv) {
 
     return 0;
 }
-
-#endif
