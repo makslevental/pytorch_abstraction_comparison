@@ -2,4 +2,7 @@ build
 cpp/build
 .vscode
 python/venv
-data/*
+data/*ubyte*
+cpp/cmake-build-debug
+cpp/.idea
+.DS_Store
