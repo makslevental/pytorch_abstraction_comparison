@@ -17,8 +17,11 @@
 
 class MNIST {
 public:
-    MNIST() : dataset_dir_("/Users/maksim/dev_projects/pytorch_abstraction_comparison/data") {}
-    MNIST(std::string dataset_dir) : dataset_dir_(std::move(dataset_dir)) {}
+    MNIST()
+        : dataset_dir_("/Users/maksim/dev_projects/pytorch_abstraction_comparison/data"),
+          shuffle_(false) {}
+    explicit MNIST(std::string dataset_dir)
+        : dataset_dir_(std::move(dataset_dir)), shuffle_(false) {}
     ~MNIST();
 
     // load train dataset
@@ -58,7 +61,7 @@ private:
 
     void normalize_data();
 
-    int to_int(uint8_t *ptr);
+    static int to_int(const uint8_t *ptr);
 
     // data loader control
     int step_ = -1;

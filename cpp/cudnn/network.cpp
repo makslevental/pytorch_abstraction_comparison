@@ -3,7 +3,6 @@
 #include "helper.h"
 #include "layer.h"
 
-#include <iomanip>
 #include <iostream>
 #include <nvtx3/nvToolsExt.h>
 

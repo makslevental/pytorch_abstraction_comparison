@@ -39,7 +39,7 @@ void MNIST::load_data(std::string &image_file_path) {
     file.read((char *)ptr, 4);
     width_ = to_int(ptr);
 
-    uint8_t *q = new uint8_t[channels_ * height_ * width_];
+    auto *q = new uint8_t[channels_ * height_ * width_];
     for (int i = 0; i < num_data; i++) {
         std::vector<float> image = std::vector<float>(channels_ * height_ * width_);
         float *image_ptr = image.data();
@@ -82,7 +82,7 @@ void MNIST::load_target(std::string &label_file_path) {
     // prepare input buffer for label
     // read all labels and converts to one-hot encoding
     for (int i = 0; i < num_target; i++) {
-        std::array<float, MNIST_CLASS> target_batch;
+        std::array<float, MNIST_CLASS> target_batch{};
         std::fill(target_batch.begin(), target_batch.end(), 0.f);
 
         file.read((char *)ptr, 1);
@@ -102,7 +102,7 @@ void MNIST::shuffle_dataset() {
     std::shuffle(std::begin(target_pool_), std::end(target_pool_), g_target);
 }
 
-int MNIST::to_int(uint8_t *ptr) {
+int MNIST::to_int(const uint8_t *ptr) {
     return (
         (ptr[0] & 0xFF) << 24 | (ptr[1] & 0xFF) << 16 | (ptr[2] & 0xFF) << 8 |
         (ptr[3] & 0xFF) << 0);

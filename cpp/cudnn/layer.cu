@@ -11,6 +11,7 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <utility>
 
 /****************************************************************
  * Layer definition                                             *
@@ -167,7 +168,7 @@ int Layer::save_parameter() {
  ****************************************************************/
 
 Dense::Dense(std::string name, int output_size) {
-    name_ = name;
+    name_ = std::move(name);
     output_size_ = output_size;
 }
 
@@ -246,7 +247,7 @@ Tensor<float> *Dense::forward(Tensor<float> *input) {
         input_size_,
         &cuda_->zero,
         output_->cuda(),
-        output_size_));
+        output_size_))
 
     // output += biases * d_one_vec^T
     checkCublasErrors(cublasSgemm(
@@ -263,7 +264,7 @@ Tensor<float> *Dense::forward(Tensor<float> *input) {
         1,
         &cuda_->one,
         output_->cuda(),
-        output_size_));
+        output_size_))
 
 #if (DEBUG_DENSE & 0x01)
     input_->print(name_ + "::input", true);
@@ -359,7 +360,7 @@ Tensor<float> *Dense::backward(Tensor<float> *grad_output) {
  ****************************************************************/
 
 Activation::Activation(std::string name, cudnnActivationMode_t mode, float coef) {
-    name_ = name;
+    name_ = std::move(name);
     act_mode_ = mode;
     act_coef_ = coef;
 
@@ -431,7 +432,7 @@ Tensor<float> *Activation::backward(Tensor<float> *grad_output) {
  * Softmax definition                                           *
  ****************************************************************/
 
-Softmax::Softmax(std::string name) { name_ = name; }
+Softmax::Softmax(std::string name) { name_ = std::move(name); }
 
 Softmax::~Softmax() {
     // do nothing
@@ -467,7 +468,7 @@ Tensor<float> *Softmax::forward(Tensor<float> *input) {
         input->cuda(),
         &cuda_->zero,
         output_desc_,
-        output_->cuda()));
+        output_->cuda()))
 
 #if (DEBUG_SOFTMAX & 0x01)
     output_->print(name_ + "::output", true, input->n());
@@ -488,7 +489,7 @@ void Softmax::bwd_initialize(Tensor<float> *target) {
 Tensor<float> *Softmax::backward(Tensor<float> *target) {
     // set grad_input_ as predict
     checkCudaErrors(cudaMemcpyAsync(
-        grad_input_->cuda(), output_->cuda(), output_->buf_size(), cudaMemcpyDeviceToDevice));
+        grad_input_->cuda(), output_->cuda(), output_->buf_size(), cudaMemcpyDeviceToDevice))
     // set grad_input_ = predict - target
     checkCublasErrors(cublasSaxpy(
         cuda_->cublas(),
@@ -497,14 +498,14 @@ Tensor<float> *Softmax::backward(Tensor<float> *target) {
         target->cuda(),
         1,
         grad_input_->cuda(),
-        1));
+        1))
 
     // normalize the grad_output by the batch size
     int grad_output_size = target->get_batch_size() * target->get_channels() *
                            target->get_height() * target->get_width();
     float scale = 1.f / static_cast<float>(target->get_batch_size());
     checkCublasErrors(
-        cublasSscal(cuda_->cublas(), grad_output_size, &scale, grad_input_->cuda(), 1));
+        cublasSscal(cuda_->cublas(), grad_output_size, &scale, grad_input_->cuda(), 1))
 
 #if (DEBUG_SOFTMAX & 0x02)
     std::cout << name_ << "[BACKWARD]" << std::endl;
@@ -585,12 +586,12 @@ Conv2D::Conv2D(
         dilation_,
         dilation_,
         CUDNN_CROSS_CORRELATION,
-        CUDNN_DATA_FLOAT));
+        CUDNN_DATA_FLOAT))
 
     // setting cudnn convolution math type
     // CUDNN_DEFAULT_MATH operates convolution with FP32.
     // If you use A100, CUDNN utilise tensor cores with TF32.
-    checkCudnnErrors(cudnnSetConvolutionMathType(conv_desc_, CUDNN_DEFAULT_MATH));
+    checkCudnnErrors(cudnnSetConvolutionMathType(conv_desc_, CUDNN_DEFAULT_MATH))
 
     d_workspace_ = nullptr;
 }
@@ -621,7 +622,7 @@ void Conv2D::set_workspace() {
 
     int algo_max_count;
     int returnedAlgoCount = 0;
-    checkCudnnErrors(cudnnGetConvolutionForwardAlgorithmMaxCount(cuda_->cudnn(), &algo_max_count));
+    checkCudnnErrors(cudnnGetConvolutionForwardAlgorithmMaxCount(cuda_->cudnn(), &algo_max_count))
 #if (DEBUG_FIND_ALGO & 1)
     std::cout << this->name_ << ": Available Algorithm Count [FWD]: " << algo_max_count
               << std::endl;
@@ -647,7 +648,7 @@ void Conv2D::set_workspace() {
         output_desc_,
         algo_max_count,
         &returnedAlgoCount,
-        &fwd_algo_perf_results[0]));
+        &fwd_algo_perf_results[0]))
 #endif
     // shoose the fastest algorithm
     conv_fwd_algo_ = fwd_algo_perf_results[0].algo;
@@ -669,13 +670,13 @@ void Conv2D::set_workspace() {
         conv_desc_,
         output_desc_,
         conv_fwd_algo_,
-        &temp_size));
+        &temp_size))
     workspace_size_ = std::max(workspace_size_, temp_size);
 
     // bwd - filter
 #if CUDNN_MAJOR >= 7
     checkCudnnErrors(
-        cudnnGetConvolutionBackwardFilterAlgorithmMaxCount(cuda_->cudnn(), &algo_max_count));
+        cudnnGetConvolutionBackwardFilterAlgorithmMaxCount(cuda_->cudnn(), &algo_max_count))
 #if (DEBUG_FIND_ALGO & 1)
     std::cout << this->name_ << ": Available Algorithm Count [BWD-filter]: " << algo_max_count
               << std::endl;
@@ -700,7 +701,7 @@ void Conv2D::set_workspace() {
         filter_desc_,
         algo_max_count,
         &returnedAlgoCount,
-        &bwd_filter_algo_perf_results[0]));
+        &bwd_filter_algo_perf_results[0]))
 #endif
     conv_bwd_filter_algo_ = bwd_filter_algo_perf_results[0].algo;
 #else
@@ -721,13 +722,13 @@ void Conv2D::set_workspace() {
         conv_desc_,
         filter_desc_,
         conv_bwd_filter_algo_,
-        &temp_size));
+        &temp_size))
     workspace_size_ = std::max(workspace_size_, temp_size);
 
     // bwd - data
 #if CUDNN_MAJOR >= 7
     checkCudnnErrors(
-        cudnnGetConvolutionBackwardDataAlgorithmMaxCount(cuda_->cudnn(), &algo_max_count));
+        cudnnGetConvolutionBackwardDataAlgorithmMaxCount(cuda_->cudnn(), &algo_max_count))
 #if (DEBUG_FIND_ALGO & 1)
     std::cout << this->name_ << ": Available Algorithm Count [BWD-data]: " << algo_max_count
               << std::endl;
@@ -752,7 +753,7 @@ void Conv2D::set_workspace() {
         input_desc_,
         algo_max_count,
         &returnedAlgoCount,
-        &bwd_data_algo_perf_results[0]));
+        &bwd_data_algo_perf_results[0]))
 #endif
     conv_bwd_data_algo_ = bwd_data_algo_perf_results[0].algo;
 #else
@@ -773,13 +774,13 @@ void Conv2D::set_workspace() {
         conv_desc_,
         input_desc_,
         conv_bwd_data_algo_,
-        &temp_size));
+        &temp_size))
     workspace_size_ = std::max(workspace_size_, temp_size);
 
     if (workspace_size_ > 0) {
         if (d_workspace_ != nullptr)
-            checkCudaErrors(cudaFree(d_workspace_));
-        checkCudaErrors(cudaMalloc((void **)&d_workspace_, workspace_size_));
+            checkCudaErrors(cudaFree(d_workspace_))
+        checkCudaErrors(cudaMalloc((void **)&d_workspace_, workspace_size_))
     }
 }
 
@@ -794,7 +795,7 @@ void Conv2D::fwd_initialize(Tensor<float> *input) {
             out_channels_,
             input->get_channels(),
             kernel_size_,
-            kernel_size_));
+            kernel_size_))
 
         weights_ =
             new Tensor<float>(out_channels_, input->get_channels(), kernel_size_, kernel_size_);
@@ -817,7 +818,7 @@ void Conv2D::fwd_initialize(Tensor<float> *input) {
             &output_size_[0],
             &output_size_[1],
             &output_size_[2],
-            &output_size_[3]));
+            &output_size_[3]))
 
         if (output_ == nullptr)
             output_ = new Tensor<float>(output_size_);
@@ -857,7 +858,7 @@ Tensor<float> *Conv2D::forward(Tensor<float> *input) {
         workspace_size_,
         &cuda_->zero,
         output_desc_,
-        output_->cuda()));
+        output_->cuda()))
 
     checkCudnnErrors(cudnnAddTensor(
         cuda_->cudnn(),
@@ -866,7 +867,7 @@ Tensor<float> *Conv2D::forward(Tensor<float> *input) {
         biases_->cuda(),
         &cuda_->one,
         output_desc_,
-        output_->cuda()));
+        output_->cuda()))
 
 #if (DEBUG_CONV & 0x01)
     input_->print(name_ + "::input", true, input_->n(), 28);
@@ -904,7 +905,7 @@ Tensor<float> *Conv2D::backward(Tensor<float> *grad_output) {
         grad_output->cuda(),
         &cuda_->zero,
         bias_desc_,
-        grad_biases_->cuda()));
+        grad_biases_->cuda()))
 
     // gradients of weights
     checkCudnnErrors(cudnnConvolutionBackwardFilter(
@@ -920,7 +921,7 @@ Tensor<float> *Conv2D::backward(Tensor<float> *grad_output) {
         workspace_size_,
         &cuda_->zero,
         filter_desc_,
-        grad_weights_->cuda()));
+        grad_weights_->cuda()))
 
     // gradients of input data
     if (!gradient_stop_)
@@ -937,7 +938,7 @@ Tensor<float> *Conv2D::backward(Tensor<float> *grad_output) {
             workspace_size_,
             &cuda_->zero,
             input_desc_,
-            grad_input_->cuda()));
+            grad_input_->cuda()))
 
 #if (DEBUG_CONV & 0x02)
     std::cout << name_ << "[BACKWARD]" << std::endl;
@@ -963,7 +964,7 @@ Tensor<float> *Conv2D::backward(Tensor<float> *grad_output) {
 Pooling::Pooling(
     std::string name, int kernel_size, int padding, int stride, cudnnPoolingMode_t mode)
     : kernel_size_(kernel_size), padding_(padding), stride_(stride), mode_(mode) {
-    name_ = name;
+    name_ = std::move(name);
 
     cudnnCreatePoolingDescriptor(&pool_desc_);
     cudnnSetPooling2dDescriptor(
@@ -1043,7 +1044,7 @@ Tensor<float> *Pooling::backward(Tensor<float> *grad_output) {
         input_->cuda(),
         &cuda_->zero,
         input_desc_,
-        grad_input_->cuda()));
+        grad_input_->cuda()))
 
     return grad_input_;
 }
