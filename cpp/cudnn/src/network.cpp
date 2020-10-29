@@ -1,7 +1,4 @@
-#include "network.h"
-
-#include "helper.h"
-#include "layer.h"
+#include <network.h>
 
 #include <iostream>
 #include <nvtx3/nvToolsExt.h>

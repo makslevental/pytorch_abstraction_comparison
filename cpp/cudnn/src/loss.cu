@@ -1,5 +1,5 @@
-#include "helper.h"
-#include "loss.h"
+#include <helper.h>
+#include <loss.h>
 
 #include <cassert>
 #include <cuda_runtime.h>

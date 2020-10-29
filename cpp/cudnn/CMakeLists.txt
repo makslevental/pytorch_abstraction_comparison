@@ -20,9 +20,21 @@ endif ()
 
 set(CUDA_PROPAGATE_HOST_FLAGS OFF)
 include_directories($ENV{CUDNN_PATH} $ENV{CUDNN_PATH}/include)
-include_directories("cudnn")
+include_directories("include")
 link_directories($ENV{CUDNN_PATH} $ENV{CUDNN_PATH}/lib $ENV{CUDNN_PATH}/lib64)
-cuda_add_executable(main_cudnn main.cu layer.cu loss.cu network.cpp mnist.cpp mnist.h)
+cuda_add_executable(main_cudnn
+        src/main.cu
+        src/layer.cu
+        src/loss.cu
+        src/network.cpp
+        src/mnist.cpp
+        src/batch_norm_2d.cu
+        src/conv_2d.cu
+        src/dense.cu
+        src/activation.cu
+        src/softmax.cu
+        src/pooling.cu
+        )
 cuda_add_cublas_to_target(main_cudnn)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")

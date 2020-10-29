@@ -34,14 +34,11 @@ public:
     void eval();
 
     Tensor<float> *output_;
-
     std::vector<Layer *> layers();
 
 private:
     std::vector<Layer *> layers_;
-
     CudaContext *cuda_ = nullptr;
-
     WorkloadType phase_ = inference;
 };
 

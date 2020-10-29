@@ -1,6 +1,6 @@
-#include "layer.h"
-#include "mnist.h"
-#include "network.h"
+#include <layers.cuh>
+#include <mnist.h>
+#include <network.h>
 
 #include <cuda_profiler_api.h>
 #include <iomanip>
@@ -38,7 +38,7 @@ int main(int argc, char *argv[]) {
     model.add_layer(new Conv2D("conv1", 20, 5));
     model.add_layer(new BatchNorm2d("bn1"));
     model.add_layer(new Activation("relu", CUDNN_ACTIVATION_RELU));
-    model.add_layer(new Pooling("pool", 2, 0, 2, CUDNN_POOLING_MAX));
+    model.add_layer(new Pooling("pool", 3, 1, 2, CUDNN_POOLING_MAX));
     model.add_layer(new Dense("dense2", 10));
     model.add_layer(new Softmax("softmax"));
     model.cuda();

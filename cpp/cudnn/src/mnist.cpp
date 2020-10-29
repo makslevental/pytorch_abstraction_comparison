@@ -1,4 +1,4 @@
-#include "mnist.h"
+#include <mnist.h>
 
 MNIST::~MNIST() {
     delete data_;
