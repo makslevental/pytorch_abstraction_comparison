@@ -82,11 +82,11 @@ float CrossEntropyLoss::loss(Tensor<float> *predict, Tensor<float> *target) {
 
     init_workspace(batch_size);
 
-#if (DEBUG_LOSS)
-    std::cout << "[[ LOSS ]]" << std::endl;
-    predict->print("predict", true);
-    target->print("target", true);
-#endif // DEBUG_LOSS
+    if (DEBUG_LOSS) {
+        std::cout << "[[ LOSS ]]" << std::endl;
+        predict->print("predict", true);
+        target->print("target", true);
+    }
 
     int num_blocks =
         std::min(num_blocks_per_sm * num_sms, (target->size() + BLOCK_DIM_1D - 1) / BLOCK_DIM_1D);

@@ -2,18 +2,10 @@
 // Created by Maksim Levental on 10/29/20.
 //
 
-#include <softmax.cuh>
 #include <cassert>
-
-/****************************************************************
- * Softmax definition                                           *
- ****************************************************************/
+#include <softmax.cuh>
 
 Softmax::Softmax(std::string name) { name_ = std::move(name); }
-
-Softmax::~Softmax() {
-    // do nothing
-}
 
 void Softmax::fwd_initialize(Tensor<float> *input) {
     if (input_ == nullptr || batch_size_ != input->get_batch_size()) {
@@ -31,10 +23,10 @@ void Softmax::fwd_initialize(Tensor<float> *input) {
 }
 
 Tensor<float> *Softmax::forward(Tensor<float> *input) {
-#if (DEBUG_SOFTMAX & 0x01)
-    std::cout << name_ << "[FORWARD]" << std::endl;
-    input_->print(name_ + "::input", true, input->n());
-#endif
+    if (DEBUG_SOFTMAX & 0x01) {
+        std::cout << name_ << "[FORWARD]" << std::endl;
+        input_->print(name_ + "::input", true, input->get_batch_size());
+    }
 
     checkCudnnErrors(cudnnSoftmaxForward(
         cuda_->cudnn(),
@@ -47,9 +39,8 @@ Tensor<float> *Softmax::forward(Tensor<float> *input) {
         output_desc_,
         output_->get_device_ptr()));
 
-#if (DEBUG_SOFTMAX & 0x01)
-    output_->print(name_ + "::output", true, input->n());
-#endif
+    if (DEBUG_SOFTMAX & 0x01)
+        output_->print(name_ + "::output", true, input->get_batch_size());
 
     return output_;
 }
@@ -87,13 +78,13 @@ Tensor<float> *Softmax::backward(Tensor<float> *target) {
     checkCublasErrors(
         cublasSscal(cuda_->cublas(), grad_output_size, &scale, grad_input_->get_device_ptr(), 1));
 
-#if (DEBUG_SOFTMAX & 0x02)
-    std::cout << name_ << "[BACKWARD]" << std::endl;
-    input_->print(name_ + "::input", true);
-    output_->print(name_ + "::predict", true);
-    target->print(name_ + "::y", true, target->n());
-    grad_input_->print(name_ + "::dx", true, target->n());
-#endif
+    if (DEBUG_SOFTMAX & 0x02) {
+        std::cout << name_ << "[BACKWARD]" << std::endl;
+        input_->print(name_ + "::input", true);
+        output_->print(name_ + "::predict", true);
+        target->print(name_ + "::y", true, target->get_batch_size());
+        grad_input_->print(name_ + "::dx", true, target->get_batch_size());
+    }
 
     return grad_input_;
 }

@@ -1,5 +1,6 @@
 #include <network.h>
 
+#include <iomanip>
 #include <iostream>
 #include <nvtx3/nvToolsExt.h>
 
@@ -30,11 +31,11 @@ Tensor<float> *Network::forward(Tensor<float> *input) {
 
     nvtxRangePushA("Forward");
     for (auto layer : layers_) {
-#if (DEBUG_FORWARD)
-        std::cout << "[[Forward ]][[ ";
-        std::cout << std::setw(7) << layer->get_name() << " ]]\t(";
-        std::cout << output_->shape() << std::endl;
-#endif // DEBUG_FORWARD
+        if (DEBUG_FORWARD) {
+            std::cout << "[[Forward ]][[ ";
+            std::cout << std::setw(7) << layer->get_name() << " ]]\t(";
+            std::cout << output_->shape() << std::endl;
+        }
 
         layer->fwd_initialize(output_);
         output_ = layer->forward(output_);
@@ -70,26 +71,27 @@ void Network::backward(Tensor<float> *target) {
     for (auto layer = layers_.rbegin(); layer != layers_.rend(); layer++) {
         // getting back propagation status with gradient size
 
-#if (DEBUG_BACKWARD)
-        std::cout << "[[Backward]][[ " << std::setw(7) << (*layer)->get_name() << " ]]\t("
-                  << gradient->n() << ", " << gradient->c() << ", " << gradient->h() << ", "
-                  << gradient->w() << ")\t";
-#endif // DEBUG_BACKWARD
+        if (DEBUG_BACKWARD) {
+            std::cout << "[[Backward]][[ " << std::setw(7) << (*layer)->get_name() << " ]]\t("
+                      << gradient->get_batch_size() << ", " << gradient->get_channels() << ", "
+                      << gradient->get_height() << ", " << gradient->get_width() << ")\t";
+        }
 
         (*layer)->bwd_initialize(gradient);
         gradient = (*layer)->backward(gradient);
 
-#if (DEBUG_BACKWARD)
-        // and the gradient result
-        std::cout << "--> (" << gradient->n() << ", " << gradient->c() << ", " << gradient->h()
-                  << ", " << gradient->w() << ")" << std::endl;
-        checkCudaErrors(cudaDeviceSynchronize());
+        if (DEBUG_BACKWARD) {
+            // and the gradient result
+            std::cout << "--> (" << gradient->get_batch_size() << ", " << gradient->get_channels()
+                      << ", " << gradient->get_height() << ", " << gradient->get_width() << ")"
+                      << std::endl;
+            checkCudaErrors(cudaDeviceSynchronize());
+        }
 
-#if (DEBUG_BACKWARD > 1)
-        gradient->print((*layer)->get_name() + "::dx", true);
-        getchar();
-#endif
-#endif // DEBUG_BACKWARD
+        if (DEBUG_BACKWARD > 1) {
+            gradient->print((*layer)->get_name() + "::dx", true);
+            //    getchar();
+        }
     }
     nvtxRangePop();
 }
@@ -98,9 +100,8 @@ void Network::update(float learning_rate) {
     if (phase_ == inference)
         return;
 
-#if (DEBUG_UPDATE)
-    std::cout << "Start update.. lr = " << learning_rate << std::endl;
-#endif
+    if (DEBUG_UPDATE)
+        std::cout << "Start update.. lr = " << learning_rate << std::endl;
 
     nvtxRangePushA("Update");
     for (auto layer : layers_) {
@@ -180,45 +181,3 @@ int Network::get_accuracy(Tensor<float> *target) {
     Layer *layer = layers_.back();
     return layer->get_accuracy(target);
 }
-
-//#if 0
-// Tensor<float> *predict = this->output_;
-//	int batch_size = predict->n();
-//	int output_size = predict->c();
-//
-//#if (DEBUG_ACCURACY)
-//	std::cout << "[[ ACCURACY ]]" << std::endl;
-//	predict->print("predict:", true);
-//	target->print("target:", true);
-//#endif // DEBUG_ACCURACY
-//
-//	float* h_predict = predict->to(host);
-//	float* h_target  = target->to(host);
-//	cudaDeviceSynchronize();
-//	int result = 0;
-//	for (int b = 0; b < batch_size; b++)
-//	{
-//		int idx_predict = 0;
-//		int idx_target = 0;
-//		for (int j = 0; j < output_size; j++) {
-//			if (h_predict[b*output_size + j] > h_predict[idx_predict])
-//				idx_predict = j;
-//			// std::cout << "[" << j << "]" << h_target[b*output_size + j] << ", " <<
-// h_target[idx_predict] << std::endl; 			if (h_target[b*output_size + j] >
-// h_target[idx_target]) 				idx_target = j;
-//		}
-//
-//#if (DEBUG_ACCURACY)
-//		std::cout << "predict:: " << idx_predict << ", target::" << idx_target << std::endl;
-//#endif // DEBUG_ACCURACY
-//       // std::cout << "p: " << idx_predict << ", y: " << idx_target << std::endl;
-//
-//		if (idx_predict == idx_target)
-//			result++;
-//	}
-//
-//#if (DEBUG_ACCURACY)
-//	getchar();
-//#endif // DEBUG_ACCURACY
-//
-//#endif

@@ -6,7 +6,6 @@
 #include <cublas_v2.h>
 #include <cuda_runtime.h>
 #include <cudnn.h>
-#include <curand.h>
 #include <vector>
 
 /**
@@ -22,6 +21,7 @@ Conv2D::Conv2D(
     bool bias)
     : out_channels_(out_channels), kernel_size_(kernel_size), stride_(stride), padding_(padding),
       dilation_(dilation), bias_(bias) {
+
     name_ = std::move(name);
 
     // create cudnn container handles
@@ -63,7 +63,6 @@ void Conv2D::set_workspace() {
     size_t temp_size = 0;
 
     // forward
-#if CUDNN_MAJOR >= 7
     std::vector<cudnnConvolutionFwdAlgoPerf_t> fwd_algo_perf_results(
         CUDNN_CONVOLUTION_FWD_ALGO_COUNT);
     std::vector<cudnnConvolutionBwdFilterAlgoPerf_t> bwd_filter_algo_perf_results(
@@ -74,23 +73,6 @@ void Conv2D::set_workspace() {
     int algo_max_count;
     int returnedAlgoCount = 0;
     checkCudnnErrors(cudnnGetConvolutionForwardAlgorithmMaxCount(cuda_->cudnn(), &algo_max_count));
-#if (DEBUG_FIND_ALGO & 1)
-    std::cout << this->name_ << ": Available Algorithm Count [FWD]: " << algo_max_count
-              << std::endl;
-    checkCudnnErrors(cudnnFindConvolutionForwardAlgorithm(
-        cuda_->cudnn(),
-        input_desc_,
-        filter_desc_,
-        conv_desc_,
-        output_desc_,
-        algo_max_count,
-        &returnedAlgoCount,
-        &fwd_algo_perf_results[0]));
-    std::cout << "returned algo_count: " << returnedAlgoCount << std::endl;
-    for (int i = 0; i < returnedAlgoCount; i++)
-        std::cout << "fwd algo[" << i << "] time: " << fwd_algo_perf_results[i].time
-                  << ", memory: " << fwd_algo_perf_results[i].memory << std::endl;
-#else
     checkCudnnErrors(cudnnGetConvolutionForwardAlgorithm_v7(
         cuda_->cudnn(),
         input_desc_,
@@ -100,20 +82,8 @@ void Conv2D::set_workspace() {
         algo_max_count,
         &returnedAlgoCount,
         &fwd_algo_perf_results[0]));
-#endif
     // choose the fastest algorithm
     conv_fwd_algo_ = fwd_algo_perf_results[0].algo;
-#else
-    checkCudnnErrors(cudnnGetConvolutionForwardAlgorithm(
-        cuda_->cudnn(),
-        input_desc_,
-        filter_desc_,
-        conv_desc_,
-        output_desc_,
-        CUDNN_CONVOLUTION_FWD_PREFER_FASTEST,
-        0,
-        &conv_fwd_algo_));
-#endif
     checkCudnnErrors(cudnnGetConvolutionForwardWorkspaceSize(
         cuda_->cudnn(),
         input_desc_,
@@ -125,25 +95,8 @@ void Conv2D::set_workspace() {
     workspace_size_ = std::max(workspace_size_, temp_size);
 
     // bwd - filter
-#if CUDNN_MAJOR >= 7
     checkCudnnErrors(
         cudnnGetConvolutionBackwardFilterAlgorithmMaxCount(cuda_->cudnn(), &algo_max_count));
-#if (DEBUG_FIND_ALGO & 1)
-    std::cout << this->name_ << ": Available Algorithm Count [BWD-filter]: " << algo_max_count
-              << std::endl;
-    checkCudnnErrors(cudnnFindConvolutionBackwardFilterAlgorithm(
-        cuda_->cudnn(),
-        input_desc_,
-        output_desc_,
-        conv_desc_,
-        filter_desc_,
-        algo_max_count,
-        &returnedAlgoCount,
-        &bwd_filter_algo_perf_results[0]));
-    for (int i = 0; i < returnedAlgoCount; i++)
-        std::cout << "bwd filter algo[" << i << "] time: " << fwd_algo_perf_results[i].time
-                  << ", memory: " << fwd_algo_perf_results[i].memory << std::endl;
-#else
     checkCudnnErrors(cudnnGetConvolutionBackwardFilterAlgorithm_v7(
         cuda_->cudnn(),
         input_desc_,
@@ -153,19 +106,7 @@ void Conv2D::set_workspace() {
         algo_max_count,
         &returnedAlgoCount,
         &bwd_filter_algo_perf_results[0]));
-#endif
     conv_bwd_filter_algo_ = bwd_filter_algo_perf_results[0].algo;
-#else
-    checkCudnnErrors(cudnnGetConvolutionBackwardFilterAlgorithm(
-        cuda_->cudnn(),
-        input_desc_,
-        output_desc_,
-        conv_desc_,
-        filter_desc_,
-        CUDNN_CONVOLUTION_BWD_FILTER_PREFER_FASTEST,
-        0,
-        &conv_bwd_filter_algo_));
-#endif
     checkCudnnErrors(cudnnGetConvolutionBackwardFilterWorkspaceSize(
         cuda_->cudnn(),
         input_desc_,
@@ -177,25 +118,8 @@ void Conv2D::set_workspace() {
     workspace_size_ = std::max(workspace_size_, temp_size);
 
     // bwd - data
-#if CUDNN_MAJOR >= 7
     checkCudnnErrors(
         cudnnGetConvolutionBackwardDataAlgorithmMaxCount(cuda_->cudnn(), &algo_max_count));
-#if (DEBUG_FIND_ALGO & 1)
-    std::cout << this->name_ << ": Available Algorithm Count [BWD-data]: " << algo_max_count
-              << std::endl;
-    checkCudnnErrors(cudnnFindConvolutionBackwardDataAlgorithm(
-        cuda_->cudnn(),
-        filter_desc_,
-        output_desc_,
-        conv_desc_,
-        input_desc_,
-        algo_max_count,
-        &returnedAlgoCount,
-        &bwd_data_algo_perf_results[0]));
-    for (int i = 0; i < returnedAlgoCount; i++)
-        std::cout << "bwd data algo[" << i << "] time: " << fwd_algo_perf_results[i].time
-                  << ", memory: " << fwd_algo_perf_results[i].memory << std::endl;
-#else
     checkCudnnErrors(cudnnGetConvolutionBackwardDataAlgorithm_v7(
         cuda_->cudnn(),
         filter_desc_,
@@ -205,19 +129,7 @@ void Conv2D::set_workspace() {
         algo_max_count,
         &returnedAlgoCount,
         &bwd_data_algo_perf_results[0]));
-#endif
     conv_bwd_data_algo_ = bwd_data_algo_perf_results[0].algo;
-#else
-    checkCudnnErrors(cudnnGetConvolutionBackwardDataAlgorithm(
-        cuda_->cudnn(),
-        filter_desc_,
-        output_desc_,
-        conv_desc_,
-        input_desc_,
-        CUDNN_CONVOLUTION_BWD_DATA_PREFER_FASTEST,
-        0,
-        &conv_bwd_data_algo_));
-#endif
     checkCudnnErrors(cudnnGetConvolutionBackwardDataWorkspaceSize(
         cuda_->cudnn(),
         filter_desc_,
@@ -323,12 +235,12 @@ Tensor<float> *Conv2D::forward(Tensor<float> *input) {
             output_->get_device_ptr()));
     }
 
-#if (DEBUG_CONV & 0x01)
-    input_->print(name_ + "::input", true, input_->get_batch_size());
-    weights_->print(name_ + "::weight", true);
-    biases_->print(name_ + "::bias", true);
-    output_->print(name_ + "::output", true);
-#endif
+    if (DEBUG_CONV & 0x01) {
+        input_->print(name_ + "::input", true, input_->get_batch_size());
+        weights_->print(name_ + "::weight", true);
+        biases_->print(name_ + "::bias", true);
+        output_->print(name_ + "::output", true);
+    }
 
     return output_;
 }
@@ -389,19 +301,19 @@ Tensor<float> *Conv2D::backward(Tensor<float> *grad_output) {
             input_desc_,
             grad_input_->get_device_ptr()));
 
-#if (DEBUG_CONV & 0x02)
-    std::cout << name_ << "[BACKWARD]" << std::endl;
-    grad_output->print(name_ + "::gradients", true);
-    grad_biases_->print(name_ + "gbias", true);
-    grad_weights_->print(name_ + "gfilter", true);
-    if (!gradient_stop_)
-        grad_input_->print(name_ + "gdata", true);
-#endif
+    if (DEBUG_CONV & 0x02) {
+        std::cout << name_ << "[BACKWARD]" << std::endl;
+        grad_output->print(name_ + "::gradients", true);
+        grad_biases_->print(name_ + "gbias", true);
+        grad_weights_->print(name_ + "gfilter", true);
+        if (!gradient_stop_)
+            grad_input_->print(name_ + "gdata", true);
+    }
 
-#if (DEBUG_CONV & 0x04)
-    grad_output->print(name_ + "::gradients", true);
-    grad_biases_->print(name_ + "::gbias", true);
-#endif
+    if (DEBUG_CONV & 0x04) {
+        grad_output->print(name_ + "::gradients", true);
+        grad_biases_->print(name_ + "::gbias", true);
+    }
 
     return grad_input_;
 }

@@ -107,12 +107,12 @@ Tensor<float> *Dense::forward(Tensor<float> *input) {
         output_->get_device_ptr(),
         output_size_));
 
-#if (DEBUG_DENSE & 0x01)
-    input_->print(name_ + "::input", true);
-    weights_->print(name_ + "::weight", true);
-    biases_->print(name_ + "::bias", true);
-    output_->print(name_ + "::output", true);
-#endif // DEBUG_DENSE
+    if (DEBUG_DENSE & 0x01) {
+        input_->print(name_ + "::input", true);
+        weights_->print(name_ + "::weight", true);
+        biases_->print(name_ + "::bias", true);
+        output_->print(name_ + "::output", true);
+    }
 
     return output_;
 }
@@ -176,14 +176,14 @@ Tensor<float> *Dense::backward(Tensor<float> *grad_output) {
             grad_input_->get_device_ptr(),
             input_size_);
 
-#if (DEBUG_DENSE & 0x02)
-    std::cout << name_ << "[BACKWARD]" << std::endl;
-    grad_output->print(name_ + "::gradients", true, grad_output->n());
-    grad_weights_->print(name_ + "::gfilter", true);
-    grad_biases_->print(name_ + "::gbias", true);
-    if (!gradient_stop_)
-        grad_input_->print(name_ + "::gdata", true);
-#endif // DEBUG_DENSE
+    if (DEBUG_DENSE & 0x02) {
+        std::cout << name_ << "[BACKWARD]" << std::endl;
+        grad_output->print(name_ + "::gradients", true, grad_output->get_batch_size());
+        grad_weights_->print(name_ + "::gfilter", true);
+        grad_biases_->print(name_ + "::gbias", true);
+        if (!gradient_stop_)
+            grad_input_->print(name_ + "::gdata", true);
+    }
 
     return grad_input_;
 }

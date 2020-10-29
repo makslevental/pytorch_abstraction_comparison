@@ -5,7 +5,7 @@
 #ifndef PROJECTNAME_ACTIVATION_CUH
 #define PROJECTNAME_ACTIVATION_CUH
 
-#include <layer.h>
+#include "layer.h"
 
 class Activation : public Layer {
 public:

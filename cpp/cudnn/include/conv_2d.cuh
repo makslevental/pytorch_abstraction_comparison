@@ -5,11 +5,11 @@
 #ifndef PROJECTNAME_CONV_2D_CUH
 #define PROJECTNAME_CONV_2D_CUH
 
+#include "layer.h"
 #include <cublas_v2.h>
 #include <cuda_runtime.h>
 #include <cudnn.h>
 #include <curand.h>
-#include <layer.h>
 
 class Conv2D : public Layer {
 public:

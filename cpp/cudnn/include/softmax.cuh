@@ -10,7 +10,7 @@
 class Softmax : public Layer {
 public:
     explicit Softmax(std::string name);
-    ~Softmax() override;
+    ~Softmax() override = default;
 
     Tensor<float> *forward(Tensor<float> *input) override;
     Tensor<float> *backward(Tensor<float> *grad_input) override;

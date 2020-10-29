@@ -37,9 +37,8 @@ Layer::Layer() { /* do nothing */
 }
 
 Layer::~Layer() {
-#if (DEBUG_FORWARD > 0 || DEBUG_BACKWARD > 0)
-    std::cout << "Destroy Layer: " << name_ << std::endl;
-#endif
+    if (DEBUG_FORWARD > 0 || DEBUG_BACKWARD > 0)
+        std::cout << "Destroy Layer: " << name_ << std::endl;
 
     if (output_ != nullptr) {
         delete output_;
@@ -97,10 +96,10 @@ void Layer::init_weight_bias(unsigned int seed) {
 void Layer::update_weights_biases(float learning_rate) {
     float eps = -1.f * learning_rate;
     if (weights_ != nullptr && grad_weights_ != nullptr) {
-#if (DEBUG_UPDATE)
-        weights_->print(name_ + "::weights (before update)", true);
-        grad_weights_->print(name_ + "::gweights", true);
-#endif // DEBUG_UPDATE
+        if (DEBUG_UPDATE) {
+            weights_->print(name_ + "::weights (before update)", true);
+            grad_weights_->print(name_ + "::gweights", true);
+        }
 
         // w = w + eps * dw
         checkCublasErrors(cublasSaxpy(
@@ -112,17 +111,15 @@ void Layer::update_weights_biases(float learning_rate) {
             weights_->get_device_ptr(),
             1));
 
-#if (DEBUG_UPDATE)
-        weights_->print(name_ + "weights (after update)", true);
-        // getchar();
-#endif // DEBUG_UPDATE
+        if (DEBUG_UPDATE)
+            weights_->print(name_ + "weights (after update)", true);
     }
 
     if (biases_ != nullptr && grad_biases_ != nullptr) {
-#if (DEBUG_UPDATE)
-        biases_->print(name_ + "biases (before update)", true);
-        grad_biases_->print(name_ + "gbiases", true);
-#endif // DEBUG_UPDATE
+        if (DEBUG_UPDATE) {
+            biases_->print(name_ + "biases (before update)", true);
+            grad_biases_->print(name_ + "gbiases", true);
+        }
 
         // b = b + eps * db
         checkCublasErrors(cublasSaxpy(
@@ -134,10 +131,8 @@ void Layer::update_weights_biases(float learning_rate) {
             biases_->get_device_ptr(),
             1));
 
-#if (DEBUG_UPDATE)
-        biases_->print(name_ + "biases (after update)", true);
-        // getchar();
-#endif // DEBUG_UPDATE
+        if (DEBUG_UPDATE)
+            biases_->print(name_ + "biases (after update)", true);
     }
 }
 
@@ -202,21 +197,3 @@ int Layer::save_parameter() {
 
     return 0;
 }
-
-
-
-
-/****************************************************************
- * Layer definition                                             *
- ****************************************************************/
-
-
-/****************************************************************
- * Layer definition                                             *
- ****************************************************************/
-
-
-/****************************************************************
- * Layer definition                                             *
- ****************************************************************/
-

@@ -171,8 +171,6 @@ void MNIST::get_batch() {
 
 int MNIST::next() {
     step_++;
-
     get_batch();
-
     return step_;
 }

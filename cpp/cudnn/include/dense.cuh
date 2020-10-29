@@ -5,7 +5,7 @@
 #ifndef PROJECTNAME_DENSE_CUH
 #define PROJECTNAME_DENSE_CUH
 
-#include <layer.h>
+#include "layer.h"
 
 class Dense : public Layer {
 public:

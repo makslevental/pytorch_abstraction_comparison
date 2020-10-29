@@ -13,6 +13,7 @@ BatchNorm2d::BatchNorm2d(
     cudnnBatchNormMode_t mode)
     : epsilon_(epsilon), momentum_(momentum), affine_(affine),
       track_running_stats_(track_running_stats), mode_(mode) {
+
     name_ = std::move(name);
     checkCudnnErrors(cudnnCreateTensorDescriptor(&derived_bn_scale_bias_mean_var_desc_));
 }
@@ -20,25 +21,6 @@ BatchNorm2d::~BatchNorm2d() = default;
 
 Tensor<float> *BatchNorm2d::forward(Tensor<float> *input) {
     if (train_) {
-        //        checkCudnnErrors(cudnnBatchNormalizationForwardTraining(
-        //            /*handle*/ cuda_->cudnn(),
-        //            /*mode*/ mode_,
-        //            /**alpha*/ &cuda_->one,
-        //            /**beta*/ &cuda_->zero,
-        //            /*xDesc*/ input_desc_,
-        //            /**xData*/ input->get_device_ptr(),
-        //            /*yDesc*/ output_desc_,
-        //            /**yData*/ output_->get_device_ptr(),
-        //            /*bnScaleBiasMeanVarDesc*/ derived_bn_scale_bias_mean_var_desc_,
-        //            /**bnScaleData*/ weights_->get_device_ptr(),
-        //            /**bnBiasData */ biases_->get_device_ptr(),
-        //            /*exponentialAverageFactor*/ momentum_,
-        //            /**resultRunningMeanData*/ running_mean_->get_device_ptr(),
-        //            /**resultRunningVarianceData*/ running_var_->get_device_ptr(),
-        //            /*epsilon*/ epsilon_,
-        //            /**saveMean*/ save_mean_->get_device_ptr(),
-        //            /**saveInvVariance*/ save_var_->get_device_ptr()));
-
         checkCudnnErrors(cudnnBatchNormalizationForwardTrainingEx(
             /*handle*/ cuda_->cudnn(),
             /*mode*/ mode_,
