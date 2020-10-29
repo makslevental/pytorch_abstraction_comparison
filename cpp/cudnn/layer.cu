@@ -10,8 +10,25 @@
 
 #include <fstream>
 #include <iostream>
+#include <prettyprint.h>
 #include <sstream>
 #include <utility>
+
+void print_tensor_descriptor(const std::string &name, cudnnTensorDescriptor_t t) {
+    cudnnDataType_t dataType;
+    const int nbDimsRequested = 10;
+    int nbDims;
+    int dimA[nbDimsRequested] = {};
+    int strideA[nbDimsRequested] = {};
+    checkCudnnErrors(
+        cudnnGetTensorNdDescriptor(t, nbDimsRequested, &dataType, &nbDims, dimA, strideA));
+    std::array<int, nbDimsRequested> dimA_arr{};
+    std::copy(std::begin(dimA), std::end(dimA), std::begin(dimA_arr));
+    std::array<int, nbDimsRequested> strideA_arr{};
+    std::copy(std::begin(strideA), std::end(strideA), std::begin(strideA_arr));
+    std::cout << name << " datatype: " << dataType << " nbDims: " << nbDims << " dimA: " << dimA_arr
+              << " strideA: " << strideA_arr << std::endl;
+}
 
 /****************************************************************
  * Layer definition                                             *
@@ -87,7 +104,13 @@ void Layer::update_weights_biases(float learning_rate) {
 
         // w = w + eps * dw
         checkCublasErrors(cublasSaxpy(
-            cuda_->cublas(), weights_->len(), &eps, grad_weights_->cuda(), 1, weights_->cuda(), 1));
+            cuda_->cublas(),
+            weights_->len(),
+            &eps,
+            grad_weights_->get_device_ptr(),
+            1,
+            weights_->get_device_ptr(),
+            1));
 
 #if (DEBUG_UPDATE)
         weights_->print(name_ + "weights (after update)", true);
@@ -103,7 +126,13 @@ void Layer::update_weights_biases(float learning_rate) {
 
         // b = b + eps * db
         checkCublasErrors(cublasSaxpy(
-            cuda_->cublas(), biases_->len(), &eps, grad_biases_->cuda(), 1, biases_->cuda(), 1));
+            cuda_->cublas(),
+            biases_->len(),
+            &eps,
+            grad_biases_->get_device_ptr(),
+            1,
+            biases_->get_device_ptr(),
+            1));
 
 #if (DEBUG_UPDATE)
         biases_->print(name_ + "biases (after update)", true);
@@ -120,6 +149,17 @@ float Layer::get_loss(Tensor<float> *target) {
 int Layer::get_accuracy(Tensor<float> *target) {
     assert("No Loss layer cannot estimate accuracy." && false);
     return EXIT_FAILURE;
+}
+
+void Layer::bwd_initialize(Tensor<float> *grad_output) {
+    if (grad_input_ == nullptr || batch_size_ != grad_output->get_batch_size()) {
+        grad_output_ = grad_output;
+
+        if (grad_input_ == nullptr)
+            grad_input_ = new Tensor<float>(input_->shape());
+        else
+            grad_input_->reset(input_->shape());
+    }
 }
 
 int Layer::load_parameter() {
@@ -209,7 +249,7 @@ void Dense::fwd_initialize(Tensor<float> *input) {
         else
             output_->reset(batch_size_, output_size_);
 
-        output_->tensor();
+        output_->tensor_descriptor();
 
         if (d_one_vec != nullptr)
             cudaFree(d_one_vec);
@@ -241,13 +281,13 @@ Tensor<float> *Dense::forward(Tensor<float> *input) {
         batch_size_,
         input_size_,
         &cuda_->one,
-        weights_->cuda(),
+        weights_->get_device_ptr(),
         input_size_,
-        input_->cuda(),
+        input_->get_device_ptr(),
         input_size_,
         &cuda_->zero,
-        output_->cuda(),
-        output_size_))
+        output_->get_device_ptr(),
+        output_size_));
 
     // output += biases * d_one_vec^T
     checkCublasErrors(cublasSgemm(
@@ -258,13 +298,13 @@ Tensor<float> *Dense::forward(Tensor<float> *input) {
         batch_size_,
         1,
         &cuda_->one,
-        biases_->cuda(),
+        biases_->get_device_ptr(),
         output_size_,
         d_one_vec,
         1,
         &cuda_->one,
-        output_->cuda(),
-        output_size_))
+        output_->get_device_ptr(),
+        output_size_));
 
 #if (DEBUG_DENSE & 0x01)
     input_->print(name_ + "::input", true);
@@ -281,15 +321,7 @@ void Dense::bwd_initialize(Tensor<float> *grad_output) {
         grad_weights_ = new Tensor<float>(weights_->shape());
         grad_biases_ = new Tensor<float>(biases_->shape());
     }
-
-    if (grad_input_ == nullptr || batch_size_ != grad_output->get_batch_size()) {
-        grad_output_ = grad_output;
-
-        if (grad_input_ == nullptr)
-            grad_input_ = new Tensor<float>(input_->shape());
-        else
-            grad_input_->reset(input_->shape());
-    }
+    Layer::bwd_initialize(grad_output);
 }
 
 Tensor<float> *Dense::backward(Tensor<float> *grad_output) {
@@ -300,12 +332,12 @@ Tensor<float> *Dense::backward(Tensor<float> *grad_output) {
         output_size_,
         batch_size_,
         &cuda_->one,
-        grad_output_->cuda(),
+        grad_output_->get_device_ptr(),
         output_size_,
         d_one_vec,
         1,
         &cuda_->zero,
-        grad_biases_->cuda(),
+        grad_biases_->get_device_ptr(),
         1);
 
     // dw = x * (dy)^T
@@ -317,12 +349,12 @@ Tensor<float> *Dense::backward(Tensor<float> *grad_output) {
         output_size_,
         batch_size_,
         &cuda_->one,
-        input_->cuda(),
+        input_->get_device_ptr(),
         input_size_,
-        grad_output_->cuda(),
+        grad_output_->get_device_ptr(),
         output_size_,
         &cuda_->zero,
-        grad_weights_->cuda(),
+        grad_weights_->get_device_ptr(),
         input_size_);
 
     // dx = W * dy
@@ -335,12 +367,12 @@ Tensor<float> *Dense::backward(Tensor<float> *grad_output) {
             batch_size_,
             output_size_,
             &cuda_->one,
-            weights_->cuda(),
+            weights_->get_device_ptr(),
             input_size_,
-            grad_output_->cuda(),
+            grad_output_->get_device_ptr(),
             output_size_,
             &cuda_->zero,
-            grad_input_->cuda(),
+            grad_input_->get_device_ptr(),
             input_size_);
 
 #if (DEBUG_DENSE & 0x02)
@@ -373,7 +405,7 @@ Activation::~Activation() { cudnnDestroyActivationDescriptor(act_desc_); }
 void Activation::fwd_initialize(Tensor<float> *input) {
     if (input_ == nullptr || batch_size_ != input->get_batch_size()) {
         input_ = input;
-        input_desc_ = input->tensor();
+        input_desc_ = input->tensor_descriptor();
         batch_size_ = input->get_batch_size();
 
         if (output_ == nullptr)
@@ -381,7 +413,7 @@ void Activation::fwd_initialize(Tensor<float> *input) {
         else
             output_->reset(input->shape());
 
-        output_desc_ = output_->tensor();
+        output_desc_ = output_->tensor_descriptor();
     }
 }
 
@@ -391,23 +423,12 @@ Tensor<float> *Activation::forward(Tensor<float> *input) {
         act_desc_,
         &cuda_->one,
         input_desc_,
-        input->cuda(),
+        input->get_device_ptr(),
         &cuda_->zero,
         output_desc_,
-        output_->cuda());
+        output_->get_device_ptr());
 
     return output_;
-}
-
-void Activation::bwd_initialize(Tensor<float> *grad_output) {
-    if (grad_input_ == nullptr || batch_size_ != grad_output->get_batch_size()) {
-        grad_output_ = grad_output;
-
-        if (grad_input_ == nullptr)
-            grad_input_ = new Tensor<float>(input_->shape());
-        else
-            grad_input_->reset(input_->shape());
-    }
 }
 
 Tensor<float> *Activation::backward(Tensor<float> *grad_output) {
@@ -416,14 +437,14 @@ Tensor<float> *Activation::backward(Tensor<float> *grad_output) {
         act_desc_,
         &cuda_->one,
         output_desc_,
-        output_->cuda(),
+        output_->get_device_ptr(),
         output_desc_,
-        grad_output->cuda(),
+        grad_output->get_device_ptr(),
         input_desc_,
-        input_->cuda(),
+        input_->get_device_ptr(),
         &cuda_->zero,
         input_desc_,
-        grad_input_->cuda());
+        grad_input_->get_device_ptr());
 
     return grad_input_;
 }
@@ -441,7 +462,7 @@ Softmax::~Softmax() {
 void Softmax::fwd_initialize(Tensor<float> *input) {
     if (input_ == nullptr || batch_size_ != input->get_batch_size()) {
         input_ = input;
-        input_desc_ = input->tensor();
+        input_desc_ = input->tensor_descriptor();
         batch_size_ = input->get_batch_size();
 
         if (output_ == nullptr)
@@ -449,7 +470,7 @@ void Softmax::fwd_initialize(Tensor<float> *input) {
         else
             output_->reset(input->shape());
 
-        output_desc_ = output_->tensor();
+        output_desc_ = output_->tensor_descriptor();
     }
 }
 
@@ -465,10 +486,10 @@ Tensor<float> *Softmax::forward(Tensor<float> *input) {
         CUDNN_SOFTMAX_MODE_CHANNEL,
         &cuda_->one,
         input_desc_,
-        input->cuda(),
+        input->get_device_ptr(),
         &cuda_->zero,
         output_desc_,
-        output_->cuda()))
+        output_->get_device_ptr()));
 
 #if (DEBUG_SOFTMAX & 0x01)
     output_->print(name_ + "::output", true, input->n());
@@ -489,23 +510,26 @@ void Softmax::bwd_initialize(Tensor<float> *target) {
 Tensor<float> *Softmax::backward(Tensor<float> *target) {
     // set grad_input_ as predict
     checkCudaErrors(cudaMemcpyAsync(
-        grad_input_->cuda(), output_->cuda(), output_->buf_size(), cudaMemcpyDeviceToDevice))
+        grad_input_->get_device_ptr(),
+        output_->get_device_ptr(),
+        output_->buf_size(),
+        cudaMemcpyDeviceToDevice));
     // set grad_input_ = predict - target
     checkCublasErrors(cublasSaxpy(
         cuda_->cublas(),
         target->len(),
         &cuda_->minus_one,
-        target->cuda(),
+        target->get_device_ptr(),
         1,
-        grad_input_->cuda(),
-        1))
+        grad_input_->get_device_ptr(),
+        1));
 
     // normalize the grad_output by the batch size
     int grad_output_size = target->get_batch_size() * target->get_channels() *
                            target->get_height() * target->get_width();
     float scale = 1.f / static_cast<float>(target->get_batch_size());
     checkCublasErrors(
-        cublasSscal(cuda_->cublas(), grad_output_size, &scale, grad_input_->cuda(), 1))
+        cublasSscal(cuda_->cublas(), grad_output_size, &scale, grad_input_->get_device_ptr(), 1));
 
 #if (DEBUG_SOFTMAX & 0x02)
     std::cout << name_ << "[BACKWARD]" << std::endl;
@@ -586,14 +610,14 @@ Conv2D::Conv2D(
         dilation_,
         dilation_,
         CUDNN_CROSS_CORRELATION,
-        CUDNN_DATA_FLOAT))
+        CUDNN_DATA_FLOAT));
 
     // setting cudnn convolution math type
     // CUDNN_DEFAULT_MATH operates convolution with FP32.
-    // If you use A100, CUDNN utilise tensor cores with TF32.
-    checkCudnnErrors(cudnnSetConvolutionMathType(conv_desc_, CUDNN_DEFAULT_MATH))
+    // If you use A100, CUDNN utilise tensor_descriptor cores with TF32.
+    checkCudnnErrors(cudnnSetConvolutionMathType(conv_desc_, CUDNN_DEFAULT_MATH));
 
-    d_workspace_ = nullptr;
+    device_workspace_ = nullptr;
 }
 
 Conv2D::~Conv2D() {
@@ -602,9 +626,9 @@ Conv2D::~Conv2D() {
     cudnnDestroyConvolutionDescriptor(conv_desc_);
 
     // terminate internal created blobs
-    if (d_workspace_ != nullptr) {
-        cudaFree(d_workspace_);
-        d_workspace_ = nullptr;
+    if (device_workspace_ != nullptr) {
+        cudaFree(device_workspace_);
+        device_workspace_ = nullptr;
     }
 }
 
@@ -622,7 +646,7 @@ void Conv2D::set_workspace() {
 
     int algo_max_count;
     int returnedAlgoCount = 0;
-    checkCudnnErrors(cudnnGetConvolutionForwardAlgorithmMaxCount(cuda_->cudnn(), &algo_max_count))
+    checkCudnnErrors(cudnnGetConvolutionForwardAlgorithmMaxCount(cuda_->cudnn(), &algo_max_count));
 #if (DEBUG_FIND_ALGO & 1)
     std::cout << this->name_ << ": Available Algorithm Count [FWD]: " << algo_max_count
               << std::endl;
@@ -648,9 +672,9 @@ void Conv2D::set_workspace() {
         output_desc_,
         algo_max_count,
         &returnedAlgoCount,
-        &fwd_algo_perf_results[0]))
+        &fwd_algo_perf_results[0]));
 #endif
-    // shoose the fastest algorithm
+    // choose the fastest algorithm
     conv_fwd_algo_ = fwd_algo_perf_results[0].algo;
 #else
     checkCudnnErrors(cudnnGetConvolutionForwardAlgorithm(
@@ -670,13 +694,13 @@ void Conv2D::set_workspace() {
         conv_desc_,
         output_desc_,
         conv_fwd_algo_,
-        &temp_size))
+        &temp_size));
     workspace_size_ = std::max(workspace_size_, temp_size);
 
     // bwd - filter
 #if CUDNN_MAJOR >= 7
     checkCudnnErrors(
-        cudnnGetConvolutionBackwardFilterAlgorithmMaxCount(cuda_->cudnn(), &algo_max_count))
+        cudnnGetConvolutionBackwardFilterAlgorithmMaxCount(cuda_->cudnn(), &algo_max_count));
 #if (DEBUG_FIND_ALGO & 1)
     std::cout << this->name_ << ": Available Algorithm Count [BWD-filter]: " << algo_max_count
               << std::endl;
@@ -701,7 +725,7 @@ void Conv2D::set_workspace() {
         filter_desc_,
         algo_max_count,
         &returnedAlgoCount,
-        &bwd_filter_algo_perf_results[0]))
+        &bwd_filter_algo_perf_results[0]));
 #endif
     conv_bwd_filter_algo_ = bwd_filter_algo_perf_results[0].algo;
 #else
@@ -722,13 +746,13 @@ void Conv2D::set_workspace() {
         conv_desc_,
         filter_desc_,
         conv_bwd_filter_algo_,
-        &temp_size))
+        &temp_size));
     workspace_size_ = std::max(workspace_size_, temp_size);
 
     // bwd - data
 #if CUDNN_MAJOR >= 7
     checkCudnnErrors(
-        cudnnGetConvolutionBackwardDataAlgorithmMaxCount(cuda_->cudnn(), &algo_max_count))
+        cudnnGetConvolutionBackwardDataAlgorithmMaxCount(cuda_->cudnn(), &algo_max_count));
 #if (DEBUG_FIND_ALGO & 1)
     std::cout << this->name_ << ": Available Algorithm Count [BWD-data]: " << algo_max_count
               << std::endl;
@@ -753,7 +777,7 @@ void Conv2D::set_workspace() {
         input_desc_,
         algo_max_count,
         &returnedAlgoCount,
-        &bwd_data_algo_perf_results[0]))
+        &bwd_data_algo_perf_results[0]));
 #endif
     conv_bwd_data_algo_ = bwd_data_algo_perf_results[0].algo;
 #else
@@ -774,13 +798,13 @@ void Conv2D::set_workspace() {
         conv_desc_,
         input_desc_,
         conv_bwd_data_algo_,
-        &temp_size))
+        &temp_size));
     workspace_size_ = std::max(workspace_size_, temp_size);
 
     if (workspace_size_ > 0) {
-        if (d_workspace_ != nullptr)
-            checkCudaErrors(cudaFree(d_workspace_))
-        checkCudaErrors(cudaMalloc((void **)&d_workspace_, workspace_size_))
+        if (device_workspace_ != nullptr)
+            checkCudaErrors(cudaFree(device_workspace_));
+        checkCudaErrors(cudaMalloc((void **)&device_workspace_, workspace_size_));
     }
 }
 
@@ -795,19 +819,21 @@ void Conv2D::fwd_initialize(Tensor<float> *input) {
             out_channels_,
             input->get_channels(),
             kernel_size_,
-            kernel_size_))
+            kernel_size_));
 
         weights_ =
             new Tensor<float>(out_channels_, input->get_channels(), kernel_size_, kernel_size_);
-        biases_ = new Tensor<float>(1, out_channels_); // bias size
-        bias_desc_ = biases_->tensor();
+        if (bias_) {
+            biases_ = new Tensor<float>(1, out_channels_); // bias size
+            bias_desc_ = biases_->tensor_descriptor();
+        }
     }
 
     // initilaize input and output
     if (input_ == nullptr || batch_size_ != input->get_batch_size()) {
         // initialize input
         input_ = input;
-        input_desc_ = input->tensor();
+        input_desc_ = input->tensor_descriptor();
         batch_size_ = input->get_batch_size();
 
         // initilaize output
@@ -818,14 +844,14 @@ void Conv2D::fwd_initialize(Tensor<float> *input) {
             &output_size_[0],
             &output_size_[1],
             &output_size_[2],
-            &output_size_[3]))
+            &output_size_[3]));
 
         if (output_ == nullptr)
             output_ = new Tensor<float>(output_size_);
         else
             output_->reset(output_size_);
 
-        output_desc_ = output_->tensor();
+        output_desc_ = output_->tensor_descriptor();
 
         // initialize workspace for cudnn
         set_workspace();
@@ -849,28 +875,29 @@ Tensor<float> *Conv2D::forward(Tensor<float> *input) {
         cuda_->cudnn(),
         &cuda_->one,
         input_desc_,
-        input_->cuda(),
+        input_->get_device_ptr(),
         filter_desc_,
-        weights_->cuda(),
+        weights_->get_device_ptr(),
         conv_desc_,
         conv_fwd_algo_,
-        d_workspace_,
+        device_workspace_,
         workspace_size_,
         &cuda_->zero,
         output_desc_,
-        output_->cuda()))
-
-    checkCudnnErrors(cudnnAddTensor(
-        cuda_->cudnn(),
-        &cuda_->one,
-        bias_desc_,
-        biases_->cuda(),
-        &cuda_->one,
-        output_desc_,
-        output_->cuda()))
+        output_->get_device_ptr()));
+    if (bias_) {
+        checkCudnnErrors(cudnnAddTensor(
+            cuda_->cudnn(),
+            &cuda_->one,
+            bias_desc_,
+            biases_->get_device_ptr(),
+            &cuda_->one,
+            output_desc_,
+            output_->get_device_ptr()));
+    }
 
 #if (DEBUG_CONV & 0x01)
-    input_->print(name_ + "::input", true, input_->n(), 28);
+    input_->print(name_ + "::input", true, input_->get_batch_size());
     weights_->print(name_ + "::weight", true);
     biases_->print(name_ + "::bias", true);
     output_->print(name_ + "::output", true);
@@ -882,46 +909,41 @@ Tensor<float> *Conv2D::forward(Tensor<float> *input) {
 void Conv2D::bwd_initialize(Tensor<float> *grad_output) {
     if (grad_weights_ == nullptr) {
         grad_weights_ = new Tensor<float>(weights_->shape());
-        grad_biases_ = new Tensor<float>(1, biases_->get_channels());
+        if (bias_) {
+            grad_biases_ = new Tensor<float>(1, biases_->get_channels());
+        }
     }
-
-    // initialize grad_output back-propagation space
-    if (grad_input_ == nullptr || batch_size_ != grad_output->get_batch_size()) {
-        grad_output_ = grad_output;
-
-        if (grad_input_ == nullptr)
-            grad_input_ = new Tensor<float>(input_->shape());
-        else
-            grad_input_->reset(input_->shape());
-    }
+    Layer::bwd_initialize(grad_output);
 }
 
 Tensor<float> *Conv2D::backward(Tensor<float> *grad_output) {
     // gradients of biases
-    checkCudnnErrors(cudnnConvolutionBackwardBias(
-        cuda_->cudnn(),
-        &cuda_->one,
-        output_desc_,
-        grad_output->cuda(),
-        &cuda_->zero,
-        bias_desc_,
-        grad_biases_->cuda()))
+    if (bias_) {
+        checkCudnnErrors(cudnnConvolutionBackwardBias(
+            cuda_->cudnn(),
+            &cuda_->one,
+            output_desc_,
+            grad_output->get_device_ptr(),
+            &cuda_->zero,
+            bias_desc_,
+            grad_biases_->get_device_ptr()));
+    }
 
     // gradients of weights
     checkCudnnErrors(cudnnConvolutionBackwardFilter(
         cuda_->cudnn(),
         &cuda_->one,
         input_desc_,
-        input_->cuda(),
+        input_->get_device_ptr(),
         output_desc_,
-        grad_output_->cuda(),
+        grad_output_->get_device_ptr(),
         conv_desc_,
         conv_bwd_filter_algo_,
-        d_workspace_,
+        device_workspace_,
         workspace_size_,
         &cuda_->zero,
         filter_desc_,
-        grad_weights_->cuda()))
+        grad_weights_->get_device_ptr()));
 
     // gradients of input data
     if (!gradient_stop_)
@@ -929,16 +951,16 @@ Tensor<float> *Conv2D::backward(Tensor<float> *grad_output) {
             cuda_->cudnn(),
             &cuda_->one,
             filter_desc_,
-            weights_->cuda(),
+            weights_->get_device_ptr(),
             output_desc_,
-            grad_output->cuda(),
+            grad_output->get_device_ptr(),
             conv_desc_,
             conv_bwd_data_algo_,
-            d_workspace_,
+            device_workspace_,
             workspace_size_,
             &cuda_->zero,
             input_desc_,
-            grad_input_->cuda()))
+            grad_input_->get_device_ptr()));
 
 #if (DEBUG_CONV & 0x02)
     std::cout << name_ << "[BACKWARD]" << std::endl;
@@ -986,7 +1008,7 @@ void Pooling::fwd_initialize(Tensor<float> *input) {
         input_ = input;
 
         // resource initialize
-        input_desc_ = input_->tensor();
+        input_desc_ = input_->tensor_descriptor();
         batch_size_ = input->get_batch_size();
 
         // setting output
@@ -1002,7 +1024,7 @@ void Pooling::fwd_initialize(Tensor<float> *input) {
         else
             output_->reset(output_size_);
 
-        output_desc_ = output_->tensor();
+        output_desc_ = output_->tensor_descriptor();
     }
 }
 
@@ -1012,23 +1034,12 @@ Tensor<float> *Pooling::forward(Tensor<float> *input) {
         pool_desc_,
         &cuda_->one,
         input_desc_,
-        input_->cuda(),
+        input_->get_device_ptr(),
         &cuda_->zero,
         output_desc_,
-        output_->cuda());
+        output_->get_device_ptr());
 
     return output_;
-}
-
-void Pooling::bwd_initialize(Tensor<float> *grad_output) {
-    if (grad_input_ == nullptr || batch_size_ != grad_output->get_batch_size()) {
-        grad_output_ = grad_output;
-
-        if (grad_input_ == nullptr)
-            grad_input_ = new Tensor<float>(input_->shape());
-        else
-            grad_input_->reset(input_->shape());
-    }
 }
 
 Tensor<float> *Pooling::backward(Tensor<float> *grad_output) {
@@ -1037,14 +1048,240 @@ Tensor<float> *Pooling::backward(Tensor<float> *grad_output) {
         pool_desc_,
         &cuda_->one,
         output_desc_,
-        output_->cuda(),
+        output_->get_device_ptr(),
         output_desc_,
-        grad_output->cuda(),
+        grad_output->get_device_ptr(),
         input_desc_,
-        input_->cuda(),
+        input_->get_device_ptr(),
         &cuda_->zero,
         input_desc_,
-        grad_input_->cuda()))
+        grad_input_->get_device_ptr()));
 
     return grad_input_;
+}
+
+/****************************************************************
+ * Layer definition                                             *
+ ****************************************************************/
+
+BatchNorm2d::BatchNorm2d(
+    std::string name,
+    float epsilon,
+    float momentum,
+    bool affine,
+    bool track_running_stats,
+    cudnnBatchNormMode_t mode)
+    : epsilon_(epsilon), momentum_(momentum), affine_(affine),
+      track_running_stats_(track_running_stats), mode_(mode) {
+    name_ = std::move(name);
+    checkCudnnErrors(cudnnCreateTensorDescriptor(&derived_bn_scale_bias_mean_var_desc_));
+}
+BatchNorm2d::~BatchNorm2d() = default;
+
+Tensor<float> *BatchNorm2d::forward(Tensor<float> *input) {
+    if (train_) {
+        //        checkCudnnErrors(cudnnBatchNormalizationForwardTraining(
+        //            /*handle*/ cuda_->cudnn(),
+        //            /*mode*/ mode_,
+        //            /**alpha*/ &cuda_->one,
+        //            /**beta*/ &cuda_->zero,
+        //            /*xDesc*/ input_desc_,
+        //            /**xData*/ input->get_device_ptr(),
+        //            /*yDesc*/ output_desc_,
+        //            /**yData*/ output_->get_device_ptr(),
+        //            /*bnScaleBiasMeanVarDesc*/ derived_bn_scale_bias_mean_var_desc_,
+        //            /**bnScaleData*/ weights_->get_device_ptr(),
+        //            /**bnBiasData */ biases_->get_device_ptr(),
+        //            /*exponentialAverageFactor*/ momentum_,
+        //            /**resultRunningMeanData*/ running_mean_->get_device_ptr(),
+        //            /**resultRunningVarianceData*/ running_var_->get_device_ptr(),
+        //            /*epsilon*/ epsilon_,
+        //            /**saveMean*/ save_mean_->get_device_ptr(),
+        //            /**saveInvVariance*/ save_var_->get_device_ptr()));
+
+        checkCudnnErrors(cudnnBatchNormalizationForwardTrainingEx(
+            /*handle*/ cuda_->cudnn(),
+            /*mode*/ mode_,
+            /*bnOps*/ CUDNN_BATCHNORM_OPS_BN,
+            /**alpha*/ &cuda_->one,
+            /**beta*/ &cuda_->zero,
+            /*xDesc*/ input_desc_,
+            /**xData*/ input->get_device_ptr(),
+            /*zDesc */ nullptr,  // z descriptor for BN-Add-Relu
+            /**zData */ nullptr, // z for BN-Add-ReLU
+            /*yDesc*/ output_desc_,
+            /**yData*/ output_->get_device_ptr(),
+            /*bnScaleBiasMeanVarDesc*/ derived_bn_scale_bias_mean_var_desc_,
+            /**bnScaleData*/ weights_->get_device_ptr(),
+            /**bnBiasData */ biases_->get_device_ptr(),
+            /*exponentialAverageFactor*/ momentum_,
+            /**resultRunningMeanData*/ running_mean_->get_device_ptr(),
+            /**resultRunningVarianceData*/ running_var_->get_device_ptr(),
+            /*epsilon*/ epsilon_,
+            /**saveMean*/ save_mean_->get_device_ptr(),
+            /**saveInvVariance*/ save_var_->get_device_ptr(),
+            /*activationDesc */ nullptr,
+            /**workspace*/ device_workspace_,
+            /*workSpaceSizeInBytes*/ workspace_size_,
+            /**reserveSpace*/ device_reserve_space_,
+            /*reserveSpaceSizeInBytes*/ reserve_size_));
+    } else {
+        checkCudnnErrors(cudnnBatchNormalizationForwardInference(
+            /*handle*/ cuda_->cudnn(),
+            /*mode*/ mode_,
+            /**alpha*/ &cuda_->one,
+            /**beta*/ &cuda_->zero,
+            /*xDesc*/ input_desc_,
+            /**x*/ input->get_device_ptr(),
+            /*yDesc*/ output_desc_,
+            /**y*/ output_->get_device_ptr(),
+            /*bnScaleBiasMeanVarDesc*/ derived_bn_scale_bias_mean_var_desc_,
+            /**bnScaleData*/ weights_->get_device_ptr(),
+            /**bnBiasData */ biases_->get_device_ptr(),
+            /**estimatedMean*/ running_mean_->get_device_ptr(),
+            /**estimatedVariance*/ running_var_->get_device_ptr(),
+            /*epsilon*/ epsilon_));
+    }
+    // will i need to clone this?
+    return output_;
+}
+Tensor<float> *BatchNorm2d::backward(Tensor<float> *grad_output) {
+    checkCudnnErrors(cudnnBatchNormalizationBackwardEx(
+        /*handle*/ cuda_->cudnn(),
+        /*mode*/ mode_,
+        /*bnOps*/ CUDNN_BATCHNORM_OPS_BN,
+        /**alphaDataDiff*/ &cuda_->one,
+        /**betaDataDiff*/ &cuda_->zero,
+        /**alphaParamDiff*/ &cuda_->one,
+        /**betaParamDiff*/ &cuda_->zero,
+        /*xDesc*/ input_desc_,
+        /**xData*/ input_->get_device_ptr(),
+        /*yDesc*/ nullptr,
+        /**yData*/ nullptr,
+        /*dyDesc*/ grad_output->tensor_descriptor(),
+        /**dyData*/ grad_output->get_device_ptr(),
+        /*dzDesc*/ nullptr,
+        /**dzData*/ nullptr,
+        /*dxDesc*/ grad_input_->tensor_descriptor(),
+        /**dxData*/ grad_input_->get_device_ptr(),
+        /*dBnScaleBiasDesc*/ derived_bn_scale_bias_mean_var_desc_,
+        /**bnScaleData*/ weights_->get_device_ptr(),
+        /**bnBiasData*/ biases_->get_device_ptr(),
+        /**dBnScaleData*/ grad_weights_->get_device_ptr(),
+        /**dBnBiasData*/ grad_biases_->get_device_ptr(),
+        /*epsilon*/ epsilon_,
+        /**savedMean*/ save_mean_->get_device_ptr(),
+        /**savedInvVariance*/ save_var_->get_device_ptr(),
+        /*activationDesc*/ nullptr,
+        /**workspace*/ device_workspace_,
+        /*workSpaceSizeInBytes*/ workspace_size_,
+        /**reserveSpace*/ device_reserve_space_,
+        /*reserveSpaceSizeInBytes*/ reserve_size_));
+    return grad_input_;
+}
+
+void BatchNorm2d::fwd_initialize(Tensor<float> *input) {
+    // initialize weights and bias
+    if (weights_ == nullptr) {
+        if (mode_ == CUDNN_BATCHNORM_PER_ACTIVATION) {
+            weights_ = new Tensor<float>(
+                1, input->get_channels(), input->get_height(), input->get_width());
+            biases_ = new Tensor<float>(
+                1, input->get_channels(), input->get_height(), input->get_width());
+        } else if (
+            mode_ == CUDNN_BATCHNORM_SPATIAL || mode_ == CUDNN_BATCHNORM_SPATIAL_PERSISTENT) {
+            weights_ = new Tensor<float>(1, input->get_channels());
+            biases_ = new Tensor<float>(1, input->get_channels());
+        } else {
+            exit(EXIT_FAILURE);
+        }
+    }
+    // initilaize input and output
+    if (input_ == nullptr || batch_size_ != input->get_batch_size()) {
+        input_ = input;
+        input_desc_ = input->tensor_descriptor();
+        batch_size_ = input->get_batch_size();
+        num_features_ = input->get_channels();
+        if (track_running_stats_) {
+            running_mean_ = new Tensor<float>(1, num_features_);
+            running_var_ = new Tensor<float>(1, num_features_);
+        }
+
+        save_mean_ = new Tensor<float>(1, num_features_);
+        save_var_ = new Tensor<float>(1, num_features_);
+
+        if (output_ == nullptr) {
+            output_ = new Tensor<float>(input->shape());
+        } else {
+            output_->reset(input->shape());
+        }
+        output_desc_ = output_->tensor_descriptor();
+
+        checkCudnnErrors(cudnnDeriveBNTensorDescriptor(
+            derived_bn_scale_bias_mean_var_desc_, input_desc_, mode_));
+
+        // initialize workspace for cudnn
+        set_workspace();
+
+        // initialize weights
+        if (load_pretrain_ && !freeze_) {
+            if (load_parameter()) {
+                std::cout << "error occurred.." << std::endl;
+                exit(-1);
+            }
+        } else if (!freeze_) {
+            init_weight_bias();
+        }
+    }
+}
+
+void BatchNorm2d::bwd_initialize(Tensor<float> *grad_output) {
+    if (grad_weights_ == nullptr) {
+        grad_weights_ = new Tensor<float>(weights_->shape());
+        grad_biases_ = new Tensor<float>(biases_->shape());
+    }
+    Layer::bwd_initialize(grad_output);
+}
+void BatchNorm2d::set_workspace() {
+    checkCudnnErrors(cudnnGetBatchNormalizationForwardTrainingExWorkspaceSize(
+        /*handle*/ cuda_->cudnn(),
+        /*mode*/ mode_,
+        /*bnOps*/ CUDNN_BATCHNORM_OPS_BN,
+        /*xDesc*/ input_desc_,
+        /*zDesc*/ input_desc_,
+        /*yDesc*/ input_desc_,
+        /*bnScaleBiasMeanVarDesc*/ derived_bn_scale_bias_mean_var_desc_,
+        /*activationDesc*/ nullptr,
+        /**sizeInBytes*/ &workspace_size_));
+    size_t workspace_size;
+    checkCudnnErrors(cudnnGetBatchNormalizationBackwardExWorkspaceSize(
+        /*handle*/ cuda_->cudnn(),
+        /*mode*/ mode_,
+        /*bnOps*/ CUDNN_BATCHNORM_OPS_BN,
+        /*xDesc*/ input_desc_,
+        /*yDesc*/ input_desc_,
+        /*dyDesc*/ input_desc_,
+        /*dzDesc*/ nullptr,
+        /*dxDesc*/ output_->tensor_descriptor(),
+        /*dBnScaleBiasDesc*/ derived_bn_scale_bias_mean_var_desc_,
+        /*activationDesc*/ nullptr,
+        &workspace_size));
+
+    // TODO: why are these still zero???
+    workspace_size_ = std::max(workspace_size_, workspace_size);
+    PRINT("workspace_size_ " << workspace_size_)
+    if (workspace_size_ > 0) {
+        if (device_workspace_ != nullptr)
+            checkCudaErrors(cudaFree(device_workspace_));
+        checkCudaErrors(cudaMalloc((void **)&device_workspace_, workspace_size_));
+    }
+
+    checkCudnnErrors(cudnnGetBatchNormalizationTrainingExReserveSpaceSize(
+        cuda_->cudnn(), mode_, CUDNN_BATCHNORM_OPS_BN, nullptr, input_desc_, &reserve_size_));
+    PRINT("reserve_size_ " << reserve_size_)
+    if (reserve_size_ > 0) {
+        if (device_reserve_space_ != nullptr)
+            checkCudaErrors(cudaFree(device_reserve_space_));
+        checkCudaErrors(cudaMalloc((void **)&device_reserve_space_, reserve_size_));
+    }
 }

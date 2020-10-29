@@ -34,17 +34,16 @@ Tensor<float> *Network::forward(Tensor<float> *input) {
     nvtxRangePushA("Forward");
     for (auto layer : layers_) {
 #if (DEBUG_FORWARD)
-        std::cout << "[[Forward ]][[ " << std::setw(7) << layer->get_name() << " ]]\t("
-                  << output_->n() << ", " << output_->c() << ", " << output_->h() << ", "
-                  << output_->w() << ")\t";
+        std::cout << "[[Forward ]][[ ";
+        std::cout << std::setw(7) << layer->get_name() << " ]]\t(";
+        std::cout << output_->shape() << std::endl;
 #endif // DEBUG_FORWARD
 
         layer->fwd_initialize(output_);
         output_ = layer->forward(output_);
 
 #if (DEBUG_FORWARD)
-        std::cout << "--> (" << output_->n() << ", " << output_->c() << ", " << output_->h() << ", "
-                  << output_->w() << ")" << std::endl;
+        std::cout << "--> " << output_->shape() << std::endl;
         checkCudaErrors(cudaDeviceSynchronize());
 
 #if (DEBUG_FORWARD > 1)
@@ -140,7 +139,7 @@ int Network::load_pretrain() {
     return 0;
 }
 
-// 1. initialize cuda resource container
+// 1. initialize get_device_ptr resource container
 // 2. register the resource container to all the layers
 void Network::cuda() {
     cuda_ = new CudaContext();
@@ -159,15 +158,17 @@ void Network::train() {
     // unfreeze all layers
     for (auto layer : layers_) {
         layer->unfreeze();
+        layer->train();
     }
 }
 
-void Network::test() {
+void Network::eval() {
     phase_ = inference;
 
     // freeze all layers
     for (auto layer : layers_) {
         layer->freeze();
+        layer->eval();
     }
 }
 
@@ -184,7 +185,7 @@ int Network::get_accuracy(Tensor<float> *target) {
 }
 
 //#if 0
-//Tensor<float> *predict = this->output_;
+// Tensor<float> *predict = this->output_;
 //	int batch_size = predict->n();
 //	int output_size = predict->c();
 //
@@ -205,9 +206,9 @@ int Network::get_accuracy(Tensor<float> *target) {
 //		for (int j = 0; j < output_size; j++) {
 //			if (h_predict[b*output_size + j] > h_predict[idx_predict])
 //				idx_predict = j;
-//			// std::cout << "[" << j << "]" << h_target[b*output_size + j] << ", " << h_target[idx_predict] << std::endl;
-//			if (h_target[b*output_size + j] > h_target[idx_target])
-//				idx_target = j;
+//			// std::cout << "[" << j << "]" << h_target[b*output_size + j] << ", " <<
+// h_target[idx_predict] << std::endl; 			if (h_target[b*output_size + j] >
+// h_target[idx_target]) 				idx_target = j;
 //		}
 //
 //#if (DEBUG_ACCURACY)

@@ -36,13 +36,9 @@ int main(int argc, char *argv[]) {
     // step 2. model initialization
     Network model;
     model.add_layer(new Conv2D("conv1", 20, 5));
+    model.add_layer(new BatchNorm2d("bn1"));
     model.add_layer(new Activation("relu", CUDNN_ACTIVATION_RELU));
     model.add_layer(new Pooling("pool", 2, 0, 2, CUDNN_POOLING_MAX));
-    model.add_layer(new Conv2D("conv2", 50, 5));
-    model.add_layer(new Activation("relu", CUDNN_ACTIVATION_RELU));
-    model.add_layer(new Pooling("pool", 2, 0, 2, CUDNN_POOLING_MAX));
-    model.add_layer(new Dense("dense1", 500));
-    model.add_layer(new Activation("relu", CUDNN_ACTIVATION_RELU));
     model.add_layer(new Dense("dense2", 10));
     model.add_layer(new Softmax("softmax"));
     model.cuda();
@@ -50,7 +46,6 @@ int main(int argc, char *argv[]) {
     if (load_pretrain)
         model.load_pretrain();
     model.train();
-
     // start Nsight System profile
     cudaProfilerStart();
 
@@ -68,7 +63,6 @@ int main(int argc, char *argv[]) {
         // update shared buffer contents
         train_data->to(cuda);
         train_target->to(cuda);
-
         // forward
         model.forward(train_data);
         tp_count += model.get_accuracy(train_target);
@@ -105,13 +99,13 @@ int main(int argc, char *argv[]) {
         model.write_file();
 
     // phase 2. inferencing
-    // step 1. load test set
+    // step 1. load eval set
     std::cout << "[INFERENCE]" << std::endl;
     MNIST test_data_loader = MNIST(std::getenv("MNIST_DATA_PATH"));
     test_data_loader.test(batch_size_test);
 
     // step 2. model initialization
-    model.test();
+    model.eval();
 
     // step 3. iterates the testing loop
     Tensor<float> *test_data = test_data_loader.get_data();

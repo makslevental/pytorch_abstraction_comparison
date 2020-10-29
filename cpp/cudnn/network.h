@@ -31,7 +31,7 @@ public:
 
     void cuda();
     void train();
-    void test();
+    void eval();
 
     Tensor<float> *output_;
 

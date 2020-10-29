@@ -27,7 +27,7 @@ public:
     // load train dataset
     void train(int batch_size = 1, bool shuffle = false);
 
-    // load test dataset
+    // load eval dataset
     void test(int batch_size = 1);
 
     // update shared batch data buffer at current step index

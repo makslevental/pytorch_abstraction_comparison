@@ -91,7 +91,12 @@ float CrossEntropyLoss::loss(Tensor<float> *predict, Tensor<float> *target) {
     int num_blocks =
         std::min(num_blocks_per_sm * num_sms, (target->size() + BLOCK_DIM_1D - 1) / BLOCK_DIM_1D);
     softmax_loss_kernel<<<num_blocks, BLOCK_DIM_1D, BLOCK_DIM_1D * sizeof(float), 0>>>(
-        d_loss_, predict->cuda(), target->cuda(), d_workspace_, batch_size, num_outputs);
+        d_loss_,
+        predict->get_device_ptr(),
+        target->get_device_ptr(),
+        d_workspace_,
+        batch_size,
+        num_outputs);
     cudaMemcpy(&h_loss_, d_loss_, sizeof(float), cudaMemcpyDeviceToHost);
 
     // batch mean loss

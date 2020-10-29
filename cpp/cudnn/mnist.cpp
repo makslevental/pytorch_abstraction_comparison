@@ -1,5 +1,4 @@
 #include "mnist.h"
-#include <cstring>
 
 MNIST::~MNIST() {
     delete data_;
@@ -9,7 +8,7 @@ MNIST::~MNIST() {
 void MNIST::create_shared_space() {
     // create Tensors with batch size and sample size
     data_ = new Tensor<float>(batch_size_, channels_, height_, width_);
-    data_->tensor();
+    data_->tensor_descriptor();
     target_ = new Tensor<float>(batch_size_, num_classes_);
 }
 

@@ -30,7 +30,7 @@
 /* CUDA API error return checker */
 #ifndef checkCudaErrors
 #define checkCudaErrors(err)                                                                       \
-    {                                                                                              \
+    do {                                                                                           \
         if (err != cudaSuccess) {                                                                  \
             fprintf(                                                                               \
                 stderr,                                                                            \
@@ -42,7 +42,7 @@
             fprintf(stderr, "%d\n", cudaSuccess);                                                  \
             exit(-1);                                                                              \
         }                                                                                          \
-    }
+    } while (0)
 #endif
 
 static const char *_cublasGetErrorEnum(cublasStatus_t error) {
@@ -82,7 +82,7 @@ static const char *_cublasGetErrorEnum(cublasStatus_t error) {
 }
 
 #define checkCublasErrors(err)                                                                     \
-    {                                                                                              \
+    do {                                                                                           \
         if (err != CUBLAS_STATUS_SUCCESS) {                                                        \
             fprintf(                                                                               \
                 stderr,                                                                            \
@@ -93,10 +93,10 @@ static const char *_cublasGetErrorEnum(cublasStatus_t error) {
                 __LINE__);                                                                         \
             exit(-1);                                                                              \
         }                                                                                          \
-    }
+    } while (0)
 
 #define checkCudnnErrors(err)                                                                      \
-    {                                                                                              \
+    do {                                                                                           \
         if (err != CUDNN_STATUS_SUCCESS) {                                                         \
             fprintf(                                                                               \
                 stderr,                                                                            \
@@ -107,7 +107,7 @@ static const char *_cublasGetErrorEnum(cublasStatus_t error) {
                 __LINE__);                                                                         \
             exit(-1);                                                                              \
         }                                                                                          \
-    }
+    } while (0)
 
 // cuRAND API errors
 static const char *_curandGetErrorEnum(curandStatus_t error) {
@@ -169,7 +169,10 @@ static const char *_curandGetErrorEnum(curandStatus_t error) {
         }                                                                                          \
     }
 
-// container for cuda resources
+#define PRINT_LINE std::cout << __FILE__ << ":" << __LINE__ << std::endl;
+#define PRINT(x) std::cout << x << std::endl;
+
+// container for get_device_ptr resources
 class CudaContext {
 public:
     CudaContext() {

@@ -31,10 +31,12 @@ public:
     /* Weight Freeze or Unfreeze */
     void freeze() { freeze_ = true; }
     void unfreeze() { freeze_ = false; }
+    void train() { train_ = true; }
+    void eval() { train_ = false; }
 
 protected:
     virtual void fwd_initialize(Tensor<float> *input) = 0;
-    virtual void bwd_initialize(Tensor<float> *grad_output) = 0;
+    virtual void bwd_initialize(Tensor<float> *grad_output);
 
     // name of layer
     std::string name_;
@@ -53,7 +55,8 @@ protected:
     Tensor<float> *grad_output_ = nullptr; /* dy */
 
     // master weights & bias
-    bool freeze_ = false;                   /* control parameter updates */
+    bool freeze_ = false; /* control parameter updates */
+    bool train_ = false;
     Tensor<float> *weights_ = nullptr;      /* w */
     Tensor<float> *biases_ = nullptr;       /* b */
     Tensor<float> *grad_weights_ = nullptr; /* dw */
@@ -65,7 +68,7 @@ protected:
     void init_weight_bias(unsigned int seed = 0);
     void update_weights_biases(float learning_rate);
 
-    // cuda handle container
+    // get_device_ptr handle container
     CudaContext *cuda_ = nullptr;
 
     // pretrain parameters
@@ -107,7 +110,6 @@ public:
 
 private:
     void fwd_initialize(Tensor<float> *input) override;
-    void bwd_initialize(Tensor<float> *grad_output) override;
 
     cudnnActivationDescriptor_t act_desc_;
     cudnnActivationMode_t act_mode_;
@@ -141,7 +143,7 @@ public:
         int stride = 1,
         int padding = 0,
         int dilation = 1,
-        bool bias = false);
+        bool bias = true);
     ~Conv2D() override;
 
     Tensor<float> *forward(Tensor<float> *input) override;
@@ -168,7 +170,7 @@ private:
     cudnnConvolutionBwdFilterAlgo_t conv_bwd_filter_algo_;
 
     size_t workspace_size_ = 0;
-    void **d_workspace_ = nullptr;
+    void **device_workspace_ = nullptr;
     virtual void set_workspace();
 };
 
@@ -182,7 +184,6 @@ public:
 
 private:
     void fwd_initialize(Tensor<float> *input) override;
-    void bwd_initialize(Tensor<float> *grad_output) override;
 
     int kernel_size_;
     int padding_;
@@ -191,6 +192,44 @@ private:
 
     std::array<int, 4> output_size_;
     cudnnPoolingDescriptor_t pool_desc_;
+};
+
+class BatchNorm2d : public Layer {
+public:
+    explicit BatchNorm2d(
+        std::string name,
+        float epsilon = 1e-5,
+        float momentum = 0.1,
+        bool affine = true,
+        bool track_running_stats = true,
+        cudnnBatchNormMode_t mode = CUDNN_BATCHNORM_SPATIAL_PERSISTENT);
+    ~BatchNorm2d() override;
+
+    Tensor<float> *forward(Tensor<float> *input) override;
+    Tensor<float> *backward(Tensor<float> *grad_output) override;
+
+private:
+    void fwd_initialize(Tensor<float> *input) override;
+    void bwd_initialize(Tensor<float> *grad_output) override;
+
+    size_t workspace_size_ = 0;
+    size_t reserve_size_ = 0;
+    void **device_workspace_ = nullptr;
+    void **device_reserve_space_ = nullptr;
+    virtual void set_workspace();
+
+    int num_features_;
+    float epsilon_;
+    float momentum_;
+    bool affine_;
+    bool track_running_stats_;
+    Tensor<float> *running_mean_ = nullptr;
+    Tensor<float> *running_var_ = nullptr;
+    Tensor<float> *save_mean_ = nullptr;
+    Tensor<float> *save_var_ = nullptr;
+
+    cudnnBatchNormMode_t mode_;
+    cudnnTensorDescriptor_t derived_bn_scale_bias_mean_var_desc_;
 };
 
 #endif // _LAYER_H_

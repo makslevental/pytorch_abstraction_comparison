@@ -13,6 +13,8 @@
 #include <cuda_runtime.h>
 #include <cudnn.h>
 
+#include <prettyprint.h>
+
 typedef enum { host, cuda } DeviceType;
 
 template <typename ftype> class Tensor {
@@ -25,18 +27,14 @@ private:
     int height_ = 1;
     int width_ = 1;
 
-    bool is_tensored_ = false;
-
     cudnnTensorDescriptor_t tensor_desc_ = nullptr;
 
 public:
     ftype *get_host_ptr() const { return host_ptr_; }
-    ftype *get_device_ptr() const { return device_ptr_; }
     int get_batch_size() const { return batch_size_; }
     int get_channels() const { return channels_; }
     int get_height() const { return height_; }
     int get_width() const { return width_; }
-    const cudnnTensorStruct *get_tensor_desc() const { return tensor_desc_; }
 
     explicit Tensor(int n = 1, int c = 1, int h = 1, int w = 1)
         : batch_size_(n), channels_(c), height_(h), width_(w) {
@@ -52,8 +50,10 @@ public:
             delete[] host_ptr_;
         if (device_ptr_ != nullptr)
             cudaFree(device_ptr_);
-        if (is_tensored_)
+        if (tensor_desc_) {
             cudnnDestroyTensorDescriptor(tensor_desc_);
+            tensor_desc_ = nullptr;
+        }
     }
 
     // reset the current blob with the new size information
@@ -76,18 +76,18 @@ public:
 
         // create new buffer
         host_ptr_ = new float[batch_size_ * channels_ * height_ * width_];
-        cuda();
+        get_device_ptr();
 
-        // reset tensor descriptor if it was tensor
-        if (is_tensored_) {
+        // reset tensor descriptor if it was tensor_descriptor
+        if (tensor_desc_) {
             cudnnDestroyTensorDescriptor(tensor_desc_);
-            is_tensored_ = false;
+            tensor_desc_ = nullptr;
         }
     }
 
     void reset(std::array<int, 4> size) { reset(size[0], size[1], size[2], size[3]); }
 
-    // returns array of tensor shape
+    // returns array of tensor_descriptor shape
     std::array<int, 4> shape() {
         return std::array<int, 4>({batch_size_, channels_, height_, width_});
     }
@@ -102,10 +102,9 @@ public:
     int buf_size() { return sizeof(ftype) * len(); }
 
     /* Tensor Control */
-    cudnnTensorDescriptor_t tensor() {
-        if (is_tensored_)
+    cudnnTensorDescriptor_t tensor_descriptor() {
+        if (tensor_desc_)
             return tensor_desc_;
-
         cudnnCreateTensorDescriptor(&tensor_desc_);
         cudnnSetTensor4dDescriptor(
             tensor_desc_,
@@ -115,13 +114,12 @@ public:
             channels_,
             height_,
             width_);
-        is_tensored_ = true;
 
         return tensor_desc_;
     }
 
-    // get cuda memory
-    ftype *cuda() {
+    // get get_device_ptr memory
+    ftype *get_device_ptr() {
         if (device_ptr_ == nullptr)
             cudaMalloc((void **)&device_ptr_, sizeof(ftype) * len());
 
@@ -131,10 +129,10 @@ public:
     // transfer data between memory
     ftype *to(DeviceType target) {
         if (target == host) {
-            cudaMemcpy(host_ptr_, cuda(), sizeof(ftype) * len(), cudaMemcpyDeviceToHost);
+            cudaMemcpy(host_ptr_, get_device_ptr(), sizeof(ftype) * len(), cudaMemcpyDeviceToHost);
             return host_ptr_;
         } else if (target == DeviceType::cuda) {
-            cudaMemcpy(cuda(), host_ptr_, sizeof(ftype) * len(), cudaMemcpyHostToDevice);
+            cudaMemcpy(get_device_ptr(), host_ptr_, sizeof(ftype) * len(), cudaMemcpyHostToDevice);
             return device_ptr_;
         } else {
             return nullptr;
