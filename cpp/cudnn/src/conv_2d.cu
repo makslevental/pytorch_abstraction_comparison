@@ -169,9 +169,9 @@ void Conv2D::fwd_initialize(Tensor<float> *input) {
     }
 
     // initilaize input and output
-    if (input_ == nullptr || batch_size_ != input->get_batch_size()) {
+    if (input_desc_ == nullptr || batch_size_ != input->get_batch_size()) {
         // initialize input
-        input_ = input;
+        input_size_ = input->size();
         input_desc_ = input->tensor_descriptor();
         batch_size_ = input->get_batch_size();
 
@@ -210,11 +210,13 @@ void Conv2D::fwd_initialize(Tensor<float> *input) {
 }
 
 Tensor<float> *Conv2D::forward(Tensor<float> *input) {
+    fwd_initialize(input);
+    input_ = input;
     checkCudnnErrors(cudnnConvolutionForward(
         cuda_->cudnn(),
         &cuda_->one,
         input_desc_,
-        input_->get_device_ptr(),
+        input->get_device_ptr(),
         filter_desc_,
         weights_->get_device_ptr(),
         conv_desc_,
@@ -236,7 +238,7 @@ Tensor<float> *Conv2D::forward(Tensor<float> *input) {
     }
 
     if (DEBUG_CONV & 0x01) {
-        input_->print(name_ + "::input", true, input_->get_batch_size());
+        input->print(name_ + "::input", true, input->get_batch_size());
         weights_->print(name_ + "::weight", true);
         biases_->print(name_ + "::bias", true);
         output_->print(name_ + "::output", true);
@@ -256,6 +258,7 @@ void Conv2D::bwd_initialize(Tensor<float> *grad_output) {
 }
 
 Tensor<float> *Conv2D::backward(Tensor<float> *grad_output) {
+    bwd_initialize(grad_output);
     // gradients of biases
     if (bias_) {
         checkCudnnErrors(cudnnConvolutionBackwardBias(

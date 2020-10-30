@@ -13,7 +13,7 @@
 
 #include "tensor.h"
 
-#define MNIST_CLASS 10
+#define NUMBER_MNIST_CLASSES 10
 
 class MNIST {
 public:
@@ -24,22 +24,14 @@ public:
         : dataset_dir_(std::move(dataset_dir)), shuffle_(false) {}
     ~MNIST();
 
-    // load train dataset
     void train(int batch_size = 1, bool shuffle = false);
 
-    // load eval dataset
     void test(int batch_size = 1);
 
-    // update shared batch data buffer at current step index
-    void get_batch();
-    // increase current step index
-    // optionally it updates shared buffer if input parameter is true.
-    int next();
-
-    // returns a pointer which has input batch data
-    Tensor<float> *get_data() { return data_; }
-    // returns a pointer which has target batch data
-    Tensor<float> *get_target() { return target_; }
+    std::tuple<Tensor<float> *, Tensor<float> *> get_next_batch();
+    [[nodiscard]] int get_num_batches() const;
+    int len();
+    void reset();
 
 private:
     // predefined file names
@@ -49,13 +41,11 @@ private:
     std::string test_dataset_file_ = "t10k-images-idx3-ubyte";
     std::string test_label_file_ = "t10k-labels-idx1-ubyte";
 
-    // container
     std::vector<std::vector<float>> data_pool_;
-    std::vector<std::array<float, MNIST_CLASS>> target_pool_;
+    std::vector<std::array<float, NUMBER_MNIST_CLASSES>> target_pool_;
     Tensor<float> *data_ = nullptr;
     Tensor<float> *target_ = nullptr;
 
-    // data loader initialization
     void load_data(std::string &image_file_path);
     void load_target(std::string &label_file_path);
 
@@ -63,16 +53,17 @@ private:
 
     static int to_int(const uint8_t *ptr);
 
-    // data loader control
-    int step_ = -1;
+    int current_batch_ = -1;
     bool shuffle_;
     int batch_size_ = 1;
     int channels_ = 1;
     int height_ = 1;
     int width_ = 1;
-    int num_classes_ = 10;
-    int num_steps_ = 0;
+    // TODO: normalize this
+    int num_classes_ = NUMBER_MNIST_CLASSES;
+    int num_batches_ = 0;
 
+private:
     void create_shared_space();
     void shuffle_dataset();
 };

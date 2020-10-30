@@ -15,14 +15,9 @@ public:
     Tensor<float> *forward(Tensor<float> *input) override;
     Tensor<float> *backward(Tensor<float> *grad_input) override;
 
-    float get_loss(Tensor<float> *target) override;
-    int get_accuracy(Tensor<float> *target) override;
-
 protected:
     void fwd_initialize(Tensor<float> *input) override;
     void bwd_initialize(Tensor<float> *grad_output) override;
-
-    CrossEntropyLoss loss_;
 };
 
 #endif // PROJECTNAME_SOFTMAX_CUH

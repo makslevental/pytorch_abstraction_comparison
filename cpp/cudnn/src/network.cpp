@@ -35,25 +35,20 @@ Tensor<float> *Network::forward(Tensor<float> *input) {
             std::cout << "[[Forward ]][[ ";
             std::cout << std::setw(7) << layer->get_name() << " ]]\t(";
             std::cout << output_->shape() << std::endl;
+            output_->print("input", true, output_->get_batch_size());
         }
 
-        layer->fwd_initialize(output_);
         output_ = layer->forward(output_);
 
-#if (DEBUG_FORWARD)
-        std::cout << "--> " << output_->shape() << std::endl;
-        checkCudaErrors(cudaDeviceSynchronize());
-
-#if (DEBUG_FORWARD > 1)
-        output_->print("output", true);
-
-        if (phase_ == inference)
-            getchar();
-#endif
-#endif // DEBUG_FORWARD
-
-        // TEST
-        // checkCudaErrors(cudaDeviceSynchronize());
+        if (DEBUG_FORWARD) {
+            std::cout << "--> " << output_->shape() << std::endl;
+            checkCudaErrors(cudaDeviceSynchronize());
+        }
+        if (DEBUG_FORWARD > 1) {
+            output_->print("output", true, output_->get_batch_size());
+            if (phase_ == inference)
+                getchar();
+        }
     }
     nvtxRangePop();
 
@@ -77,9 +72,11 @@ void Network::backward(Tensor<float> *target) {
                       << gradient->get_height() << ", " << gradient->get_width() << ")\t";
         }
 
-        (*layer)->bwd_initialize(gradient);
+        // TODO: stop storing things and pass them instead
+        // TODO: figure out why the beginning of the epoch accuracy is low
         gradient = (*layer)->backward(gradient);
 
+        // TODO change debugging to flags
         if (DEBUG_BACKWARD) {
             // and the gradient result
             std::cout << "--> (" << gradient->get_batch_size() << ", " << gradient->get_channels()
@@ -96,6 +93,7 @@ void Network::backward(Tensor<float> *target) {
     nvtxRangePop();
 }
 
+// TODO: SGD and all that?
 void Network::update(float learning_rate) {
     if (phase_ == inference)
         return;
@@ -137,8 +135,6 @@ int Network::load_pretrain() {
     return 0;
 }
 
-// 1. initialize get_device_ptr resource container
-// 2. register the resource container to all the layers
 void Network::cuda() {
     cuda_ = new CudaContext();
 
@@ -170,14 +166,4 @@ void Network::eval() {
     }
 }
 
-std::vector<Layer *> Network::layers() { return layers_; }
-
-float Network::loss(Tensor<float> *target) {
-    Layer *layer = layers_.back();
-    return layer->get_loss(target);
-}
-
-int Network::get_accuracy(Tensor<float> *target) {
-    Layer *layer = layers_.back();
-    return layer->get_accuracy(target);
-}
+CudaContext *Network::get_cuda_context() const { return cuda_; }

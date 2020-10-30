@@ -2,6 +2,7 @@
 #include <loss.h>
 
 #include <cassert>
+#include <cmath>
 #include <cuda_runtime.h>
 
 /*
@@ -11,9 +12,10 @@
 CrossEntropyLoss::CrossEntropyLoss() { cudaMalloc((void **)&d_loss_, sizeof(float)); }
 
 CrossEntropyLoss::~CrossEntropyLoss() {
-    if (d_loss_ != nullptr)
+    if (d_loss_ != nullptr) {
         cudaFree(d_loss_);
-    d_loss_ = nullptr;
+        d_loss_ = nullptr;
+    }
 
     if (d_workspace_ != nullptr)
         cudaFree(d_workspace_);
@@ -100,5 +102,6 @@ float CrossEntropyLoss::loss(Tensor<float> *predict, Tensor<float> *target) {
     cudaMemcpy(&h_loss_, d_loss_, sizeof(float), cudaMemcpyDeviceToHost);
 
     // batch mean loss
-    return h_loss_ / float(batch_size);
+    auto loss = h_loss_ / float(batch_size);
+    return loss;
 }

@@ -11,7 +11,7 @@ void MNIST::create_shared_space() {
     data_->tensor_descriptor();
     target_ = new Tensor<float>(batch_size_, num_classes_);
 }
-
+// TODO: multithreading to match pytorch?
 void MNIST::load_data(std::string &image_file_path) {
     uint8_t ptr[4];
     std::string file_path_ = dataset_dir_ + "/" + image_file_path;
@@ -53,8 +53,8 @@ void MNIST::load_data(std::string &image_file_path) {
 
     delete[] q;
 
-    num_steps_ = num_data / batch_size_;
-
+    num_batches_ = num_data / batch_size_;
+    std::cout << "num_steps: " << num_batches_ << std::endl;
     std::cout << "loaded " << data_pool_.size() << " items.." << std::endl;
 
     file.close();
@@ -81,7 +81,7 @@ void MNIST::load_target(std::string &label_file_path) {
     // prepare input buffer for label
     // read all labels and converts to one-hot encoding
     for (int i = 0; i < num_target; i++) {
-        std::array<float, MNIST_CLASS> target_batch{};
+        std::array<float, NUMBER_MNIST_CLASSES> target_batch{};
         std::fill(target_batch.begin(), target_batch.end(), 0.f);
 
         file.read((char *)ptr, 1);
@@ -123,7 +123,13 @@ void MNIST::train(int batch_size, bool shuffle) {
         shuffle_dataset();
     create_shared_space();
 
-    step_ = 0;
+    current_batch_ = 0;
+}
+
+void MNIST::reset() {
+    if (shuffle_)
+        shuffle_dataset();
+    current_batch_ = 0;
 }
 
 void MNIST::test(int batch_size) {
@@ -139,17 +145,18 @@ void MNIST::test(int batch_size) {
 
     create_shared_space();
 
-    step_ = 0;
+    current_batch_ = 0;
 }
 
-void MNIST::get_batch() {
-    if (step_ < 0) {
+std::tuple<Tensor<float> *, Tensor<float> *> MNIST::get_next_batch() {
+    if (current_batch_ < 0) {
         std::cout << "You must initialize dataset first.." << std::endl;
-        exit(-1);
+        exit(EXIT_FAILURE);
     }
+    //    std::cout << " internal step: " << current_batch_ << std::endl;
 
     // index cliping
-    int data_idx = (step_ * batch_size_) % num_steps_;
+    int data_idx = (current_batch_ * batch_size_) % num_batches_;
 
     // prepare data Tensor
     int data_size = channels_ * width_ * height_;
@@ -158,19 +165,19 @@ void MNIST::get_batch() {
     for (int i = 0; i < batch_size_; i++)
         std::copy(
             data_pool_[data_idx + i].data(),
-            &data_pool_[data_idx + i].data()[data_size],
+            &data_pool_[data_idx + i][data_size],
             &data_->get_host_ptr()[data_size * i]);
 
     // copy target with one-hot encoded
     for (int i = 0; i < batch_size_; i++)
         std::copy(
             target_pool_[data_idx + i].data(),
-            &target_pool_[data_idx + i].data()[MNIST_CLASS],
-            &target_->get_host_ptr()[MNIST_CLASS * i]);
+            &target_pool_[data_idx + i][NUMBER_MNIST_CLASSES],
+            &target_->get_host_ptr()[NUMBER_MNIST_CLASSES * i]);
+
+    current_batch_++;
+    return std::make_tuple(data_, target_);
 }
 
-int MNIST::next() {
-    step_++;
-    get_batch();
-    return step_;
-}
+int MNIST::len() { return data_pool_.size(); }
+int MNIST::get_num_batches() const { return num_batches_; }

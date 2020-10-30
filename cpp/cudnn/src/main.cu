@@ -1,149 +1,188 @@
-#include <layers.cuh>
+#include <cmath>
 #include <mnist.h>
 #include <network.h>
+#include <resnet.cuh>
 
 #include <cuda_profiler_api.h>
 #include <iomanip>
 #include <nvtx3/nvToolsExt.h>
 
+int get_accuracy(Tensor<float> *output, Tensor<float> *target);
+int arg_max(int batch, int output_size, const float *arr);
+int find_one(int batch, int output_size, const float *arr);
+
 int main(int argc, char *argv[]) {
     /* configure the network */
-    int batch_size_train = 256;
-    int num_steps_train = 1600;
-    int monitoring_step = 200;
+    int batch_size = 32;
+    int epochs = 10;
+    int monitoring_step = 100;
 
-    double learning_rate = 0.02f;
+    double learning_rate = 0.1f;
     double lr_decay = 0.00005f;
 
     bool load_pretrain = false;
     bool file_save = false;
 
-    int batch_size_test = 10;
-    int num_steps_test = 1000;
-
-    /* Welcome Message */
     std::cout << "== MNIST training with CUDNN ==" << std::endl;
 
-    // phase 1. training
-    std::cout << "[TRAIN]" << std::endl;
+    MNIST train_data_loader = MNIST(std::getenv("MNIST_DATA_PATH"));
+    // TODO: fix the data loader to take a string path for files instead of assuming
+    train_data_loader.train(batch_size, true);
 
-    // step 1. loading dataset
-    auto dataset_path = std::getenv("MNIST_DATA_PATH");
-    std::cout << dataset_path;
-    MNIST train_data_loader = MNIST(dataset_path);
-    train_data_loader.train(batch_size_train, true);
+    MNIST test_data_loader = MNIST(std::getenv("MNIST_DATA_PATH"));
+    test_data_loader.test(batch_size);
 
-    // step 2. model initialization
-    Network model;
-    model.add_layer(new Conv2D("conv1", 20, 5));
-    model.add_layer(new BatchNorm2d("bn1"));
-    model.add_layer(new Activation("relu", CUDNN_ACTIVATION_RELU));
-    model.add_layer(new Pooling("pool", 3, 1, 2, CUDNN_POOLING_MAX));
-    model.add_layer(new Dense("dense2", 10));
-    model.add_layer(new Softmax("softmax"));
+    CrossEntropyLoss criterion;
+    CrossEntropyLoss criterion1;
+    double loss, accuracy;
+    int tp_count;
+
+    auto model = make_resnet50();
     model.cuda();
+    //    Network model;
+    //    model.add_layer(new Conv2D("conv1", 20, 5));
+    //    model.add_layer(new Activation("relu", CUDNN_ACTIVATION_RELU));
+    //    model.add_layer(new Pooling("pool", 2, 2, 0, CUDNN_POOLING_MAX));
+    //    model.add_layer(new Conv2D("conv2", 50, 5));
+    //    model.add_layer(new Activation("relu", CUDNN_ACTIVATION_RELU));
+    //    model.add_layer(new Pooling("pool", 2, 2, 0, CUDNN_POOLING_MAX));
+    //    model.add_layer(new Dense("dense1", 500));
+    //    model.add_layer(new Activation("relu", CUDNN_ACTIVATION_RELU));
+    //    model.add_layer(new Dense("dense2", 10));
+    //    model.add_layer(new Softmax("softmax"));
+    //    model.cuda();
 
     if (load_pretrain)
         model.load_pretrain();
-    model.train();
-    // start Nsight System profile
+
     cudaProfilerStart();
 
-    // step 3. train
-    int step = 0;
-    Tensor<float> *train_data = train_data_loader.get_data();
-    Tensor<float> *train_target = train_data_loader.get_target();
-    train_data_loader.get_batch();
-    int tp_count = 0;
-    while (step < num_steps_train) {
-        // nvtx profiling start
-        std::string nvtx_message = std::string("step" + std::to_string(step));
-        nvtxRangePushA(nvtx_message.c_str());
+    Tensor<float> *train_data, *train_target;
+    Tensor<float> *test_data, *test_target;
+    Tensor<float> *output;
 
-        // update shared buffer contents
-        train_data->to(cuda);
-        train_target->to(cuda);
-        // forward
-        model.forward(train_data);
-        tp_count += model.get_accuracy(train_target);
+    for (int epoch = 0; epoch < epochs; epoch++) {
+        std::cout << "[TRAIN]" << std::endl;
+        model.train();
+        tp_count = 0;
+        train_data_loader.reset();
 
-        // back-propagation
-        model.backward(train_target);
+        for (int batch = 0; batch < train_data_loader.get_num_batches(); batch++) {
+            std::string nvtx_message =
+                std::string("epoch " + std::to_string(epoch) + " batch " + std::to_string(batch));
+            nvtxRangePushA(nvtx_message.c_str());
 
-        // update parameter
-        // we will use learning rate decay to the learning rate
-        learning_rate *= 1.f / (1.f + lr_decay * step);
-        model.update(learning_rate);
+            std::tie(train_data, train_target) = train_data_loader.get_next_batch();
+            train_data->to(cuda);
+            train_target->to(cuda);
 
-        // fetch next data
-        step = train_data_loader.next();
+            output = model.forward(train_data);
+            tp_count += get_accuracy(output, train_target);
 
-        // nvtx profiling end
-        nvtxRangePop();
+            model.backward(train_target);
+            model.update(learning_rate);
 
-        // calculation softmax loss
-        if (step % monitoring_step == 0) {
-            float loss = model.loss(train_target);
-            float accuracy = 100.f * tp_count / monitoring_step / batch_size_train;
+            nvtxRangePop();
 
-            std::cout << "step: " << std::right << std::setw(4) << step << ", loss: " << std::left
-                      << std::setw(5) << std::fixed << std::setprecision(3) << loss
-                      << ", accuracy: " << accuracy << "%" << std::endl;
+            if (batch % monitoring_step == 0) {
+                //                train_data->print("data", true, batch_size);
+                //                output->print("output", true, batch_size);
+                //                train_target->print("target", true, batch_size);
 
-            tp_count = 0;
+                loss = criterion.loss(output, train_target);
+                accuracy = 100.f * tp_count / monitoring_step / batch_size;
+                std::cout << "epoch: " << std::right << std::setw(4) << epoch
+                          << ", batch: " << std::right << std::setw(4) << batch
+                          << ", loss: " << std::left << std::setw(8) << std::fixed
+                          << std::setprecision(6) << loss << ", accuracy: " << accuracy << "%"
+                          << std::endl;
+                tp_count = 0;
+            }
         }
+        std::cout << std::endl;
+
+        if (file_save)
+            model.write_file();
+
+        std::cout << "[EVAL]" << std::endl;
+
+        model.eval();
+        test_data_loader.reset();
+
+        tp_count = 0;
+        loss = 0;
+        for (int batch = 0; batch < test_data_loader.get_num_batches(); batch++) {
+            std::string nvtx_message = std::string("batch " + std::to_string(batch));
+            nvtxRangePushA(nvtx_message.c_str());
+
+            std::tie(test_data, test_target) = test_data_loader.get_next_batch();
+            test_data->to(cuda);
+            test_target->to(cuda);
+
+            output = model.forward(test_data);
+            tp_count += get_accuracy(output, test_target);
+            loss += criterion1.loss(output, test_target);
+
+            nvtxRangePop();
+            if (batch % monitoring_step == 0) {
+                //                test_data->print("data", true, batch_size);
+                //                output->print("output", true, batch_size);
+                //                test_target->print("target", true, batch_size);
+            }
+        }
+
+        accuracy = 100.f * tp_count / test_data_loader.get_num_batches() / batch_size;
+        std::cout << "loss: " << std::setw(4) << loss << ", accuracy: " << accuracy << "%"
+                  << std::endl;
+        std::cout << std::endl;
     }
 
-    // trained parameter save
-    if (file_save)
-        model.write_file();
-
-    // phase 2. inferencing
-    // step 1. load eval set
-    std::cout << "[INFERENCE]" << std::endl;
-    MNIST test_data_loader = MNIST(std::getenv("MNIST_DATA_PATH"));
-    test_data_loader.test(batch_size_test);
-
-    // step 2. model initialization
-    model.eval();
-
-    // step 3. iterates the testing loop
-    Tensor<float> *test_data = test_data_loader.get_data();
-    Tensor<float> *test_target = test_data_loader.get_target();
-    test_data_loader.get_batch();
-    tp_count = 0;
-    step = 0;
-    while (step < num_steps_test) {
-        // nvtx profiling start
-        std::string nvtx_message = std::string("step" + std::to_string(step));
-        nvtxRangePushA(nvtx_message.c_str());
-
-        // update shared buffer contents
-        test_data->to(cuda);
-        test_target->to(cuda);
-
-        // forward
-        model.forward(test_data);
-        tp_count += model.get_accuracy(test_target);
-
-        // fetch next data
-        step = test_data_loader.next();
-
-        // nvtx profiling stop
-        nvtxRangePop();
-    }
-
-    // stop Nsight System profiling
     cudaProfilerStop();
-
-    // step 4. calculate loss and accuracy
-    float loss = model.loss(test_target);
-    float accuracy = 100.f * tp_count / num_steps_test / batch_size_test;
-
-    std::cout << "loss: " << std::setw(4) << loss << ", accuracy: " << accuracy << "%" << std::endl;
-
-    // Good bye
     std::cout << "Done." << std::endl;
 
     return 0;
+}
+
+int get_accuracy(Tensor<float> *output, Tensor<float> *target) {
+    int batch_size = output->get_batch_size();
+    int output_size = output->size();
+
+    assert(batch_size == target->get_batch_size());
+    assert(output_size == target->size());
+
+    float *h_output, *h_target;
+    int idx_output, idx_target;
+    int hit_count = 0;
+
+    // get predicts and targets
+    h_output = output->to(host);
+    h_target = target->to(host);
+
+    // idx_output = idx_target = 0;
+    for (int b = 0; b < batch_size; b++) {
+        idx_output = arg_max(b, output_size, h_output);
+        idx_target = find_one(b, output_size, h_target);
+        if (idx_output == idx_target)
+            hit_count++;
+    }
+
+    return hit_count;
+}
+
+int arg_max(int batch, int output_size, const float *arr) {
+    int idx_output = 0;
+    for (int i = 1; i < NUMBER_MNIST_CLASSES; i++) {
+        if (arr[batch * output_size + i] > arr[batch * output_size + idx_output])
+            idx_output = i;
+    }
+    return idx_output;
+}
+
+int find_one(int batch, int output_size, const float *arr) {
+    for (int i = 0; i < 10; i++) {
+        if (abs(arr[batch * output_size + i] - 1) < 1e-10) {
+            return i;
+        }
+    }
+    exit(EXIT_FAILURE);
 }

@@ -20,9 +20,6 @@ public:
 
     std::string get_name() { return name_; }
 
-    virtual float get_loss(Tensor<float> *target);
-    virtual int get_accuracy(Tensor<float> *target);
-
     void set_cuda_context(CudaContext *context) { cuda_ = context; }
 
     void set_load_pretrain() { load_pretrain_ = true; };
@@ -53,6 +50,7 @@ protected:
     Tensor<float> *output_ = nullptr;      /* y  */
     Tensor<float> *grad_input_ = nullptr;  /* dx */
     Tensor<float> *grad_output_ = nullptr; /* dy */
+    int input_size_;
 
     // master weights & bias
     bool freeze_ = false; /* control parameter updates */

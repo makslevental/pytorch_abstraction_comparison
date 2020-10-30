@@ -72,13 +72,14 @@ void Layer::init_weight_bias(unsigned int seed) {
 
     if (weights_ == nullptr || biases_ == nullptr)
         return;
-
+    PRINT("init weights biases");
     // Create random network
     std::random_device rd;
     std::mt19937 gen(seed == 0 ? rd() : static_cast<unsigned int>(seed));
 
     // He uniform distribution
-    float range = sqrt(6.f / input_->size()); // He's initialization
+    // TODO: initialization Xi
+    float range = sqrt(6.f / input_size_); // He's initialization
     std::uniform_real_distribution<> dis(-range, range);
 
     for (int i = 0; i < weights_->len(); i++)
@@ -134,16 +135,6 @@ void Layer::update_weights_biases(float learning_rate) {
         if (DEBUG_UPDATE)
             biases_->print(name_ + "biases (after update)", true);
     }
-}
-
-float Layer::get_loss(Tensor<float> *target) {
-    assert("No Loss layer has no loss." && false);
-    return EXIT_FAILURE;
-}
-
-int Layer::get_accuracy(Tensor<float> *target) {
-    assert("No Loss layer cannot estimate accuracy." && false);
-    return EXIT_FAILURE;
 }
 
 void Layer::bwd_initialize(Tensor<float> *grad_output) {

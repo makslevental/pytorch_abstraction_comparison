@@ -151,7 +151,7 @@ public:
             std::cout << std::fixed;
             std::cout.precision(6);
 
-            int max_print_line = 4;
+            int max_print_line = 100;
             if (width_ == 28) {
                 std::cout.precision(3);
                 max_print_line = 28;
@@ -166,7 +166,14 @@ public:
                 while (count < size() && print_line_count < max_print_line) {
                     std::cout << "\t";
                     for (int s = 0; s < width_ && count < size(); s++) {
-                        std::cout << host_ptr_[size() * n + count + offset] << "\t";
+                        if (width_ == 28) {
+                            if (host_ptr_[size() * n + count + offset] > 0)
+                                std::cout << "*";
+                            else
+                                std::cout << " ";
+                        } else {
+                            std::cout << host_ptr_[size() * n + count + offset] << "\t";
+                        }
                         count++;
                     }
                     std::cout << std::endl;

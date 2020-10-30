@@ -8,8 +8,7 @@
 Softmax::Softmax(std::string name) { name_ = std::move(name); }
 
 void Softmax::fwd_initialize(Tensor<float> *input) {
-    if (input_ == nullptr || batch_size_ != input->get_batch_size()) {
-        input_ = input;
+    if (input_desc_ == nullptr || batch_size_ != input->get_batch_size()) {
         input_desc_ = input->tensor_descriptor();
         batch_size_ = input->get_batch_size();
 
@@ -23,11 +22,12 @@ void Softmax::fwd_initialize(Tensor<float> *input) {
 }
 
 Tensor<float> *Softmax::forward(Tensor<float> *input) {
-    if (DEBUG_SOFTMAX & 0x01) {
+    fwd_initialize(input);
+    if (DEBUG_SOFTMAX) {
         std::cout << name_ << "[FORWARD]" << std::endl;
         input_->print(name_ + "::input", true, input->get_batch_size());
     }
-
+    input_ = input;
     checkCudnnErrors(cudnnSoftmaxForward(
         cuda_->cudnn(),
         CUDNN_SOFTMAX_ACCURATE,
@@ -39,7 +39,7 @@ Tensor<float> *Softmax::forward(Tensor<float> *input) {
         output_desc_,
         output_->get_device_ptr()));
 
-    if (DEBUG_SOFTMAX & 0x01)
+    if (DEBUG_SOFTMAX)
         output_->print(name_ + "::output", true, input->get_batch_size());
 
     return output_;
@@ -55,6 +55,7 @@ void Softmax::bwd_initialize(Tensor<float> *target) {
 }
 
 Tensor<float> *Softmax::backward(Tensor<float> *target) {
+    bwd_initialize(target);
     // set grad_input_ as predict
     checkCudaErrors(cudaMemcpyAsync(
         grad_input_->get_device_ptr(),
@@ -78,7 +79,7 @@ Tensor<float> *Softmax::backward(Tensor<float> *target) {
     checkCublasErrors(
         cublasSscal(cuda_->cublas(), grad_output_size, &scale, grad_input_->get_device_ptr(), 1));
 
-    if (DEBUG_SOFTMAX & 0x02) {
+    if (DEBUG_SOFTMAX > 1) {
         std::cout << name_ << "[BACKWARD]" << std::endl;
         input_->print(name_ + "::input", true);
         output_->print(name_ + "::predict", true);
@@ -87,40 +88,4 @@ Tensor<float> *Softmax::backward(Tensor<float> *target) {
     }
 
     return grad_input_;
-}
-
-float Softmax::get_loss(Tensor<float> *target) { return loss_.loss(output_, target); }
-
-int Softmax::get_accuracy(Tensor<float> *target) {
-    int batch_size = output_->get_batch_size();
-    int output_size = output_->size();
-
-    assert(batch_size == target->get_batch_size());
-    assert(output_size == target->size());
-
-    float *h_output, *h_target;
-    int idx_output, idx_target;
-    int hit_count = 0;
-
-    // get predicts and targets
-    h_output = output_->to(host);
-    h_target = target->to(host);
-
-    // idx_output = idx_target = 0;
-    for (int b = 0; b < batch_size; b++) {
-        idx_output = 0;
-        idx_target = 0;
-
-        for (int i = 1; i < 10; i++) {
-            if (h_output[b * output_size + i] > h_output[b * output_size + idx_output])
-                idx_output = i;
-            if (h_target[b * output_size + i] > h_target[b * output_size + idx_target])
-                idx_target = i;
-        }
-
-        if (idx_output == idx_target)
-            hit_count++;
-    }
-
-    return hit_count;
 }

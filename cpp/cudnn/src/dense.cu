@@ -32,17 +32,14 @@ __global__ void init_one_vec(float *d_one_vec, size_t length) {
 void Dense::fwd_initialize(Tensor<float> *input) {
     // initialize weights and biases
     if (weights_ == nullptr) {
-        // setup parameter size information
-        input_size_ = input->get_channels() * input->get_height() * input->get_height();
-
-        // initialize weight, bias, and output
+        input_size_ = input->size();
         weights_ = new Tensor<float>(1, 1, input_size_, output_size_);
         biases_ = new Tensor<float>(1, 1, output_size_);
     }
 
-    // initilaize input and output
-    if (input_ == nullptr || batch_size_ != input->get_batch_size()) {
-        input_ = input;
+    if (input_desc_ == nullptr || batch_size_ != input->get_batch_size()) {
+        input_size_ = input->size();
+        input_desc_ = input->tensor_descriptor();
         batch_size_ = input->get_batch_size();
 
         if (output_ == nullptr)
@@ -58,22 +55,22 @@ void Dense::fwd_initialize(Tensor<float> *input) {
         init_one_vec<<<(batch_size_ + BLOCK_DIM_1D - 1) / BLOCK_DIM_1D, BLOCK_DIM_1D>>>(
             d_one_vec, batch_size_);
 
-        // initialize weights and biases
         if (load_pretrain_ && !freeze_) {
             if (load_parameter()) {
                 std::cout << "error occurred.." << std::endl;
                 exit(-1);
             }
         } else if (!freeze_) {
+            PRINT("input_size " << input_size_);
             init_weight_bias();
-        } else {
-            /* do nothing */
         }
     }
 }
 
 Tensor<float> *Dense::forward(Tensor<float> *input) {
     // output = weights^T * input (without biases)
+    fwd_initialize(input);
+    input_ = input;
     checkCublasErrors(cublasSgemm(
         cuda_->cublas(),
         CUBLAS_OP_T,
@@ -84,7 +81,7 @@ Tensor<float> *Dense::forward(Tensor<float> *input) {
         &cuda_->one,
         weights_->get_device_ptr(),
         input_size_,
-        input_->get_device_ptr(),
+        input->get_device_ptr(),
         input_size_,
         &cuda_->zero,
         output_->get_device_ptr(),
@@ -107,8 +104,8 @@ Tensor<float> *Dense::forward(Tensor<float> *input) {
         output_->get_device_ptr(),
         output_size_));
 
-    if (DEBUG_DENSE & 0x01) {
-        input_->print(name_ + "::input", true);
+    if (DEBUG_DENSE) {
+        input->print(name_ + "::input", true);
         weights_->print(name_ + "::weight", true);
         biases_->print(name_ + "::bias", true);
         output_->print(name_ + "::output", true);
@@ -126,6 +123,7 @@ void Dense::bwd_initialize(Tensor<float> *grad_output) {
 }
 
 Tensor<float> *Dense::backward(Tensor<float> *grad_output) {
+    bwd_initialize(grad_output);
     // db = (dy) * d_one_vec
     cublasSgemv(
         cuda_->cublas(),

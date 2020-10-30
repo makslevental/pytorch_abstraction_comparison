@@ -20,8 +20,9 @@ Activation::Activation(std::string name, cudnnActivationMode_t mode, float coef)
 Activation::~Activation() { cudnnDestroyActivationDescriptor(act_desc_); }
 
 void Activation::fwd_initialize(Tensor<float> *input) {
-    if (input_ == nullptr || batch_size_ != input->get_batch_size()) {
-        input_ = input;
+    if (input_desc_ == nullptr || batch_size_ != input->get_batch_size()) {
+        //        input_ = input;
+        input_size_ = input->size();
         input_desc_ = input->tensor_descriptor();
         batch_size_ = input->get_batch_size();
 
@@ -35,6 +36,8 @@ void Activation::fwd_initialize(Tensor<float> *input) {
 }
 
 Tensor<float> *Activation::forward(Tensor<float> *input) {
+    fwd_initialize(input);
+    input_ = input;
     cudnnActivationForward(
         cuda_->cudnn(),
         act_desc_,
@@ -49,6 +52,7 @@ Tensor<float> *Activation::forward(Tensor<float> *input) {
 }
 
 Tensor<float> *Activation::backward(Tensor<float> *grad_output) {
+    bwd_initialize(grad_output);
     cudnnActivationBackward(
         cuda_->cudnn(),
         act_desc_,

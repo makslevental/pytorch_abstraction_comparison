@@ -26,15 +26,11 @@ public:
     int load_pretrain();
     int write_file();
 
-    float loss(Tensor<float> *target);
-    int get_accuracy(Tensor<float> *target);
-
     void cuda();
     void train();
     void eval();
 
     Tensor<float> *output_;
-    std::vector<Layer *> layers();
 
 private:
     std::vector<Layer *> layers_;

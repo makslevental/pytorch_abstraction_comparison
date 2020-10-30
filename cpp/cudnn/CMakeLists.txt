@@ -34,7 +34,7 @@ cuda_add_executable(main_cudnn
         src/activation.cu
         src/softmax.cu
         src/pooling.cu
-        )
+        include/resnet.cuh)
 cuda_add_cublas_to_target(main_cudnn)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")

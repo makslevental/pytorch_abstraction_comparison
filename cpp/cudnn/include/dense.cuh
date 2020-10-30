@@ -19,7 +19,6 @@ private:
     void fwd_initialize(Tensor<float> *input) override;
     void bwd_initialize(Tensor<float> *grad_output) override;
 
-    int input_size_ = 0;
     int output_size_ = 0;
 
     float *d_one_vec = nullptr;

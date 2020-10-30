@@ -38,7 +38,6 @@ private:
     bool bias_;
 
     std::array<int, 4> output_size_;
-
     // convolution
     cudnnConvolutionDescriptor_t conv_desc_;
 

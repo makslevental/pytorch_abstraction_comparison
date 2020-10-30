@@ -9,7 +9,6 @@ public:
     ~CrossEntropyLoss();
 
     float loss(Tensor<float> *predict, Tensor<float> *target);
-    float accuracy(Tensor<float> *predict, Tensor<float> *target);
 
 private:
     // reduced loss

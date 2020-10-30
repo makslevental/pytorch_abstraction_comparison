@@ -22,7 +22,6 @@ private:
     int padding_;
     int stride_;
     cudnnPoolingMode_t mode_;
-
     std::array<int, 4> output_size_;
     cudnnPoolingDescriptor_t pool_desc_;
 };

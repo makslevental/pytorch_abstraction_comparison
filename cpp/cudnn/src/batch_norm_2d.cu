@@ -20,6 +20,8 @@ BatchNorm2d::BatchNorm2d(
 BatchNorm2d::~BatchNorm2d() = default;
 
 Tensor<float> *BatchNorm2d::forward(Tensor<float> *input) {
+    fwd_initialize(input);
+    input_ = input;
     if (train_) {
         checkCudnnErrors(cudnnBatchNormalizationForwardTrainingEx(
             /*handle*/ cuda_->cudnn(),
@@ -36,7 +38,8 @@ Tensor<float> *BatchNorm2d::forward(Tensor<float> *input) {
             /*bnScaleBiasMeanVarDesc*/ derived_bn_scale_bias_mean_var_desc_,
             /**bnScaleData*/ weights_->get_device_ptr(),
             /**bnBiasData */ biases_->get_device_ptr(),
-            /*exponentialAverageFactor*/ momentum_,
+            /*exponentialAverageFactor*/ momentum_, // TODO: something about the first one having to
+                                                    // be 1?
             /**resultRunningMeanData*/ running_mean_->get_device_ptr(),
             /**resultRunningVarianceData*/ running_var_->get_device_ptr(),
             /*epsilon*/ epsilon_,
@@ -68,6 +71,7 @@ Tensor<float> *BatchNorm2d::forward(Tensor<float> *input) {
     return output_;
 }
 Tensor<float> *BatchNorm2d::backward(Tensor<float> *grad_output) {
+    bwd_initialize(grad_output);
     checkCudnnErrors(cudnnBatchNormalizationBackwardEx(
         /*handle*/ cuda_->cudnn(),
         /*mode*/ mode_,
@@ -119,9 +123,9 @@ void BatchNorm2d::fwd_initialize(Tensor<float> *input) {
         }
     }
     // initilaize input and output
-    if (input_ == nullptr || batch_size_ != input->get_batch_size()) {
-        input_ = input;
+    if (input_desc_ == nullptr || batch_size_ != input->get_batch_size()) {
         input_desc_ = input->tensor_descriptor();
+        input_size_ = input->size();
         batch_size_ = input->get_batch_size();
         num_features_ = input->get_channels();
         if (track_running_stats_) {
@@ -191,7 +195,7 @@ void BatchNorm2d::set_workspace() {
 
     // TODO: why are these still zero???
     workspace_size_ = std::max(workspace_size_, workspace_size);
-    PRINT("workspace_size_ " << workspace_size_)
+    //    PRINT("workspace_size_ " << workspace_size_)
     if (workspace_size_ > 0) {
         if (device_workspace_ != nullptr)
             checkCudaErrors(cudaFree(device_workspace_));
@@ -200,7 +204,7 @@ void BatchNorm2d::set_workspace() {
 
     checkCudnnErrors(cudnnGetBatchNormalizationTrainingExReserveSpaceSize(
         cuda_->cudnn(), mode_, CUDNN_BATCHNORM_OPS_BN, nullptr, input_desc_, &reserve_size_));
-    PRINT("reserve_size_ " << reserve_size_)
+    //    PRINT("reserve_size_ " << reserve_size_)
     if (reserve_size_ > 0) {
         if (device_reserve_space_ != nullptr)
             checkCudaErrors(cudaFree(device_reserve_space_));
