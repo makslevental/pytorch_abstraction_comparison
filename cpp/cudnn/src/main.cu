@@ -40,10 +40,10 @@ int main(int argc, char *argv[]) {
     auto model = make_resnet50();
     model.cuda();
     //    Network model;
-    //    model.add_layer(new Conv2D("conv1", 20, 5));
+    //    model.add_layer(new Conv2d("conv1", 20, 5));
     //    model.add_layer(new Activation("relu", CUDNN_ACTIVATION_RELU));
     //    model.add_layer(new Pooling("pool", 2, 2, 0, CUDNN_POOLING_MAX));
-    //    model.add_layer(new Conv2D("conv2", 50, 5));
+    //    model.add_layer(new Conv2d("conv2", 50, 5));
     //    model.add_layer(new Activation("relu", CUDNN_ACTIVATION_RELU));
     //    model.add_layer(new Pooling("pool", 2, 2, 0, CUDNN_POOLING_MAX));
     //    model.add_layer(new Dense("dense1", 500));

@@ -11,7 +11,7 @@
 /**
  * Convolutional layer with bias
  */
-Conv2D::Conv2D(
+Conv2d::Conv2d(
     std::string name,
     int out_channels,
     int kernel_size,
@@ -47,7 +47,7 @@ Conv2D::Conv2D(
     device_workspace_ = nullptr;
 }
 
-Conv2D::~Conv2D() {
+Conv2d::~Conv2d() {
     // distroy cudnn container resources
     cudnnDestroyFilterDescriptor(filter_desc_);
     cudnnDestroyConvolutionDescriptor(conv_desc_);
@@ -59,7 +59,7 @@ Conv2D::~Conv2D() {
     }
 }
 
-void Conv2D::set_workspace() {
+void Conv2d::set_workspace() {
     size_t temp_size = 0;
 
     // forward
@@ -147,7 +147,7 @@ void Conv2D::set_workspace() {
     }
 }
 
-void Conv2D::fwd_initialize(Tensor<float> *input) {
+void Conv2d::fwd_initialize(Tensor<float> *input) {
     // initialize weights and bias
     if (weights_ == nullptr) {
         // initialize containers handles
@@ -209,7 +209,7 @@ void Conv2D::fwd_initialize(Tensor<float> *input) {
     }
 }
 
-Tensor<float> *Conv2D::forward(Tensor<float> *input) {
+Tensor<float> *Conv2d::forward(Tensor<float> *input) {
     fwd_initialize(input);
     input_ = input;
     checkCudnnErrors(cudnnConvolutionForward(
@@ -247,7 +247,7 @@ Tensor<float> *Conv2D::forward(Tensor<float> *input) {
     return output_;
 }
 
-void Conv2D::bwd_initialize(Tensor<float> *grad_output) {
+void Conv2d::bwd_initialize(Tensor<float> *grad_output) {
     if (grad_weights_ == nullptr) {
         grad_weights_ = new Tensor<float>(weights_->shape());
         if (bias_) {
@@ -257,7 +257,7 @@ void Conv2D::bwd_initialize(Tensor<float> *grad_output) {
     Layer::bwd_initialize(grad_output);
 }
 
-Tensor<float> *Conv2D::backward(Tensor<float> *grad_output) {
+Tensor<float> *Conv2d::backward(Tensor<float> *grad_output) {
     bwd_initialize(grad_output);
     // gradients of biases
     if (bias_) {

@@ -19,8 +19,8 @@ public:
 
     void add_layer(Layer *layer);
 
-    Tensor<float> *forward(Tensor<float> *input);
-    void backward(Tensor<float> *input = nullptr);
+    virtual Tensor<float> *forward(Tensor<float> *input);
+    virtual void backward(Tensor<float> *input = nullptr);
     void update(float learning_rate = 0.02f);
 
     int load_pretrain();

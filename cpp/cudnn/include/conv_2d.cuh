@@ -11,9 +11,9 @@
 #include <cudnn.h>
 #include <curand.h>
 
-class Conv2D : public Layer {
+class Conv2d : public Layer {
 public:
-    Conv2D(
+    Conv2d(
         std::string name,
         int out_channels,
         int kernel_size,
@@ -21,7 +21,7 @@ public:
         int padding = 0,
         int dilation = 1,
         bool bias = true);
-    ~Conv2D() override;
+    ~Conv2d() override;
 
     Tensor<float> *forward(Tensor<float> *input) override;
     Tensor<float> *backward(Tensor<float> *grad_output) override;
