@@ -1,0 +1,262 @@
+graph(%self : __torch__.resnet.ResNet50,
+      %y.1 : Tensor):
+  %399 : int = prim::Constant[value=-1]()
+  %398 : int = prim::Constant[value=1]() inplace=False
+  %2 : __torch__.torch.nn.modules.conv.Conv2d = prim::GetAttr[name="conv1"](%self)
+  %x.1 : Tensor = prim::CallMethod[name="forward"](%2, %y.1) inplace=False
+  %5 : __torch__.torch.nn.modules.batchnorm.BatchNorm2d = prim::GetAttr[name="bn1"](%self)
+  %x.3 : Tensor = prim::CallMethod[name="forward"](%5, %x.1) inplace=False
+  %8 : __torch__.torch.nn.modules.activation.ReLU = prim::GetAttr[name="relu1"](%self)
+  %x.5 : Tensor = prim::CallMethod[name="forward"](%8, %x.3) inplace=False
+  %11 : __torch__.torch.nn.modules.pooling.MaxPool2d = prim::GetAttr[name="maxpool1"](%self)
+  %x.7 : Tensor = prim::CallMethod[name="forward"](%11, %x.5) inplace=False
+  %15 : __torch__.torch.nn.modules.conv.___torch_mangle_0.Conv2d = prim::GetAttr[name="conv2"](%self)
+  %x.10 : Tensor = prim::CallMethod[name="forward"](%15, %x.7) inplace=False
+  %18 : __torch__.torch.nn.modules.batchnorm.BatchNorm2d = prim::GetAttr[name="bn2"](%self)
+  %x.12 : Tensor = prim::CallMethod[name="forward"](%18, %x.10) inplace=False
+  %21 : __torch__.torch.nn.modules.conv.___torch_mangle_1.Conv2d = prim::GetAttr[name="conv3"](%self)
+  %x.14 : Tensor = prim::CallMethod[name="forward"](%21, %x.12) inplace=False
+  %24 : __torch__.torch.nn.modules.batchnorm.BatchNorm2d = prim::GetAttr[name="bn3"](%self)
+  %x.16 : Tensor = prim::CallMethod[name="forward"](%24, %x.14) inplace=False
+  %27 : __torch__.torch.nn.modules.conv.___torch_mangle_2.Conv2d = prim::GetAttr[name="conv4"](%self)
+  %x.18 : Tensor = prim::CallMethod[name="forward"](%27, %x.16) inplace=False
+  %30 : __torch__.torch.nn.modules.batchnorm.___torch_mangle_3.BatchNorm2d = prim::GetAttr[name="bn4"](%self)
+  %x.20 : Tensor = prim::CallMethod[name="forward"](%30, %x.18) inplace=False
+  %33 : __torch__.torch.nn.modules.activation.ReLU = prim::GetAttr[name="relu2"](%self)
+  %x.22 : Tensor = prim::CallMethod[name="forward"](%33, %x.20) inplace=False
+  %36 : __torch__.torch.nn.modules.conv.___torch_mangle_2.Conv2d = prim::GetAttr[name="conv5"](%self)
+  %y.4 : Tensor = prim::CallMethod[name="forward"](%36, %x.7) inplace=False
+  %39 : __torch__.torch.nn.modules.batchnorm.___torch_mangle_3.BatchNorm2d = prim::GetAttr[name="bn5"](%self)
+  %y.6 : Tensor = prim::CallMethod[name="forward"](%39, %y.4) inplace=False
+  %x.24 : Tensor = aten::add_(%x.22, %y.6, %398) inplace=False
+  %46 : __torch__.torch.nn.modules.conv.___torch_mangle_4.Conv2d = prim::GetAttr[name="conv6"](%self)
+  %x.26 : Tensor = prim::CallMethod[name="forward"](%46, %x.24) inplace=False
+  %49 : __torch__.torch.nn.modules.batchnorm.BatchNorm2d = prim::GetAttr[name="bn6"](%self)
+  %x.28 : Tensor = prim::CallMethod[name="forward"](%49, %x.26) inplace=False
+  %52 : __torch__.torch.nn.modules.conv.___torch_mangle_1.Conv2d = prim::GetAttr[name="conv7"](%self)
+  %x.30 : Tensor = prim::CallMethod[name="forward"](%52, %x.28) inplace=False
+  %55 : __torch__.torch.nn.modules.batchnorm.BatchNorm2d = prim::GetAttr[name="bn7"](%self)
+  %x.32 : Tensor = prim::CallMethod[name="forward"](%55, %x.30) inplace=False
+  %58 : __torch__.torch.nn.modules.conv.___torch_mangle_2.Conv2d = prim::GetAttr[name="conv8"](%self)
+  %x.34 : Tensor = prim::CallMethod[name="forward"](%58, %x.32) inplace=False
+  %61 : __torch__.torch.nn.modules.batchnorm.___torch_mangle_3.BatchNorm2d = prim::GetAttr[name="bn8"](%self)
+  %x.36 : Tensor = prim::CallMethod[name="forward"](%61, %x.34) inplace=False
+  %64 : __torch__.torch.nn.modules.activation.ReLU = prim::GetAttr[name="relu3"](%self)
+  %x.38 : Tensor = prim::CallMethod[name="forward"](%64, %x.36) inplace=False
+  %67 : __torch__.torch.nn.modules.conv.___torch_mangle_4.Conv2d = prim::GetAttr[name="conv9"](%self)
+  %x.40 : Tensor = prim::CallMethod[name="forward"](%67, %x.38) inplace=False
+  %70 : __torch__.torch.nn.modules.batchnorm.BatchNorm2d = prim::GetAttr[name="bn9"](%self)
+  %x.42 : Tensor = prim::CallMethod[name="forward"](%70, %x.40) inplace=False
+  %73 : __torch__.torch.nn.modules.conv.___torch_mangle_1.Conv2d = prim::GetAttr[name="conv10"](%self)
+  %x.44 : Tensor = prim::CallMethod[name="forward"](%73, %x.42) inplace=False
+  %76 : __torch__.torch.nn.modules.batchnorm.BatchNorm2d = prim::GetAttr[name="bn10"](%self)
+  %x.46 : Tensor = prim::CallMethod[name="forward"](%76, %x.44) inplace=False
+  %79 : __torch__.torch.nn.modules.conv.___torch_mangle_2.Conv2d = prim::GetAttr[name="conv11"](%self)
+  %x.48 : Tensor = prim::CallMethod[name="forward"](%79, %x.46) inplace=False
+  %82 : __torch__.torch.nn.modules.batchnorm.___torch_mangle_3.BatchNorm2d = prim::GetAttr[name="bn11"](%self)
+  %x.50 : Tensor = prim::CallMethod[name="forward"](%82, %x.48) inplace=False
+  %85 : __torch__.torch.nn.modules.activation.ReLU = prim::GetAttr[name="relu4"](%self)
+  %x.52 : Tensor = prim::CallMethod[name="forward"](%85, %x.50) inplace=False
+  %89 : __torch__.torch.nn.modules.conv.___torch_mangle_5.Conv2d = prim::GetAttr[name="conv12"](%self)
+  %x.55 : Tensor = prim::CallMethod[name="forward"](%89, %x.52) inplace=False
+  %92 : __torch__.torch.nn.modules.batchnorm.___torch_mangle_6.BatchNorm2d = prim::GetAttr[name="bn12"](%self)
+  %x.57 : Tensor = prim::CallMethod[name="forward"](%92, %x.55) inplace=False
+  %95 : __torch__.torch.nn.modules.conv.___torch_mangle_7.Conv2d = prim::GetAttr[name="conv13"](%self)
+  %x.59 : Tensor = prim::CallMethod[name="forward"](%95, %x.57) inplace=False
+  %98 : __torch__.torch.nn.modules.batchnorm.___torch_mangle_6.BatchNorm2d = prim::GetAttr[name="bn13"](%self)
+  %x.61 : Tensor = prim::CallMethod[name="forward"](%98, %x.59) inplace=False
+  %101 : __torch__.torch.nn.modules.conv.___torch_mangle_8.Conv2d = prim::GetAttr[name="conv14"](%self)
+  %x.63 : Tensor = prim::CallMethod[name="forward"](%101, %x.61) inplace=False
+  %104 : __torch__.torch.nn.modules.batchnorm.___torch_mangle_9.BatchNorm2d = prim::GetAttr[name="bn14"](%self)
+  %x.65 : Tensor = prim::CallMethod[name="forward"](%104, %x.63) inplace=False
+  %107 : __torch__.torch.nn.modules.activation.ReLU = prim::GetAttr[name="relu5"](%self)
+  %x.67 : Tensor = prim::CallMethod[name="forward"](%107, %x.65) inplace=False
+  %110 : __torch__.torch.nn.modules.conv.___torch_mangle_10.Conv2d = prim::GetAttr[name="conv15"](%self)
+  %y.9 : Tensor = prim::CallMethod[name="forward"](%110, %x.52) inplace=False
+  %113 : __torch__.torch.nn.modules.batchnorm.___torch_mangle_9.BatchNorm2d = prim::GetAttr[name="bn15"](%self)
+  %y.11 : Tensor = prim::CallMethod[name="forward"](%113, %y.9) inplace=False
+  %x.69 : Tensor = aten::add_(%x.67, %y.11, %398) inplace=False
+  %120 : __torch__.torch.nn.modules.conv.___torch_mangle_11.Conv2d = prim::GetAttr[name="conv16"](%self)
+  %x.71 : Tensor = prim::CallMethod[name="forward"](%120, %x.69) inplace=False
+  %123 : __torch__.torch.nn.modules.batchnorm.___torch_mangle_6.BatchNorm2d = prim::GetAttr[name="bn16"](%self)
+  %x.73 : Tensor = prim::CallMethod[name="forward"](%123, %x.71) inplace=False
+  %126 : __torch__.torch.nn.modules.conv.___torch_mangle_12.Conv2d = prim::GetAttr[name="conv17"](%self)
+  %x.75 : Tensor = prim::CallMethod[name="forward"](%126, %x.73) inplace=False
+  %129 : __torch__.torch.nn.modules.batchnorm.___torch_mangle_6.BatchNorm2d = prim::GetAttr[name="bn17"](%self)
+  %x.77 : Tensor = prim::CallMethod[name="forward"](%129, %x.75) inplace=False
+  %132 : __torch__.torch.nn.modules.conv.___torch_mangle_8.Conv2d = prim::GetAttr[name="conv18"](%self)
+  %x.79 : Tensor = prim::CallMethod[name="forward"](%132, %x.77) inplace=False
+  %135 : __torch__.torch.nn.modules.batchnorm.___torch_mangle_9.BatchNorm2d = prim::GetAttr[name="bn18"](%self)
+  %x.81 : Tensor = prim::CallMethod[name="forward"](%135, %x.79) inplace=False
+  %138 : __torch__.torch.nn.modules.activation.ReLU = prim::GetAttr[name="relu6"](%self)
+  %x.83 : Tensor = prim::CallMethod[name="forward"](%138, %x.81) inplace=False
+  %141 : __torch__.torch.nn.modules.conv.___torch_mangle_11.Conv2d = prim::GetAttr[name="conv19"](%self)
+  %x.85 : Tensor = prim::CallMethod[name="forward"](%141, %x.83) inplace=False
+  %144 : __torch__.torch.nn.modules.batchnorm.___torch_mangle_6.BatchNorm2d = prim::GetAttr[name="bn19"](%self)
+  %x.87 : Tensor = prim::CallMethod[name="forward"](%144, %x.85) inplace=False
+  %147 : __torch__.torch.nn.modules.conv.___torch_mangle_12.Conv2d = prim::GetAttr[name="conv20"](%self)
+  %x.89 : Tensor = prim::CallMethod[name="forward"](%147, %x.87) inplace=False
+  %150 : __torch__.torch.nn.modules.batchnorm.___torch_mangle_6.BatchNorm2d = prim::GetAttr[name="bn20"](%self)
+  %x.91 : Tensor = prim::CallMethod[name="forward"](%150, %x.89) inplace=False
+  %153 : __torch__.torch.nn.modules.conv.___torch_mangle_8.Conv2d = prim::GetAttr[name="conv21"](%self)
+  %x.93 : Tensor = prim::CallMethod[name="forward"](%153, %x.91) inplace=False
+  %156 : __torch__.torch.nn.modules.batchnorm.___torch_mangle_9.BatchNorm2d = prim::GetAttr[name="bn21"](%self)
+  %x.95 : Tensor = prim::CallMethod[name="forward"](%156, %x.93) inplace=False
+  %159 : __torch__.torch.nn.modules.activation.ReLU = prim::GetAttr[name="relu7"](%self)
+  %x.97 : Tensor = prim::CallMethod[name="forward"](%159, %x.95) inplace=False
+  %162 : __torch__.torch.nn.modules.conv.___torch_mangle_11.Conv2d = prim::GetAttr[name="conv22"](%self)
+  %x.99 : Tensor = prim::CallMethod[name="forward"](%162, %x.97) inplace=False
+  %165 : __torch__.torch.nn.modules.batchnorm.___torch_mangle_6.BatchNorm2d = prim::GetAttr[name="bn22"](%self)
+  %x.101 : Tensor = prim::CallMethod[name="forward"](%165, %x.99) inplace=False
+  %168 : __torch__.torch.nn.modules.conv.___torch_mangle_12.Conv2d = prim::GetAttr[name="conv23"](%self)
+  %x.103 : Tensor = prim::CallMethod[name="forward"](%168, %x.101) inplace=False
+  %171 : __torch__.torch.nn.modules.batchnorm.___torch_mangle_6.BatchNorm2d = prim::GetAttr[name="bn23"](%self)
+  %x.105 : Tensor = prim::CallMethod[name="forward"](%171, %x.103) inplace=False
+  %174 : __torch__.torch.nn.modules.conv.___torch_mangle_8.Conv2d = prim::GetAttr[name="conv24"](%self)
+  %x.107 : Tensor = prim::CallMethod[name="forward"](%174, %x.105) inplace=False
+  %177 : __torch__.torch.nn.modules.batchnorm.___torch_mangle_9.BatchNorm2d = prim::GetAttr[name="bn24"](%self)
+  %x.109 : Tensor = prim::CallMethod[name="forward"](%177, %x.107) inplace=False
+  %180 : __torch__.torch.nn.modules.activation.ReLU = prim::GetAttr[name="relu8"](%self)
+  %x.111 : Tensor = prim::CallMethod[name="forward"](%180, %x.109) inplace=False
+  %184 : __torch__.torch.nn.modules.conv.___torch_mangle_13.Conv2d = prim::GetAttr[name="conv25"](%self)
+  %x.114 : Tensor = prim::CallMethod[name="forward"](%184, %x.111) inplace=False
+  %187 : __torch__.torch.nn.modules.batchnorm.___torch_mangle_3.BatchNorm2d = prim::GetAttr[name="bn25"](%self)
+  %x.116 : Tensor = prim::CallMethod[name="forward"](%187, %x.114) inplace=False
+  %190 : __torch__.torch.nn.modules.conv.___torch_mangle_14.Conv2d = prim::GetAttr[name="conv26"](%self)
+  %x.118 : Tensor = prim::CallMethod[name="forward"](%190, %x.116) inplace=False
+  %193 : __torch__.torch.nn.modules.batchnorm.___torch_mangle_3.BatchNorm2d = prim::GetAttr[name="bn26"](%self)
+  %x.120 : Tensor = prim::CallMethod[name="forward"](%193, %x.118) inplace=False
+  %196 : __torch__.torch.nn.modules.conv.___torch_mangle_15.Conv2d = prim::GetAttr[name="conv27"](%self)
+  %x.122 : Tensor = prim::CallMethod[name="forward"](%196, %x.120) inplace=False
+  %199 : __torch__.torch.nn.modules.batchnorm.___torch_mangle_16.BatchNorm2d = prim::GetAttr[name="bn27"](%self)
+  %x.124 : Tensor = prim::CallMethod[name="forward"](%199, %x.122) inplace=False
+  %202 : __torch__.torch.nn.modules.activation.ReLU = prim::GetAttr[name="relu9"](%self)
+  %x.126 : Tensor = prim::CallMethod[name="forward"](%202, %x.124) inplace=False
+  %205 : __torch__.torch.nn.modules.conv.___torch_mangle_17.Conv2d = prim::GetAttr[name="conv28"](%self)
+  %y.14 : Tensor = prim::CallMethod[name="forward"](%205, %x.111) inplace=False
+  %208 : __torch__.torch.nn.modules.batchnorm.___torch_mangle_16.BatchNorm2d = prim::GetAttr[name="bn28"](%self)
+  %y.16 : Tensor = prim::CallMethod[name="forward"](%208, %y.14) inplace=False
+  %x.128 : Tensor = aten::add_(%x.126, %y.16, %398) inplace=False
+  %215 : __torch__.torch.nn.modules.conv.___torch_mangle_18.Conv2d = prim::GetAttr[name="conv29"](%self)
+  %x.130 : Tensor = prim::CallMethod[name="forward"](%215, %x.128) inplace=False
+  %218 : __torch__.torch.nn.modules.batchnorm.___torch_mangle_3.BatchNorm2d = prim::GetAttr[name="bn29"](%self)
+  %x.132 : Tensor = prim::CallMethod[name="forward"](%218, %x.130) inplace=False
+  %221 : __torch__.torch.nn.modules.conv.___torch_mangle_19.Conv2d = prim::GetAttr[name="conv30"](%self)
+  %x.134 : Tensor = prim::CallMethod[name="forward"](%221, %x.132) inplace=False
+  %224 : __torch__.torch.nn.modules.batchnorm.___torch_mangle_3.BatchNorm2d = prim::GetAttr[name="bn30"](%self)
+  %x.136 : Tensor = prim::CallMethod[name="forward"](%224, %x.134) inplace=False
+  %227 : __torch__.torch.nn.modules.conv.___torch_mangle_15.Conv2d = prim::GetAttr[name="conv31"](%self)
+  %x.138 : Tensor = prim::CallMethod[name="forward"](%227, %x.136) inplace=False
+  %230 : __torch__.torch.nn.modules.batchnorm.___torch_mangle_16.BatchNorm2d = prim::GetAttr[name="bn31"](%self)
+  %x.140 : Tensor = prim::CallMethod[name="forward"](%230, %x.138) inplace=False
+  %233 : __torch__.torch.nn.modules.activation.ReLU = prim::GetAttr[name="relu10"](%self)
+  %x.142 : Tensor = prim::CallMethod[name="forward"](%233, %x.140) inplace=False
+  %236 : __torch__.torch.nn.modules.conv.___torch_mangle_18.Conv2d = prim::GetAttr[name="conv32"](%self)
+  %x.144 : Tensor = prim::CallMethod[name="forward"](%236, %x.142) inplace=False
+  %239 : __torch__.torch.nn.modules.batchnorm.___torch_mangle_3.BatchNorm2d = prim::GetAttr[name="bn32"](%self)
+  %x.146 : Tensor = prim::CallMethod[name="forward"](%239, %x.144) inplace=False
+  %242 : __torch__.torch.nn.modules.conv.___torch_mangle_19.Conv2d = prim::GetAttr[name="conv33"](%self)
+  %x.148 : Tensor = prim::CallMethod[name="forward"](%242, %x.146) inplace=False
+  %245 : __torch__.torch.nn.modules.batchnorm.___torch_mangle_3.BatchNorm2d = prim::GetAttr[name="bn33"](%self)
+  %x.150 : Tensor = prim::CallMethod[name="forward"](%245, %x.148) inplace=False
+  %248 : __torch__.torch.nn.modules.conv.___torch_mangle_15.Conv2d = prim::GetAttr[name="conv34"](%self)
+  %x.152 : Tensor = prim::CallMethod[name="forward"](%248, %x.150) inplace=False
+  %251 : __torch__.torch.nn.modules.batchnorm.___torch_mangle_16.BatchNorm2d = prim::GetAttr[name="bn34"](%self)
+  %x.154 : Tensor = prim::CallMethod[name="forward"](%251, %x.152) inplace=False
+  %254 : __torch__.torch.nn.modules.activation.ReLU = prim::GetAttr[name="relu11"](%self)
+  %x.156 : Tensor = prim::CallMethod[name="forward"](%254, %x.154) inplace=False
+  %257 : __torch__.torch.nn.modules.conv.___torch_mangle_18.Conv2d = prim::GetAttr[name="conv35"](%self)
+  %x.158 : Tensor = prim::CallMethod[name="forward"](%257, %x.156) inplace=False
+  %260 : __torch__.torch.nn.modules.batchnorm.___torch_mangle_3.BatchNorm2d = prim::GetAttr[name="bn35"](%self)
+  %x.160 : Tensor = prim::CallMethod[name="forward"](%260, %x.158) inplace=False
+  %263 : __torch__.torch.nn.modules.conv.___torch_mangle_19.Conv2d = prim::GetAttr[name="conv36"](%self)
+  %x.162 : Tensor = prim::CallMethod[name="forward"](%263, %x.160) inplace=False
+  %266 : __torch__.torch.nn.modules.batchnorm.___torch_mangle_3.BatchNorm2d = prim::GetAttr[name="bn36"](%self)
+  %x.164 : Tensor = prim::CallMethod[name="forward"](%266, %x.162) inplace=False
+  %269 : __torch__.torch.nn.modules.conv.___torch_mangle_15.Conv2d = prim::GetAttr[name="conv37"](%self)
+  %x.166 : Tensor = prim::CallMethod[name="forward"](%269, %x.164) inplace=False
+  %272 : __torch__.torch.nn.modules.batchnorm.___torch_mangle_16.BatchNorm2d = prim::GetAttr[name="bn37"](%self)
+  %x.168 : Tensor = prim::CallMethod[name="forward"](%272, %x.166) inplace=False
+  %275 : __torch__.torch.nn.modules.activation.ReLU = prim::GetAttr[name="relu12"](%self)
+  %x.170 : Tensor = prim::CallMethod[name="forward"](%275, %x.168) inplace=False
+  %278 : __torch__.torch.nn.modules.conv.___torch_mangle_18.Conv2d = prim::GetAttr[name="conv38"](%self)
+  %x.172 : Tensor = prim::CallMethod[name="forward"](%278, %x.170) inplace=False
+  %281 : __torch__.torch.nn.modules.batchnorm.___torch_mangle_3.BatchNorm2d = prim::GetAttr[name="bn38"](%self)
+  %x.174 : Tensor = prim::CallMethod[name="forward"](%281, %x.172) inplace=False
+  %284 : __torch__.torch.nn.modules.conv.___torch_mangle_19.Conv2d = prim::GetAttr[name="conv39"](%self)
+  %x.176 : Tensor = prim::CallMethod[name="forward"](%284, %x.174) inplace=False
+  %287 : __torch__.torch.nn.modules.batchnorm.___torch_mangle_3.BatchNorm2d = prim::GetAttr[name="bn39"](%self)
+  %x.178 : Tensor = prim::CallMethod[name="forward"](%287, %x.176) inplace=False
+  %290 : __torch__.torch.nn.modules.conv.___torch_mangle_15.Conv2d = prim::GetAttr[name="conv40"](%self)
+  %x.180 : Tensor = prim::CallMethod[name="forward"](%290, %x.178) inplace=False
+  %293 : __torch__.torch.nn.modules.batchnorm.___torch_mangle_16.BatchNorm2d = prim::GetAttr[name="bn40"](%self)
+  %x.182 : Tensor = prim::CallMethod[name="forward"](%293, %x.180) inplace=False
+  %296 : __torch__.torch.nn.modules.activation.ReLU = prim::GetAttr[name="relu13"](%self)
+  %x.184 : Tensor = prim::CallMethod[name="forward"](%296, %x.182) inplace=False
+  %299 : __torch__.torch.nn.modules.conv.___torch_mangle_18.Conv2d = prim::GetAttr[name="conv41"](%self)
+  %x.186 : Tensor = prim::CallMethod[name="forward"](%299, %x.184) inplace=False
+  %302 : __torch__.torch.nn.modules.batchnorm.___torch_mangle_3.BatchNorm2d = prim::GetAttr[name="bn41"](%self)
+  %x.188 : Tensor = prim::CallMethod[name="forward"](%302, %x.186) inplace=False
+  %305 : __torch__.torch.nn.modules.conv.___torch_mangle_19.Conv2d = prim::GetAttr[name="conv42"](%self)
+  %x.190 : Tensor = prim::CallMethod[name="forward"](%305, %x.188) inplace=False
+  %308 : __torch__.torch.nn.modules.batchnorm.___torch_mangle_3.BatchNorm2d = prim::GetAttr[name="bn42"](%self)
+  %x.192 : Tensor = prim::CallMethod[name="forward"](%308, %x.190) inplace=False
+  %311 : __torch__.torch.nn.modules.conv.___torch_mangle_15.Conv2d = prim::GetAttr[name="conv43"](%self)
+  %x.194 : Tensor = prim::CallMethod[name="forward"](%311, %x.192) inplace=False
+  %314 : __torch__.torch.nn.modules.batchnorm.___torch_mangle_16.BatchNorm2d = prim::GetAttr[name="bn43"](%self)
+  %x.196 : Tensor = prim::CallMethod[name="forward"](%314, %x.194) inplace=False
+  %317 : __torch__.torch.nn.modules.activation.ReLU = prim::GetAttr[name="relu14"](%self)
+  %x.198 : Tensor = prim::CallMethod[name="forward"](%317, %x.196) inplace=False
+  %321 : __torch__.torch.nn.modules.conv.___torch_mangle_20.Conv2d = prim::GetAttr[name="conv44"](%self)
+  %x.201 : Tensor = prim::CallMethod[name="forward"](%321, %x.198) inplace=False
+  %324 : __torch__.torch.nn.modules.batchnorm.___torch_mangle_9.BatchNorm2d = prim::GetAttr[name="bn44"](%self)
+  %x.203 : Tensor = prim::CallMethod[name="forward"](%324, %x.201) inplace=False
+  %327 : __torch__.torch.nn.modules.conv.___torch_mangle_21.Conv2d = prim::GetAttr[name="conv45"](%self)
+  %x.205 : Tensor = prim::CallMethod[name="forward"](%327, %x.203) inplace=False
+  %330 : __torch__.torch.nn.modules.batchnorm.___torch_mangle_9.BatchNorm2d = prim::GetAttr[name="bn45"](%self)
+  %x.207 : Tensor = prim::CallMethod[name="forward"](%330, %x.205) inplace=False
+  %333 : __torch__.torch.nn.modules.conv.___torch_mangle_22.Conv2d = prim::GetAttr[name="conv46"](%self)
+  %x.209 : Tensor = prim::CallMethod[name="forward"](%333, %x.207) inplace=False
+  %336 : __torch__.torch.nn.modules.batchnorm.___torch_mangle_23.BatchNorm2d = prim::GetAttr[name="bn46"](%self)
+  %x.211 : Tensor = prim::CallMethod[name="forward"](%336, %x.209) inplace=False
+  %339 : __torch__.torch.nn.modules.activation.ReLU = prim::GetAttr[name="relu15"](%self)
+  %x.213 : Tensor = prim::CallMethod[name="forward"](%339, %x.211) inplace=False
+  %342 : __torch__.torch.nn.modules.conv.___torch_mangle_24.Conv2d = prim::GetAttr[name="conv47"](%self)
+  %y.19 : Tensor = prim::CallMethod[name="forward"](%342, %x.198) inplace=False
+  %345 : __torch__.torch.nn.modules.batchnorm.___torch_mangle_23.BatchNorm2d = prim::GetAttr[name="bn47"](%self)
+  %y.21 : Tensor = prim::CallMethod[name="forward"](%345, %y.19) inplace=False
+  %x.215 : Tensor = aten::add_(%x.213, %y.21, %398) inplace=False
+  %352 : __torch__.torch.nn.modules.conv.___torch_mangle_25.Conv2d = prim::GetAttr[name="conv48"](%self)
+  %x.217 : Tensor = prim::CallMethod[name="forward"](%352, %x.215) inplace=False
+  %355 : __torch__.torch.nn.modules.batchnorm.___torch_mangle_9.BatchNorm2d = prim::GetAttr[name="bn48"](%self)
+  %x.219 : Tensor = prim::CallMethod[name="forward"](%355, %x.217) inplace=False
+  %358 : __torch__.torch.nn.modules.conv.___torch_mangle_26.Conv2d = prim::GetAttr[name="conv49"](%self)
+  %x.221 : Tensor = prim::CallMethod[name="forward"](%358, %x.219) inplace=False
+  %361 : __torch__.torch.nn.modules.batchnorm.___torch_mangle_9.BatchNorm2d = prim::GetAttr[name="bn49"](%self)
+  %x.223 : Tensor = prim::CallMethod[name="forward"](%361, %x.221) inplace=False
+  %364 : __torch__.torch.nn.modules.conv.___torch_mangle_22.Conv2d = prim::GetAttr[name="conv50"](%self)
+  %x.225 : Tensor = prim::CallMethod[name="forward"](%364, %x.223) inplace=False
+  %367 : __torch__.torch.nn.modules.batchnorm.___torch_mangle_23.BatchNorm2d = prim::GetAttr[name="bn50"](%self)
+  %x.227 : Tensor = prim::CallMethod[name="forward"](%367, %x.225) inplace=False
+  %370 : __torch__.torch.nn.modules.activation.ReLU = prim::GetAttr[name="relu16"](%self)
+  %x.229 : Tensor = prim::CallMethod[name="forward"](%370, %x.227) inplace=False
+  %373 : __torch__.torch.nn.modules.conv.___torch_mangle_25.Conv2d = prim::GetAttr[name="conv51"](%self)
+  %x.231 : Tensor = prim::CallMethod[name="forward"](%373, %x.229) inplace=False
+  %376 : __torch__.torch.nn.modules.batchnorm.___torch_mangle_9.BatchNorm2d = prim::GetAttr[name="bn51"](%self)
+  %x.233 : Tensor = prim::CallMethod[name="forward"](%376, %x.231) inplace=False
+  %379 : __torch__.torch.nn.modules.conv.___torch_mangle_26.Conv2d = prim::GetAttr[name="conv52"](%self)
+  %x.235 : Tensor = prim::CallMethod[name="forward"](%379, %x.233) inplace=False
+  %382 : __torch__.torch.nn.modules.batchnorm.___torch_mangle_9.BatchNorm2d = prim::GetAttr[name="bn52"](%self)
+  %x.237 : Tensor = prim::CallMethod[name="forward"](%382, %x.235) inplace=False
+  %385 : __torch__.torch.nn.modules.conv.___torch_mangle_22.Conv2d = prim::GetAttr[name="conv53"](%self)
+  %x.239 : Tensor = prim::CallMethod[name="forward"](%385, %x.237) inplace=False
+  %388 : __torch__.torch.nn.modules.batchnorm.___torch_mangle_23.BatchNorm2d = prim::GetAttr[name="bn53"](%self)
+  %x.241 : Tensor = prim::CallMethod[name="forward"](%388, %x.239) inplace=False
+  %391 : __torch__.torch.nn.modules.activation.ReLU = prim::GetAttr[name="relu17"](%self)
+  %x.243 : Tensor = prim::CallMethod[name="forward"](%391, %x.241) inplace=False
+  %394 : __torch__.torch.nn.modules.pooling.AdaptiveAvgPool2d = prim::GetAttr[name="avgpool1"](%self)
+  %x.245 : Tensor = prim::CallMethod[name="forward"](%394, %x.243) inplace=False
+  %x.247 : Tensor = aten::flatten(%x.245, %398, %399) inplace=False
+  %401 : __torch__.torch.nn.modules.linear.Linear = prim::GetAttr[name="fc1"](%self)
+  %x.249 : Tensor = prim::CallMethod[name="forward"](%401, %x.247) inplace=False
+  return (%x.249)

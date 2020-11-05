@@ -46,3 +46,5 @@ private:
 };
 
 #endif // PROJECTNAME_BATCH_NORM_2D_CUH
+
+//TODO: fused ops

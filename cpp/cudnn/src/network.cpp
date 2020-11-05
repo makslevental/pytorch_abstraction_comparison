@@ -166,4 +166,3 @@ void Network::eval() {
     }
 }
 
-CudaContext *Network::get_cuda_context() const { return cuda_; }
