@@ -2,14 +2,12 @@
 // Created by Maksim Levental on 10/29/20.
 //
 
-// TODO: the downsampling steps are wrong
 #include "layers.cuh"
 #include "network.h"
 
 class ResNet50 : public Network {
 public:
     ResNet50() {
-
         this->conv1 =
             new Conv2d("conv1", /*out_channels*/ 64, /*kernel*/ 7, /*stride*/ 2, /*padding*/ 3);
         this->conv1->set_gradient_stop();
@@ -460,22 +458,22 @@ public:
         gradient = this->conv45->backward(gradient);
         // bottleneck 2
 
-        gradient = this->bn44->backward(gradient);
-        gradient = this->conv44->backward(gradient);
-        if (res_grad1) {
-            res_grad1->download(*gradient);
+        if (orig_grad1) {
+            orig_grad1->download(*gradient);
         } else {
-            res_grad1 = new Tensor<float>(*gradient);
+            orig_grad1 = new Tensor<float>(*gradient);
         }
+        auto downsample_grad = this->bn44->backward(gradient);
+        downsample_grad = this->conv44->backward(downsample_grad);
         // downsample
-        gradient = this->relu14->backward(gradient);
+        gradient = this->relu14->backward(orig_grad1);
         gradient = this->bn43->backward(gradient);
         gradient = this->conv43->backward(gradient);
         gradient = this->bn42->backward(gradient);
         gradient = this->conv42->backward(gradient);
         gradient = this->bn41->backward(gradient);
         gradient = this->conv41->backward(gradient);
-        gradient = this->add5->add(gradient, res_grad1);
+        gradient = this->add5->add(gradient, downsample_grad);
         // bottleneck 1
         // layer 4
 
@@ -515,13 +513,13 @@ public:
         gradient = this->conv29->backward(gradient);
         // bottleneck 2
 
-        gradient = this->bn28->backward(gradient);
-        gradient = this->conv28->backward(gradient);
-        if (res_grad2) {
-            res_grad2->download(*gradient);
+        if (orig_grad2) {
+            orig_grad2->download(*gradient);
         } else {
-            res_grad2 = new Tensor<float>(*gradient);
+            orig_grad2 = new Tensor<float>(*gradient);
         }
+        downsample_grad = this->bn28->backward(gradient);
+        downsample_grad = this->conv28->backward(downsample_grad);
         // downsample
         gradient = this->relu9->backward(gradient);
         gradient = this->bn27->backward(gradient);
@@ -530,7 +528,7 @@ public:
         gradient = this->conv26->backward(gradient);
         gradient = this->bn25->backward(gradient);
         gradient = this->conv25->backward(gradient);
-        gradient = this->add6->add(gradient, res_grad2);
+        gradient = this->add6->add(gradient, downsample_grad);
         // bottleneck 1
         // layer 3
 
@@ -561,13 +559,13 @@ public:
         gradient = this->conv16->backward(gradient);
         // bottleneck 2
 
-        gradient = this->bn15->backward(gradient);
-        gradient = this->conv15->backward(gradient);
-        if (res_grad3) {
-            res_grad3->download(*gradient);
+        if (orig_grad3) {
+            orig_grad3->download(*gradient);
         } else {
-            res_grad3 = new Tensor<float>(*gradient);
+            orig_grad3 = new Tensor<float>(*gradient);
         }
+        downsample_grad = this->bn15->backward(orig_grad3);
+        downsample_grad = this->conv15->backward(downsample_grad);
         // downsample
         gradient = this->relu5->backward(gradient);
         gradient = this->bn14->backward(gradient);
@@ -576,7 +574,7 @@ public:
         gradient = this->conv13->backward(gradient);
         gradient = this->bn12->backward(gradient);
         gradient = this->conv12->backward(gradient);
-        gradient = this->add7->add(gradient, res_grad3);
+        gradient = this->add7->add(gradient, downsample_grad);
         // bottleneck 1
         // layer 2
 
@@ -598,13 +596,13 @@ public:
         gradient = this->conv6->backward(gradient);
         // bottleneck 2
 
-        gradient = this->bn5->backward(gradient);
-        gradient = this->conv5->backward(gradient);
-        if (res_grad4) {
-            res_grad4->download(*gradient);
+        if (orig_grad4) {
+            orig_grad4->download(*gradient);
         } else {
-            res_grad4 = new Tensor<float>(*gradient);
+            orig_grad4 = new Tensor<float>(*gradient);
         }
+        downsample_grad = this->bn5->backward(gradient);
+        downsample_grad = this->conv5->backward(downsample_grad);
         // downsample
         gradient = this->relu2->backward(gradient);
         gradient = this->bn4->backward(gradient);
@@ -613,14 +611,14 @@ public:
         gradient = this->conv3->backward(gradient);
         gradient = this->bn2->backward(gradient);
         gradient = this->conv2->backward(gradient);
-        gradient = this->add8->add(gradient, res_grad4);
+        gradient = this->add8->add(gradient, downsample_grad);
         // bottleneck 1
         // layer 1
 
         gradient = this->pool1->backward(gradient);
         gradient = this->relu1->backward(gradient);
         gradient = this->bn1->backward(gradient);
-        gradient = this->conv1->backward(gradient);
+        this->conv1->backward(gradient);
     }
 
 private:
@@ -757,10 +755,10 @@ private:
     Tensor<float> *identity2 = nullptr;
     Tensor<float> *identity3 = nullptr;
     Tensor<float> *identity4 = nullptr;
-    Tensor<float> *res_grad1 = nullptr;
-    Tensor<float> *res_grad2 = nullptr;
-    Tensor<float> *res_grad3 = nullptr;
-    Tensor<float> *res_grad4 = nullptr;
+    Tensor<float> *orig_grad1 = nullptr;
+    Tensor<float> *orig_grad2 = nullptr;
+    Tensor<float> *orig_grad3 = nullptr;
+    Tensor<float> *orig_grad4 = nullptr;
 };
 
 Network *make_resnet50() { return new ResNet50(); }
