@@ -32,7 +32,7 @@ public:
     void eval() { train_ = false; }
 
 protected:
-    virtual void fwd_initialize(Tensor<float> *input) = 0;
+    virtual void fwd_initialize(Tensor<float> *input);
     virtual void bwd_initialize(Tensor<float> *grad_output);
 
     // name of layer

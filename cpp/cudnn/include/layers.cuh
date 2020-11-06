@@ -6,6 +6,7 @@
 #define PROJECTNAME_LAYERS_CUH
 
 #include "activation.cuh"
+#include "addition.cuh"
 #include "batch_norm_2d.cuh"
 #include "conv_2d.cuh"
 #include "dense.cuh"

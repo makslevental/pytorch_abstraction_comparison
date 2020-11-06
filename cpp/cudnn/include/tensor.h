@@ -12,15 +12,16 @@
 
 #include <cuda_runtime.h>
 #include <cudnn.h>
+#include <helper.h>
 
 #include <prettyprint.h>
 
 typedef enum { host, cuda } DeviceType;
 
-template <typename ftype> class Tensor {
+template <typename dtype> class Tensor {
 private:
-    ftype *host_ptr_ = nullptr;
-    ftype *device_ptr_ = nullptr;
+    dtype *host_ptr_ = nullptr;
+    dtype *device_ptr_ = nullptr;
 
     int batch_size_ = 1;
     int channels_ = 1;
@@ -30,7 +31,7 @@ private:
     cudnnTensorDescriptor_t tensor_desc_ = nullptr;
 
 public:
-    ftype *get_host_ptr() const { return host_ptr_; }
+    dtype *get_host_ptr() const { return host_ptr_; }
     int get_batch_size() const { return batch_size_; }
     int get_channels() const { return channels_; }
     int get_height() const { return height_; }
@@ -39,10 +40,21 @@ public:
     explicit Tensor(int n = 1, int c = 1, int h = 1, int w = 1)
         : batch_size_(n), channels_(c), height_(h), width_(w) {
         host_ptr_ = new float[batch_size_ * channels_ * height_ * width_];
+        tensor_descriptor();
     }
     explicit Tensor(std::array<int, 4> size)
         : batch_size_(size[0]), channels_(size[1]), height_(size[2]), width_(size[3]) {
         host_ptr_ = new float[batch_size_ * channels_ * height_ * width_];
+        tensor_descriptor();
+    }
+
+    Tensor(const Tensor<dtype> &t) {
+        batch_size_ = t.batch_size_;
+        channels_ = t.channels_;
+        height_ = t.height_;
+        width_ = t.width_;
+        reset(shape());
+        download(t);
     }
 
     ~Tensor() {
@@ -51,9 +63,17 @@ public:
         if (device_ptr_ != nullptr)
             cudaFree(device_ptr_);
         if (tensor_desc_) {
-            cudnnDestroyTensorDescriptor(tensor_desc_);
+            checkCudnnErrors(cudnnDestroyTensorDescriptor(tensor_desc_));
             tensor_desc_ = nullptr;
         }
+    }
+
+    void download(const Tensor<dtype> &t) {
+        checkCudaErrors(cudaMemcpy(
+            get_device_ptr(), t.get_device_ptr(), sizeof(dtype) * len(), cudaMemcpyDeviceToDevice));
+        host_ptr_ = new float[batch_size_ * channels_ * height_ * width_];
+        checkCudaErrors(
+            cudaMemcpy(host_ptr_, t.get_host_ptr(), sizeof(dtype) * len(), cudaMemcpyHostToHost));
     }
 
     // reset the current blob with the new size information
@@ -80,12 +100,14 @@ public:
 
         // reset tensor descriptor if it was tensor_descriptor
         if (tensor_desc_) {
-            cudnnDestroyTensorDescriptor(tensor_desc_);
+            checkCudnnErrors(cudnnDestroyTensorDescriptor(tensor_desc_));
             tensor_desc_ = nullptr;
+            tensor_descriptor();
         }
     }
 
     void reset(std::array<int, 4> size) { reset(size[0], size[1], size[2], size[3]); }
+    void reset() { reset(batch_size_, channels_, height_, width_); }
 
     // returns array of tensor_descriptor shape
     std::array<int, 4> shape() {
@@ -99,40 +121,44 @@ public:
     int len() { return batch_size_ * channels_ * height_ * width_; }
 
     // returns size of allocated memory
-    int buf_size() { return sizeof(ftype) * len(); }
+    int buf_size() { return sizeof(dtype) * len(); }
 
     /* Tensor Control */
     cudnnTensorDescriptor_t tensor_descriptor() {
         if (tensor_desc_)
             return tensor_desc_;
-        cudnnCreateTensorDescriptor(&tensor_desc_);
-        cudnnSetTensor4dDescriptor(
+        checkCudnnErrors(cudnnCreateTensorDescriptor(&tensor_desc_));
+        checkCudnnErrors(cudnnSetTensor4dDescriptor(
             tensor_desc_,
             CUDNN_TENSOR_NCHW,
             CUDNN_DATA_FLOAT,
             batch_size_,
             channels_,
             height_,
-            width_);
+            width_));
 
         return tensor_desc_;
     }
 
     // get get_device_ptr memory
-    ftype *get_device_ptr() {
+    dtype *get_device_ptr() {
         if (device_ptr_ == nullptr)
-            cudaMalloc((void **)&device_ptr_, sizeof(ftype) * len());
+            checkCudaErrors(cudaMalloc((void **)&device_ptr_, sizeof(dtype) * len()));
 
         return device_ptr_;
     }
 
+    const dtype *get_device_ptr() const { return device_ptr_; }
+
     // transfer data between memory
-    ftype *to(DeviceType target) {
+    dtype *to(DeviceType target) {
         if (target == host) {
-            cudaMemcpy(host_ptr_, get_device_ptr(), sizeof(ftype) * len(), cudaMemcpyDeviceToHost);
+            checkCudaErrors(cudaMemcpy(
+                host_ptr_, get_device_ptr(), sizeof(dtype) * len(), cudaMemcpyDeviceToHost));
             return host_ptr_;
         } else if (target == DeviceType::cuda) {
-            cudaMemcpy(get_device_ptr(), host_ptr_, sizeof(ftype) * len(), cudaMemcpyHostToDevice);
+            checkCudaErrors(cudaMemcpy(
+                get_device_ptr(), host_ptr_, sizeof(dtype) * len(), cudaMemcpyHostToDevice));
             return device_ptr_;
         } else {
             return nullptr;

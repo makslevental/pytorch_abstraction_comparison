@@ -34,8 +34,12 @@ cuda_add_executable(main_cudnn
         src/activation.cu
         src/softmax.cu
         src/pooling.cu
-        include/resnet.cuh)
+        include/resnet.cuh src/addition.cu include/addition.cuh)
+
 cuda_add_cublas_to_target(main_cudnn)
+
+set_target_properties(main_cudnn PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+set_target_properties(main_cudnn PROPERTIES CUDA_RESOLVE_DEVICE_SYMBOLS ON)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 target_link_libraries(main_cudnn cudnn)

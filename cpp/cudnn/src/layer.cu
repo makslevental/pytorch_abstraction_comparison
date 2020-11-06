@@ -5,30 +5,11 @@
 #include <algorithm>
 #include <cassert>
 #include <cmath>
-#include <cuda_runtime.h>
-#include <curand.h>
 
 #include <fstream>
 #include <iostream>
-#include <prettyprint.h>
 #include <sstream>
-#include <utility>
 
-void print_tensor_descriptor(const std::string &name, cudnnTensorDescriptor_t t) {
-    cudnnDataType_t dataType;
-    const int nbDimsRequested = 10;
-    int nbDims;
-    int dimA[nbDimsRequested] = {};
-    int strideA[nbDimsRequested] = {};
-    checkCudnnErrors(
-        cudnnGetTensorNdDescriptor(t, nbDimsRequested, &dataType, &nbDims, dimA, strideA));
-    std::array<int, nbDimsRequested> dimA_arr{};
-    std::copy(std::begin(dimA), std::end(dimA), std::begin(dimA_arr));
-    std::array<int, nbDimsRequested> strideA_arr{};
-    std::copy(std::begin(strideA), std::end(strideA), std::begin(strideA_arr));
-    std::cout << name << " datatype: " << dataType << " nbDims: " << nbDims << " dimA: " << dimA_arr
-              << " strideA: " << strideA_arr << std::endl;
-}
 
 /****************************************************************
  * Layer definition                                             *
@@ -134,6 +115,22 @@ void Layer::update_weights_biases(float learning_rate) {
 
         if (DEBUG_UPDATE)
             biases_->print(name_ + "biases (after update)", true);
+    }
+}
+
+void Layer::fwd_initialize(Tensor<float> *input) {
+    if (input_desc_ == nullptr || batch_size_ != input->get_batch_size()) {
+        //        input_ = input;
+        input_size_ = input->size();
+        input_desc_ = input->tensor_descriptor();
+        batch_size_ = input->get_batch_size();
+
+        if (output_ == nullptr)
+            output_ = new Tensor<float>(input->shape());
+        else
+            output_->reset(input->shape());
+
+        output_desc_ = output_->tensor_descriptor();
     }
 }
 

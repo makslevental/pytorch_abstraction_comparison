@@ -20,7 +20,7 @@ public:
     void add_layer(Layer *layer);
 
     virtual Tensor<float> *forward(Tensor<float> *input);
-    virtual void backward(Tensor<float> *input = nullptr);
+    virtual void backward(Tensor<float> *input);
     void update(float learning_rate = 0.02f);
 
     int load_pretrain();
@@ -32,7 +32,7 @@ public:
 
     Tensor<float> *output_;
 
-private:
+protected:
     std::vector<Layer *> layers_;
     CudaContext *cuda_ = nullptr;
     WorkloadType phase_ = inference;

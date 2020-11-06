@@ -16,8 +16,6 @@ public:
     Tensor<float> *backward(Tensor<float> *grad_input) override;
 
 private:
-    void fwd_initialize(Tensor<float> *input) override;
-
     cudnnActivationDescriptor_t act_desc_;
     cudnnActivationMode_t act_mode_;
     float act_coef_;

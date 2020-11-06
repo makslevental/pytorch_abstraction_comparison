@@ -38,7 +38,7 @@ int main(int argc, char *argv[]) {
     int tp_count;
 
     auto model = make_resnet50();
-    model.cuda();
+    model->cuda();
     //    Network model;
     //    model.add_layer(new Conv2d("conv1", 20, 5));
     //    model.add_layer(new Activation("relu", CUDNN_ACTIVATION_RELU));
@@ -53,7 +53,7 @@ int main(int argc, char *argv[]) {
     //    model.cuda();
 
     if (load_pretrain)
-        model.load_pretrain();
+        model->load_pretrain();
 
     cudaProfilerStart();
 
@@ -63,7 +63,7 @@ int main(int argc, char *argv[]) {
 
     for (int epoch = 0; epoch < epochs; epoch++) {
         std::cout << "[TRAIN]" << std::endl;
-        model.train();
+        model->train();
         tp_count = 0;
         train_data_loader.reset();
 
@@ -76,11 +76,11 @@ int main(int argc, char *argv[]) {
             train_data->to(cuda);
             train_target->to(cuda);
 
-            output = model.forward(train_data);
+            output = model->forward(train_data);
             tp_count += get_accuracy(output, train_target);
 
-            model.backward(train_target);
-            model.update(learning_rate);
+            model->backward(train_target);
+            model->update(learning_rate);
 
             nvtxRangePop();
 
@@ -102,11 +102,11 @@ int main(int argc, char *argv[]) {
         std::cout << std::endl;
 
         if (file_save)
-            model.write_file();
+            model->write_file();
 
         std::cout << "[EVAL]" << std::endl;
 
-        model.eval();
+        model->eval();
         test_data_loader.reset();
 
         tp_count = 0;
@@ -119,7 +119,7 @@ int main(int argc, char *argv[]) {
             test_data->to(cuda);
             test_target->to(cuda);
 
-            output = model.forward(test_data);
+            output = model->forward(test_data);
             tp_count += get_accuracy(output, test_target);
             loss += criterion1.loss(output, test_target);
 

@@ -4,6 +4,7 @@ import torch
 import torch.nn as nn
 from torch import Tensor
 
+torch.add
 
 class ResNet50(nn.Module):
     def __init__(self):

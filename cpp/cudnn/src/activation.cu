@@ -19,26 +19,10 @@ Activation::Activation(std::string name, cudnnActivationMode_t mode, float coef)
 
 Activation::~Activation() { cudnnDestroyActivationDescriptor(act_desc_); }
 
-void Activation::fwd_initialize(Tensor<float> *input) {
-    if (input_desc_ == nullptr || batch_size_ != input->get_batch_size()) {
-        //        input_ = input;
-        input_size_ = input->size();
-        input_desc_ = input->tensor_descriptor();
-        batch_size_ = input->get_batch_size();
-
-        if (output_ == nullptr)
-            output_ = new Tensor<float>(input->shape());
-        else
-            output_->reset(input->shape());
-
-        output_desc_ = output_->tensor_descriptor();
-    }
-}
-
 Tensor<float> *Activation::forward(Tensor<float> *input) {
     fwd_initialize(input);
     input_ = input;
-    cudnnActivationForward(
+    checkCudnnErrors(cudnnActivationForward(
         cuda_->cudnn(),
         act_desc_,
         &cuda_->one,
@@ -46,14 +30,14 @@ Tensor<float> *Activation::forward(Tensor<float> *input) {
         input->get_device_ptr(),
         &cuda_->zero,
         output_desc_,
-        output_->get_device_ptr());
+        output_->get_device_ptr()));
 
     return output_;
 }
 
 Tensor<float> *Activation::backward(Tensor<float> *grad_output) {
     bwd_initialize(grad_output);
-    cudnnActivationBackward(
+    checkCudnnErrors(cudnnActivationBackward(
         cuda_->cudnn(),
         act_desc_,
         &cuda_->one,
@@ -65,7 +49,7 @@ Tensor<float> *Activation::backward(Tensor<float> *grad_output) {
         input_->get_device_ptr(),
         &cuda_->zero,
         input_desc_,
-        grad_input_->get_device_ptr());
+        grad_input_->get_device_ptr()));
 
     return grad_input_;
 }

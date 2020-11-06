@@ -6,6 +6,13 @@
 
 #include <cstdio>
 #include <cstdlib>
+#include <cuda_runtime.h>
+#include <curand.h>
+#include <fstream>
+#include <iostream>
+#include <prettyprint.h>
+#include <sstream>
+#include <utility>
 
 // #include <helper_cuda.h>
 #include <curand.h>
@@ -199,5 +206,21 @@ private:
     cublasHandle_t _cublas_handle;
     cudnnHandle_t _cudnn_handle;
 };
+
+static void print_tensor_descriptor(const std::string &name, cudnnTensorDescriptor_t t) {
+    cudnnDataType_t dataType;
+    const int nbDimsRequested = 10;
+    int nbDims;
+    int dimA[nbDimsRequested] = {};
+    int strideA[nbDimsRequested] = {};
+    checkCudnnErrors(
+        cudnnGetTensorNdDescriptor(t, nbDimsRequested, &dataType, &nbDims, dimA, strideA));
+    std::array<int, nbDimsRequested> dimA_arr{};
+    std::copy(std::begin(dimA), std::end(dimA), std::begin(dimA_arr));
+    std::array<int, nbDimsRequested> strideA_arr{};
+    std::copy(std::begin(strideA), std::end(strideA), std::begin(strideA_arr));
+    std::cout << name << " datatype: " << dataType << " nbDims: " << nbDims << " dimA: " << dimA_arr
+              << " strideA: " << strideA_arr << std::endl;
+}
 
 #endif // _HELPER_H_
