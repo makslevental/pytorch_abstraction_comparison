@@ -13,6 +13,7 @@
 #include <prettyprint.h>
 #include <sstream>
 #include <utility>
+#include "stacktrace.h"
 
 // #include <helper_cuda.h>
 #include <curand.h>
@@ -47,6 +48,7 @@
                 __FILE__,                                                                          \
                 __LINE__);                                                                         \
             fprintf(stderr, "%d\n", cudaSuccess);                                                  \
+            print_stacktrace();                                                                    \
             exit(-1);                                                                              \
         }                                                                                          \
     } while (0)
@@ -98,6 +100,7 @@ static const char *_cublasGetErrorEnum(cublasStatus_t error) {
                 _cublasGetErrorEnum(err),                                                          \
                 __FILE__,                                                                          \
                 __LINE__);                                                                         \
+            print_stacktrace();                                                                    \
             exit(-1);                                                                              \
         }                                                                                          \
     } while (0)
@@ -112,6 +115,7 @@ static const char *_cublasGetErrorEnum(cublasStatus_t error) {
                 cudnnGetErrorString(err),                                                          \
                 __FILE__,                                                                          \
                 __LINE__);                                                                         \
+            print_stacktrace();                                                                    \
             exit(-1);                                                                              \
         }                                                                                          \
     } while (0)

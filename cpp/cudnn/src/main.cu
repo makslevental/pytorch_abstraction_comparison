@@ -105,7 +105,9 @@ int main(int argc, char *argv[]) {
 
             std::tie(train_data, train_target) = train_data_loader.get_next_batch();
             train_data->to(cuda);
+//            train_data->print("train_data", true);
             train_target->to(cuda);
+//            train_target->print("train_target", true);
 
             output = model->forward(train_data);
             tp_count += get_accuracy(output, train_target);

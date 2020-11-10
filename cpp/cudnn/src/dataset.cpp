@@ -57,22 +57,18 @@ std::tuple<Tensor<float> *, Tensor<float> *> Dataset::get_next_batch() {
     // index cliping
     int data_idx = (current_batch_ * batch_size_) % num_batches_;
 
-    // prepare data Tensor
     int data_size = channels_ * width_ * height_;
-
-    // copy data
-    for (int i = 0; i < batch_size_; i++)
+    for (int i = 0; i < batch_size_; i++) {
         std::copy(
             data_pool_[data_idx + i].data(),
-            &data_pool_[data_idx + i][data_size],
+            &data_pool_[data_idx + i].data()[data_size],
             &data_->get_host_ptr()[data_size * i]);
 
-    // copy target with one-hot encoded
-    for (int i = 0; i < batch_size_; i++)
         std::copy(
             target_pool_[data_idx + i].data(),
-            &target_pool_[data_idx + i][num_classes_],
+            &target_pool_[data_idx + i].data()[num_classes_],
             &target_->get_host_ptr()[num_classes_ * i]);
+    }
 
     current_batch_++;
     return std::make_tuple(data_, target_);

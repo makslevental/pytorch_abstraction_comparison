@@ -52,6 +52,7 @@ void MNIST::load_target() {
     uint8_t ptr[4];
 
     std::ifstream file(label_fp_.c_str(), std::ios::in | std::ios::binary);
+    std::cout << "loading " << label_fp_ << std::endl;
 
     if (!file.is_open()) {
         std::cout << "Check dataset existance!!" << std::endl;

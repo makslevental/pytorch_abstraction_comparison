@@ -161,7 +161,7 @@ public:
                 get_device_ptr(), host_ptr_, sizeof(dtype) * len(), cudaMemcpyHostToDevice));
             return device_ptr_;
         } else {
-            return nullptr;
+            exit(EXIT_FAILURE);
         }
     }
 
