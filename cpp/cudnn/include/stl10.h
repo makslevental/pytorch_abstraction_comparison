@@ -14,9 +14,6 @@ public:
         const string &label_fp,
         bool shuffle,
         int batch_size,
-        int channels,
-        int height,
-        int width,
         int num_classes);
     [[nodiscard]] int get_num_batches() const override;
 
