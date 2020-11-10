@@ -1,23 +1,11 @@
 #include <mnist.h>
 
-MNIST::~MNIST() {
-    delete data_;
-    delete target_;
-}
-
-void MNIST::create_shared_space() {
-    // create Tensors with batch size and sample size
-    data_ = new Tensor<float>(batch_size_, channels_, height_, width_);
-    data_->tensor_descriptor();
-    target_ = new Tensor<float>(batch_size_, num_classes_);
-}
 // TODO: multithreading to match pytorch?
-void MNIST::load_data(std::string &image_file_path) {
+void MNIST::load_data() {
     uint8_t ptr[4];
-    std::string file_path_ = dataset_dir_ + "/" + image_file_path;
 
-    std::cout << "loading " << file_path_ << std::endl;
-    std::ifstream file(file_path_.c_str(), std::ios::in | std::ios::binary);
+    std::cout << "loading " << dataset_fp_ << std::endl;
+    std::ifstream file(dataset_fp_.c_str(), std::ios::in | std::ios::binary);
     if (!file.is_open()) {
         std::cout << "Download dataset first!!" << std::endl;
         std::cout << "You can get the MNIST dataset from 'http://yann.lecun.com/exdb/mnist/' or "
@@ -45,7 +33,7 @@ void MNIST::load_data(std::string &image_file_path) {
 
         file.read((char *)q, channels_ * height_ * width_);
         for (int j = 0; j < channels_ * height_ * width_; j++) {
-            image_ptr[j] = (float)q[j] / 255.f;
+            image_ptr[j] = (float)q[j];
         }
 
         data_pool_.push_back(image);
@@ -54,21 +42,20 @@ void MNIST::load_data(std::string &image_file_path) {
     delete[] q;
 
     num_batches_ = num_data / batch_size_;
-    std::cout << "num_steps: " << num_batches_ << std::endl;
+    std::cout << "num_batches: " << num_batches_ << std::endl;
     std::cout << "loaded " << data_pool_.size() << " items.." << std::endl;
 
     file.close();
 }
 
-void MNIST::load_target(std::string &label_file_path) {
+void MNIST::load_target() {
     uint8_t ptr[4];
-    std::string file_path_ = dataset_dir_ + "/" + label_file_path;
 
-    std::ifstream file(file_path_.c_str(), std::ios::in | std::ios::binary);
+    std::ifstream file(label_fp_.c_str(), std::ios::in | std::ios::binary);
 
     if (!file.is_open()) {
         std::cout << "Check dataset existance!!" << std::endl;
-        exit(-1);
+        exit(EXIT_FAILURE);
     }
 
     file.read((char *)ptr, 4);
@@ -81,9 +68,7 @@ void MNIST::load_target(std::string &label_file_path) {
     // prepare input buffer for label
     // read all labels and converts to one-hot encoding
     for (int i = 0; i < num_target; i++) {
-        std::array<float, NUMBER_MNIST_CLASSES> target_batch{};
-        std::fill(target_batch.begin(), target_batch.end(), 0.f);
-
+        std::vector<float> target_batch(num_classes_, 0.f);
         file.read((char *)ptr, 1);
         target_batch[static_cast<int>(ptr[0])] = 1.f;
         target_pool_.push_back(target_batch);
@@ -92,92 +77,34 @@ void MNIST::load_target(std::string &label_file_path) {
     file.close();
 }
 
-void MNIST::shuffle_dataset() {
-    std::random_device rd;
-    std::mt19937 g_data(rd());
-    auto g_target = g_data;
-
-    std::shuffle(std::begin(data_pool_), std::end(data_pool_), g_data);
-    std::shuffle(std::begin(target_pool_), std::end(target_pool_), g_target);
-}
-
-int MNIST::to_int(const uint8_t *ptr) {
-    return (
-        (ptr[0] & 0xFF) << 24 | (ptr[1] & 0xFF) << 16 | (ptr[2] & 0xFF) << 8 |
-        (ptr[3] & 0xFF) << 0);
-}
-
-void MNIST::train(int batch_size, bool shuffle) {
-    if (batch_size < 1) {
-        std::cout << "batch size should be greater than 1." << std::endl;
-        return;
+void MNIST::normalize_data() {
+    for (auto image : data_pool_) {
+        float *image_ptr = image.data();
+        for (int j = 0; j < channels_ * height_ * width_; j++) {
+            image_ptr[j] /= 255.f;
+        }
     }
+}
 
-    batch_size_ = batch_size;
-    shuffle_ = shuffle;
+MNIST::MNIST(
+    const string &dataset_fp,
+    const string &label_fp,
+    bool shuffle,
+    int batch_size,
+    int channels,
+    int height,
+    int width,
+    int num_classes)
+    : Dataset(dataset_fp, label_fp, shuffle, batch_size, channels, height, width, num_classes) {
 
-    load_data(train_dataset_file_);
-    load_target(train_label_file_);
+    // https://wiki.sei.cmu.edu/confluence/display/cplusplus/OOP50-CPP.+Do+not+invoke+virtual+functions+from+constructors+or+destructors
+    MNIST::load_data();
+    MNIST::normalize_data();
+    MNIST::load_target();
 
     if (shuffle_)
         shuffle_dataset();
     create_shared_space();
-
-    current_batch_ = 0;
 }
 
-void MNIST::reset() {
-    if (shuffle_)
-        shuffle_dataset();
-    current_batch_ = 0;
-}
-
-void MNIST::test(int batch_size) {
-    if (batch_size < 1) {
-        std::cout << "batch size should be greater than or equal to 1." << std::endl;
-        return;
-    }
-
-    batch_size_ = batch_size;
-
-    load_data(test_dataset_file_);
-    load_target(test_label_file_);
-
-    create_shared_space();
-
-    current_batch_ = 0;
-}
-
-std::tuple<Tensor<float> *, Tensor<float> *> MNIST::get_next_batch() {
-    if (current_batch_ < 0) {
-        std::cout << "You must initialize dataset first.." << std::endl;
-        exit(EXIT_FAILURE);
-    }
-    //    std::cout << " internal step: " << current_batch_ << std::endl;
-
-    // index cliping
-    int data_idx = (current_batch_ * batch_size_) % num_batches_;
-
-    // prepare data Tensor
-    int data_size = channels_ * width_ * height_;
-
-    // copy data
-    for (int i = 0; i < batch_size_; i++)
-        std::copy(
-            data_pool_[data_idx + i].data(),
-            &data_pool_[data_idx + i][data_size],
-            &data_->get_host_ptr()[data_size * i]);
-
-    // copy target with one-hot encoded
-    for (int i = 0; i < batch_size_; i++)
-        std::copy(
-            target_pool_[data_idx + i].data(),
-            &target_pool_[data_idx + i][NUMBER_MNIST_CLASSES],
-            &target_->get_host_ptr()[NUMBER_MNIST_CLASSES * i]);
-
-    current_batch_++;
-    return std::make_tuple(data_, target_);
-}
-
-int MNIST::len() { return data_pool_.size(); }
 int MNIST::get_num_batches() const { return num_batches_; }

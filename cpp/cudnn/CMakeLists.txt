@@ -34,7 +34,7 @@ cuda_add_executable(main_cudnn
         src/activation.cu
         src/softmax.cu
         src/pooling.cu
-        include/resnet.cuh src/addition.cu include/addition.cuh)
+        src/addition.cu ../generic_utils/stb_image.h src/stl10.cpp include/stl10.h include/dataset.h src/dataset.cpp include/dataset.h)
 
 cuda_add_cublas_to_target(main_cudnn)
 

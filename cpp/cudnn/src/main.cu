@@ -1,3 +1,4 @@
+#include "CLI11.hpp"
 #include <cmath>
 #include <mnist.h>
 #include <network.h>
@@ -12,8 +13,26 @@ int arg_max(int batch, int output_size, const float *arr);
 int find_one(int batch, int output_size, const float *arr);
 
 int main(int argc, char *argv[]) {
+    CLI::App app{"CUDNN Harness"};
+
+    std::string train_dataset_fp = "default";
+    std::string train_label_fp = "default";
+    app.add_option("--train_dataset_fp", train_dataset_fp, "dataset file path");
+    app.add_option("--train_label_fp", train_label_fp, "label file path");
+
+    std::string test_dataset_fp = "default";
+    std::string test_label_fp = "default";
+    app.add_option("--test_dataset_fp", test_dataset_fp, "dataset file path");
+    app.add_option("--test_label_fp", test_label_fp, "label file path");
+
+    CLI11_PARSE(app, argc, argv);
+
     /* configure the network */
     int batch_size = 32;
+    int channels = 3;
+    int height = 28;
+    int width = 28;
+
     int epochs = 10;
     int monitoring_step = 100;
 
@@ -25,12 +44,24 @@ int main(int argc, char *argv[]) {
 
     std::cout << "== MNIST training with CUDNN ==" << std::endl;
 
-    MNIST train_data_loader = MNIST(std::getenv("MNIST_DATA_PATH"));
-    // TODO: fix the data loader to take a string path for files instead of assuming
-    train_data_loader.train(batch_size, true);
-
-    MNIST test_data_loader = MNIST(std::getenv("MNIST_DATA_PATH"));
-    test_data_loader.test(batch_size);
+    MNIST train_data_loader = MNIST(
+        train_dataset_fp,
+        train_label_fp,
+        true,
+        batch_size,
+        channels,
+        height,
+        width,
+        NUMBER_MNIST_CLASSES);
+    MNIST test_data_loader = MNIST(
+        test_dataset_fp,
+        test_label_fp,
+        false,
+        batch_size,
+        channels,
+        height,
+        width,
+        NUMBER_MNIST_CLASSES);
 
     CrossEntropyLoss criterion;
     CrossEntropyLoss criterion1;

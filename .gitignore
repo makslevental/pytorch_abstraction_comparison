@@ -6,3 +6,4 @@ data/*ubyte*
 cpp/cmake-build-debug
 cpp/.idea
 .DS_Store
+python/.idea

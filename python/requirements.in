@@ -1,0 +1,4 @@
+pip-tools
+torch
+torchvision
+numpy

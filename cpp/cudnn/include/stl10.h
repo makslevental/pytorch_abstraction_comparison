@@ -1,23 +1,15 @@
-#ifndef _MNIST_H_
-#define _MNIST_H_
+//
+// Created by Maksim Levental on 11/10/20.
+//
 
-#include <algorithm>
-#include <array>
-#include <cassert>
-#include <fstream>
-#include <iostream>
-#include <string>
-#include <utility>
-#include <vector>
+#ifndef PROJECTNAME_STL10_H
+#define PROJECTNAME_STL10_H
 
 #include "dataset.h"
-#include "tensor.h"
 
-#define NUMBER_MNIST_CLASSES 10
-
-class MNIST : public Dataset {
+class STL10 : public Dataset {
 public:
-    MNIST(
+    STL10(
         const string &dataset_fp,
         const string &label_fp,
         bool shuffle,
@@ -29,9 +21,9 @@ public:
     [[nodiscard]] int get_num_batches() const override;
 
 protected:
-    void normalize_data() override;
     void load_data() override;
     void load_target() override;
+    void normalize_data() override;
 };
 
-#endif // _MNIST_H_
+#endif // PROJECTNAME_STL10_H

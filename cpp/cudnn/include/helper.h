@@ -223,4 +223,10 @@ static void print_tensor_descriptor(const std::string &name, cudnnTensorDescript
               << " strideA: " << strideA_arr << std::endl;
 }
 
+static int to_int(const uint8_t *ptr) {
+    return (
+        (ptr[0] & 0xFF) << 24 | (ptr[1] & 0xFF) << 16 | (ptr[2] & 0xFF) << 8 |
+        (ptr[3] & 0xFF) << 0);
+}
+
 #endif // _HELPER_H_
