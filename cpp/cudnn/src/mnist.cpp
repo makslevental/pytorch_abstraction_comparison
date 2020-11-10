@@ -25,6 +25,7 @@ void MNIST::load_data() {
     height_ = to_int(ptr);
     file.read((char *)ptr, 4);
     width_ = to_int(ptr);
+    channels_ = 1;
 
     auto *q = new uint8_t[channels_ * height_ * width_];
     for (int i = 0; i < num_data; i++) {
@@ -69,10 +70,10 @@ void MNIST::load_target() {
     // prepare input buffer for label
     // read all labels and converts to one-hot encoding
     for (int i = 0; i < num_target; i++) {
-        std::vector<float> target_batch(num_classes_, 0.f);
+        std::vector<float> target_one_hot(num_classes_, 0.f);
         file.read((char *)ptr, 1);
-        target_batch[static_cast<int>(ptr[0])] = 1.f;
-        target_pool_.push_back(target_batch);
+        target_one_hot[static_cast<int>(ptr[0])] = 1.f;
+        target_pool_.push_back(target_one_hot);
     }
 
     file.close();
@@ -88,15 +89,8 @@ void MNIST::normalize_data() {
 }
 
 MNIST::MNIST(
-    const string &dataset_fp,
-    const string &label_fp,
-    bool shuffle,
-    int batch_size,
-    int channels,
-    int height,
-    int width,
-    int num_classes)
-    : Dataset(dataset_fp, label_fp, shuffle, batch_size, channels, height, width, num_classes) {
+    const string &dataset_fp, const string &label_fp, bool shuffle, int batch_size, int num_classes)
+    : Dataset(dataset_fp, label_fp, shuffle, batch_size, num_classes) {
 
     // https://wiki.sei.cmu.edu/confluence/display/cplusplus/OOP50-CPP.+Do+not+invoke+virtual+functions+from+constructors+or+destructors
     MNIST::load_data();

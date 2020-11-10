@@ -29,11 +29,8 @@ int main(int argc, char *argv[]) {
 
     /* configure the network */
     int batch_size = 32;
-    int channels = 3;
-    int height = 28;
-    int width = 28;
 
-    int epochs = 10;
+    int epochs = 100;
     int monitoring_step = 100;
 
     double learning_rate = 0.1f;
@@ -44,25 +41,18 @@ int main(int argc, char *argv[]) {
 
     std::cout << "== MNIST training with CUDNN ==" << std::endl;
 
-    MNIST train_data_loader = MNIST(
-        train_dataset_fp,
-        train_label_fp,
-        true,
-        batch_size,
-        channels,
-        height,
-        width,
-        NUMBER_MNIST_CLASSES);
-    MNIST test_data_loader = MNIST(
-        test_dataset_fp,
-        test_label_fp,
-        false,
-        batch_size,
-        channels,
-        height,
-        width,
-        NUMBER_MNIST_CLASSES);
+    MNIST train_data_loader =
+        MNIST(train_dataset_fp, train_label_fp, true, batch_size, NUMBER_MNIST_CLASSES);
+    MNIST test_data_loader =
+        MNIST(test_dataset_fp, test_label_fp, false, batch_size, NUMBER_MNIST_CLASSES);
 
+    //    Tensor<float> *train_data, *train_target;
+    //    for (int batch = 0; batch < 10; batch++) {
+    //        std::tie(train_data, train_target) = train_data_loader.get_next_batch();
+    //        train_data->print("train_data", true, batch_size);
+    //        train_target->print("train_target", true, batch_size);
+    //    }
+    //    exit(EXIT_FAILURE);
     CrossEntropyLoss criterion;
     CrossEntropyLoss criterion1;
     double loss, accuracy;
