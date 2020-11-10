@@ -17,9 +17,6 @@ public:
         string label_fp,
         bool shuffle,
         int batch_size,
-        int channels,
-        int height,
-        int width,
         int num_classes);
 
     std::tuple<Tensor<float> *, Tensor<float> *> get_next_batch();

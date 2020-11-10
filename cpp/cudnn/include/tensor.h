@@ -152,6 +152,7 @@ public:
 
     // transfer data between memory
     dtype *to(DeviceType target) {
+        // TODO: keep track of where the canonical data is using a flag/enum
         if (target == host) {
             checkCudaErrors(cudaMemcpy(
                 host_ptr_, get_device_ptr(), sizeof(dtype) * len(), cudaMemcpyDeviceToHost));
@@ -166,7 +167,7 @@ public:
     }
 
     void print(const std::string &name, bool view_param = false, int num_batch = 1) {
-        to(host);
+        // TODO: copy to host without overwriting
         std::cout << "**" << name << "\t: (" << size() << ")\t";
         std::cout << ".n: " << batch_size_ << ", .c: " << channels_ << ", .h: " << height_
                   << ", .w: " << width_;
@@ -185,8 +186,7 @@ public:
             int offset = 0;
 
             for (int n = 0; n < num_batch; n++) {
-                if (num_batch > 1)
-                    std::cout << "<--- batch[" << n << "] --->" << std::endl;
+                std::cout << "<--- batch[" << n << "] --->" << std::endl;
                 int count = 0;
                 int print_line_count = 0;
                 while (count < size() && print_line_count < max_print_line) {

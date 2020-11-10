@@ -16,10 +16,11 @@ void STL10::load_data() {
     npy::LoadArrayFromNumpy(dataset_fp_, shape, fortran_order, data);
     // n x c x h x w
     assert(shape.size() == 4);
-    int n_samples = shape[0], c = shape[1], h = shape[2], w = shape[3];
-    assert(c == channels_);
-    assert(h == height_);
-    assert(w == width_);
+    int n_samples = shape[0];
+    channels_ = shape[1], height_ = shape[2], width_ = shape[3];
+    assert(channels_ == 3);
+    assert(height_ == 96);
+    assert(width_ == 96);
 
     auto num_pixels = channels_ * height_ * width_;
     for (int i = 0; i < n_samples; i++) {
@@ -52,26 +53,20 @@ void STL10::load_target() {
 }
 
 void STL10::normalize_data() {
-    //    for (auto image : data_pool_) {
-    //        float *image_ptr = image.data();
-    //        for (int j = 0; j < channels_ * height_ * width_; j++) {
-    //            image_ptr[j] /= 255.f;
-    //        }
-    //    }
+    for (auto image : data_pool_) {
+        float *image_ptr = image.data();
+        for (int j = 0; j < channels_ * height_ * width_; j++) {
+            image_ptr[j] /= 255.f;
+        }
+    }
 }
 
 STL10::STL10(
-    const string &dataset_fp,
-    const string &label_fp,
-    bool shuffle,
-    int batch_size,
-    int channels,
-    int height,
-    int width,
-    int num_classes)
-    : Dataset(dataset_fp, label_fp, shuffle, batch_size, channels, height, width, num_classes) {
+    const string &dataset_fp, const string &label_fp, bool shuffle, int batch_size, int num_classes)
+    : Dataset(dataset_fp, label_fp, shuffle, batch_size, num_classes) {
 
     STL10::load_data();
+    STL10::normalize_data();
     STL10::load_target();
 
     if (shuffle_)
