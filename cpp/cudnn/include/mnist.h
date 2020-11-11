@@ -1,15 +1,6 @@
 #ifndef _MNIST_H_
 #define _MNIST_H_
 
-#include <algorithm>
-#include <array>
-#include <cassert>
-#include <fstream>
-#include <iostream>
-#include <string>
-#include <utility>
-#include <vector>
-
 #include "dataset.h"
 #include "tensor.h"
 

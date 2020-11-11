@@ -4,6 +4,7 @@
 #include <cublas_v2.h>
 #include <cudnn.h>
 
+#include "stacktrace.h"
 #include <cstdio>
 #include <cstdlib>
 #include <cuda_runtime.h>
@@ -13,7 +14,6 @@
 #include <prettyprint.h>
 #include <sstream>
 #include <utility>
-#include "stacktrace.h"
 
 // #include <helper_cuda.h>
 #include <curand.h>

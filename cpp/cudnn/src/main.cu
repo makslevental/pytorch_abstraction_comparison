@@ -1,8 +1,10 @@
 #include "CLI11.hpp"
+#include "mnist.h"
+#include "network.h"
+#include "resnet.cuh"
+#include "stl10.h"
+#include <cassert>
 #include <cmath>
-#include <mnist.h>
-#include <network.h>
-#include <resnet.cuh>
 
 #include <cuda_profiler_api.h>
 #include <iomanip>
@@ -28,7 +30,7 @@ int main(int argc, char *argv[]) {
     CLI11_PARSE(app, argc, argv);
 
     /* configure the network */
-    int batch_size = 32;
+    int batch_size = 1;
 
     int epochs = 100;
     int monitoring_step = 100;
@@ -41,18 +43,15 @@ int main(int argc, char *argv[]) {
 
     std::cout << "== MNIST training with CUDNN ==" << std::endl;
 
-    MNIST train_data_loader =
-        MNIST(train_dataset_fp, train_label_fp, true, batch_size, NUMBER_MNIST_CLASSES);
-    MNIST test_data_loader =
-        MNIST(test_dataset_fp, test_label_fp, false, batch_size, NUMBER_MNIST_CLASSES);
+//    MNIST train_data_loader =
+//        MNIST(train_dataset_fp, train_label_fp, true, batch_size, NUMBER_MNIST_CLASSES);
+//    MNIST test_data_loader =
+//        MNIST(test_dataset_fp, test_label_fp, false, batch_size, NUMBER_MNIST_CLASSES);
+    STL10 train_data_loader =
+        STL10(train_dataset_fp, train_label_fp, true, batch_size, NUMBER_STL10_CLASSES);
+    STL10 test_data_loader =
+        STL10(test_dataset_fp, test_label_fp, false, batch_size, NUMBER_STL10_CLASSES);
 
-    //    Tensor<float> *train_data, *train_target;
-    //    for (int batch = 0; batch < 10; batch++) {
-    //        std::tie(train_data, train_target) = train_data_loader.get_next_batch();
-    //        train_data->print("train_data", true, batch_size);
-    //        train_target->print("train_target", true, batch_size);
-    //    }
-    //    exit(EXIT_FAILURE);
     CrossEntropyLoss criterion;
     CrossEntropyLoss criterion1;
     double loss, accuracy;
@@ -82,6 +81,7 @@ int main(int argc, char *argv[]) {
     Tensor<float> *test_data, *test_target;
     Tensor<float> *output;
 
+    std::string nvtx_message;
     for (int epoch = 0; epoch < epochs; epoch++) {
         std::cout << "[TRAIN]" << std::endl;
         model->train();
@@ -89,15 +89,13 @@ int main(int argc, char *argv[]) {
         train_data_loader.reset();
 
         for (int batch = 0; batch < train_data_loader.get_num_batches(); batch++) {
-            std::string nvtx_message =
+            nvtx_message =
                 std::string("epoch " + std::to_string(epoch) + " batch " + std::to_string(batch));
             nvtxRangePushA(nvtx_message.c_str());
 
             std::tie(train_data, train_target) = train_data_loader.get_next_batch();
             train_data->to(cuda);
-//            train_data->print("train_data", true);
             train_target->to(cuda);
-//            train_target->print("train_target", true);
 
             output = model->forward(train_data);
             tp_count += get_accuracy(output, train_target);

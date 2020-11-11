@@ -27,3 +27,5 @@ private:
 };
 
 #endif // PROJECTNAME_POOLING_CUH
+
+// TODO: avg pool

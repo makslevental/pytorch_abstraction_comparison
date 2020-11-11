@@ -9,16 +9,18 @@
  * https://deepnotes.io/softmax-crossentropy
  * */
 
-CrossEntropyLoss::CrossEntropyLoss() { cudaMalloc((void **)&d_loss_, sizeof(float)); }
+CrossEntropyLoss::CrossEntropyLoss() {
+    checkCudaErrors(cudaMalloc((void **)&d_loss_, sizeof(float)));
+}
 
 CrossEntropyLoss::~CrossEntropyLoss() {
     if (d_loss_ != nullptr) {
-        cudaFree(d_loss_);
+        checkCudaErrors(cudaFree(d_loss_));
         d_loss_ = nullptr;
     }
 
     if (d_workspace_ != nullptr)
-        cudaFree(d_workspace_);
+        checkCudaErrors(cudaFree(d_workspace_));
 }
 
 __device__ float clip(float prediction, float epsilon = 1e-12) {
@@ -69,15 +71,15 @@ __global__ void softmax_loss_kernel(
 
 void CrossEntropyLoss::init_workspace(int batch_size) {
     if (d_workspace_ == nullptr)
-        cudaMalloc((void **)&d_workspace_, sizeof(float) * batch_size);
+        checkCudaErrors(cudaMalloc((void **)&d_workspace_, sizeof(float) * batch_size));
 }
 
 float CrossEntropyLoss::loss(Tensor<float> *predict, Tensor<float> *target) {
     int num_sms;
     int num_blocks_per_sm;
-    cudaDeviceGetAttribute(&num_sms, cudaDevAttrMultiProcessorCount, 0);
-    cudaOccupancyMaxActiveBlocksPerMultiprocessor(
-        &num_blocks_per_sm, softmax_loss_kernel, BLOCK_DIM_1D, BLOCK_DIM_1D * sizeof(float));
+    checkCudaErrors(cudaDeviceGetAttribute(&num_sms, cudaDevAttrMultiProcessorCount, 0));
+    checkCudaErrors(cudaOccupancyMaxActiveBlocksPerMultiprocessor(
+        &num_blocks_per_sm, softmax_loss_kernel, BLOCK_DIM_1D, BLOCK_DIM_1D * sizeof(float)));
 
     int batch_size = target->get_batch_size();
     int num_outputs = target->get_channels();
@@ -99,7 +101,7 @@ float CrossEntropyLoss::loss(Tensor<float> *predict, Tensor<float> *target) {
         d_workspace_,
         batch_size,
         num_outputs);
-    cudaMemcpy(&h_loss_, d_loss_, sizeof(float), cudaMemcpyDeviceToHost);
+    checkCudaErrors(cudaMemcpy(&h_loss_, d_loss_, sizeof(float), cudaMemcpyDeviceToHost));
 
     // batch mean loss
     auto loss = h_loss_ / float(batch_size);
