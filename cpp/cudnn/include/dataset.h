@@ -23,6 +23,7 @@ public:
     [[nodiscard]] virtual int get_num_batches() const = 0;
     virtual int len();
     virtual void reset();
+    void test_dataset();
 
 protected:
     std::string dataset_fp_;

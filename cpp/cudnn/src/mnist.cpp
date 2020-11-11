@@ -1,5 +1,5 @@
+#include <cassert>
 #include <mnist.h>
-
 // TODO: multithreading to match pytorch?
 void MNIST::load_data() {
     uint8_t ptr[4];
@@ -11,7 +11,7 @@ void MNIST::load_data() {
         std::cout << "You can get the MNIST dataset from 'http://yann.lecun.com/exdb/mnist/' or "
                      "just use 'download_mnist.sh' file."
                   << std::endl;
-        exit(-1);
+        exit(EXIT_FAILURE);
     }
 
     file.read((char *)ptr, 4);
@@ -40,7 +40,7 @@ void MNIST::load_data() {
         data_pool_.push_back(image);
     }
 
-    delete[] q;
+    delete q;
 
     num_batches_ = num_data / batch_size_;
     std::cout << "num_batches: " << num_batches_ << std::endl;
@@ -80,10 +80,10 @@ void MNIST::load_target() {
 }
 
 void MNIST::normalize_data() {
-    for (auto image : data_pool_) {
-        float *image_ptr = image.data();
+    for (auto &sample : data_pool_) {
+        float *sample_data_ptr = sample.data();
         for (int j = 0; j < channels_ * height_ * width_; j++) {
-            image_ptr[j] /= 255.f;
+            sample_data_ptr[j] /= 255.f;
         }
     }
 }

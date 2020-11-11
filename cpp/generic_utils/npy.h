@@ -554,6 +554,7 @@ inline void SaveArrayAsNumpy(
 
     std::ofstream stream(filename, std::ofstream::binary);
     if (!stream) {
+        std::cout << filename;
         throw std::runtime_error("io error: failed to open a file.");
     }
 
@@ -581,7 +582,7 @@ inline void LoadArrayFromNumpy(
     std::vector<Scalar> &data) {
     std::ifstream stream(filename, std::ifstream::binary);
     if (!stream) {
-        throw std::runtime_error("io error: failed to open a file.");
+        throw std::runtime_error("io error: failed to open a file: " + filename);
     }
 
     std::string header_s = read_header(stream);
@@ -595,6 +596,8 @@ inline void LoadArrayFromNumpy(
 
     // TODO: implement != and == for dtype_t
     if (header.dtype.str() != expect_descr) {
+        std::cout << "header.dtype.str() " << header.dtype.str() << " expect_descr " << expect_descr
+                  << std::endl;
         throw std::runtime_error("formatting error: typestrings not matching");
     }
 

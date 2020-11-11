@@ -41,11 +41,13 @@ public:
         : batch_size_(n), channels_(c), height_(h), width_(w) {
         host_ptr_ = new float[batch_size_ * channels_ * height_ * width_];
         tensor_descriptor();
+        checkCudaErrors(cudaMalloc((void **)&device_ptr_, sizeof(dtype) * len()));
     }
     explicit Tensor(std::array<int, 4> size)
         : batch_size_(size[0]), channels_(size[1]), height_(size[2]), width_(size[3]) {
         host_ptr_ = new float[batch_size_ * channels_ * height_ * width_];
         tensor_descriptor();
+        checkCudaErrors(cudaMalloc((void **)&device_ptr_, sizeof(dtype) * len()));
     }
 
     Tensor(const Tensor<dtype> &t) {
@@ -54,14 +56,15 @@ public:
         height_ = t.height_;
         width_ = t.width_;
         reset(shape());
+        checkCudaErrors(cudaMalloc((void **)&device_ptr_, sizeof(dtype) * len()));
         download(t);
     }
 
     ~Tensor() {
         if (host_ptr_ != nullptr)
-            delete[] host_ptr_;
+            delete host_ptr_;
         if (device_ptr_ != nullptr)
-            cudaFree(device_ptr_);
+            checkCudaErrors(cudaFree(device_ptr_));
         if (tensor_desc_) {
             checkCudnnErrors(cudnnDestroyTensorDescriptor(tensor_desc_));
             tensor_desc_ = nullptr;
@@ -71,7 +74,6 @@ public:
     void download(const Tensor<dtype> &t) {
         checkCudaErrors(cudaMemcpy(
             get_device_ptr(), t.get_device_ptr(), sizeof(dtype) * len(), cudaMemcpyDeviceToDevice));
-        host_ptr_ = new float[batch_size_ * channels_ * height_ * width_];
         checkCudaErrors(
             cudaMemcpy(host_ptr_, t.get_host_ptr(), sizeof(dtype) * len(), cudaMemcpyHostToHost));
     }
@@ -86,7 +88,7 @@ public:
 
         // terminate current buffers
         if (host_ptr_ != nullptr) {
-            delete[] host_ptr_;
+            delete host_ptr_;
             host_ptr_ = nullptr;
         }
         if (device_ptr_ != nullptr) {
@@ -96,7 +98,6 @@ public:
 
         // create new buffer
         host_ptr_ = new float[batch_size_ * channels_ * height_ * width_];
-        get_device_ptr();
 
         // reset tensor descriptor if it was tensor_descriptor
         if (tensor_desc_) {
@@ -140,13 +141,7 @@ public:
         return tensor_desc_;
     }
 
-    // get get_device_ptr memory
-    dtype *get_device_ptr() {
-        if (device_ptr_ == nullptr)
-            checkCudaErrors(cudaMalloc((void **)&device_ptr_, sizeof(dtype) * len()));
-
-        return device_ptr_;
-    }
+    dtype *get_device_ptr() { return device_ptr_; }
 
     const dtype *get_device_ptr() const { return device_ptr_; }
 
