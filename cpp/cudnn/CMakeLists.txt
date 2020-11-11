@@ -15,6 +15,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     message("Debug mode")
     set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};-gencode;arch=compute_61,code=sm_61;-g;-lineinfo;-std=c++14;-Xcompiler;-ggdb)
 else ()
+    message("Release mode")
     set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};-gencode;arch=compute_61,code=sm_61;-O3;-DNDEBUG;-std=c++14;-Xcompiler;-DNDEBUG)
 endif ()
 

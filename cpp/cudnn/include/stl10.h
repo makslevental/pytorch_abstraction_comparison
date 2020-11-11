@@ -5,6 +5,8 @@
 #ifndef PROJECTNAME_STL10_H
 #define PROJECTNAME_STL10_H
 
+#define NUMBER_STL10_CLASSES 10
+
 #include "dataset.h"
 
 class STL10 : public Dataset {
