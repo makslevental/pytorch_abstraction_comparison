@@ -54,21 +54,11 @@ std::tuple<Tensor<float> *, Tensor<float> *> Dataset::get_next_batch() {
 
     for (int batch = 0, sample = data_idx; batch < batch_size_;
          batch++, sample = data_idx + batch) {
-<<<<<<< HEAD
         std::copy(
             data_pool_[sample].begin(),
             data_pool_[sample].end(),
             &data_->get_host_ptr()[data_size * batch]);
         std::copy(
-=======
-//        std::cout << "batch: " << batch << " data_idx: " << data_idx << " sample: " << sample
-//                  << std::endl;
-        std::copy(
-            data_pool_[sample].begin(),
-            data_pool_[sample].end(),
-            &data_->get_host_ptr()[data_size * batch]);
-        std::copy(
->>>>>>> f5fcd8a... b&w images have only one channel 🤦
             target_pool_[sample].begin(),
             target_pool_[sample].end(),
             &target_->get_host_ptr()[num_classes_ * batch]);

@@ -57,17 +57,10 @@ void STL10::load_target() {
 }
 
 void STL10::normalize_data() {
-<<<<<<< HEAD
     for (auto &sample : data_pool_) {
         float *sample_data_ptr = sample.data();
         for (int j = 0; j < channels_ * height_ * width_; j++) {
             sample_data_ptr[j] /= 255.f;
-=======
-    for (auto image : data_pool_) {
-        float *image_ptr = image.data();
-        for (int j = 0; j < channels_ * height_ * width_; j++) {
-            image_ptr[j] /= 255.f;
->>>>>>> f5fcd8a... b&w images have only one channel 🤦
         }
     }
 }
