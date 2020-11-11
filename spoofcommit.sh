@@ -8,7 +8,6 @@ username=$(git config user.name);
 email=$(git config user.email);
 
 read -p "Enter the username to be spoofed:" spoofas;
-read -p "Enter the email of $spoofas:" spoofasemail;
 
 content=$(wget "https://github.com/$spoofas" -q -O -);
 
@@ -16,6 +15,8 @@ if [[ $content == *"$before"* ]];
 then
     spoofasemail=$(echo $content | recode html/.. | grep -EiEio '\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}\b' | head -1);
     echo "Enter the email of $spoofas:$spoofasemail";
+else
+    read -p "Enter the email of $spoofas:" spoofasemail;
 fi;
 
 read -p "Enter a commit message:" message;
