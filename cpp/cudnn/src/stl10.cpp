@@ -5,14 +5,18 @@
 #include <stl10.h>
 
 #include "npy.h"
-#include <assert.h>
+#include <cassert>
+#include <filesystem>
 #include <utility>
 
 void STL10::load_data() {
+    if (!(std::filesystem::exists(dataset_fp_) && std::filesystem::exists(label_fp_))) {
+        std::cout << "Download dataset first!!" << std::endl;
+        exit(EXIT_FAILURE);
+    }
     vector<unsigned long> shape;
     bool fortran_order;
-    vector<float> data;
-
+    vector<uint8_t> data;
     npy::LoadArrayFromNumpy(dataset_fp_, shape, fortran_order, data);
     // n x c x h x w
     assert(shape.size() == 4);
@@ -36,7 +40,7 @@ void STL10::load_data() {
 void STL10::load_target() {
     vector<unsigned long> shape;
     bool fortran_order;
-    vector<float> data;
+    vector<uint8_t> data;
 
     npy::LoadArrayFromNumpy(label_fp_, shape, fortran_order, data);
     assert(shape.size() == 1);
@@ -53,10 +57,10 @@ void STL10::load_target() {
 }
 
 void STL10::normalize_data() {
-    for (auto image : data_pool_) {
-        float *image_ptr = image.data();
+    for (auto &sample : data_pool_) {
+        float *sample_data_ptr = sample.data();
         for (int j = 0; j < channels_ * height_ * width_; j++) {
-            image_ptr[j] /= 255.f;
+            sample_data_ptr[j] /= 255.f;
         }
     }
 }

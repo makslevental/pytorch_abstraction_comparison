@@ -39,11 +39,11 @@ protected:
     std::string name_;
 
     // tensor descriptor for the input/output tensors
-    cudnnTensorDescriptor_t input_desc_;
-    cudnnTensorDescriptor_t output_desc_;
+    cudnnTensorDescriptor_t input_desc_ = nullptr;
+    cudnnTensorDescriptor_t output_desc_ = nullptr;
     // weight/bias descriptor
-    cudnnFilterDescriptor_t filter_desc_;
-    cudnnTensorDescriptor_t bias_desc_;
+    cudnnFilterDescriptor_t filter_desc_ = nullptr;
+    cudnnTensorDescriptor_t bias_desc_ = nullptr;
 
     // output memory
     Tensor<float> *input_ = nullptr;       /* x  */

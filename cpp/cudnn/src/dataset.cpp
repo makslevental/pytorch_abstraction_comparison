@@ -54,8 +54,6 @@ std::tuple<Tensor<float> *, Tensor<float> *> Dataset::get_next_batch() {
 
     for (int batch = 0, sample = data_idx; batch < batch_size_;
          batch++, sample = data_idx + batch) {
-//        std::cout << "batch: " << batch << " data_idx: " << data_idx << " sample: " << sample
-//                  << std::endl;
         std::copy(
             data_pool_[sample].begin(),
             data_pool_[sample].end(),
@@ -68,4 +66,11 @@ std::tuple<Tensor<float> *, Tensor<float> *> Dataset::get_next_batch() {
 
     current_batch_++;
     return std::make_tuple(data_, target_);
+}
+void Dataset::test_dataset() {
+    Tensor<float> *train_data, *train_target;
+    std::tie(train_data, train_target) = get_next_batch();
+    train_data->print("train_data", true);
+    train_target->print("train_data", true);
+    reset();
 }
