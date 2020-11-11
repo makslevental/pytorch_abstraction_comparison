@@ -30,7 +30,7 @@ int main(int argc, char *argv[]) {
     CLI11_PARSE(app, argc, argv);
 
     /* configure the network */
-    int batch_size = 1;
+    int batch_size = 32;
 
     int epochs = 100;
     int monitoring_step = 100;
@@ -43,10 +43,10 @@ int main(int argc, char *argv[]) {
 
     std::cout << "== MNIST training with CUDNN ==" << std::endl;
 
-//    MNIST train_data_loader =
-//        MNIST(train_dataset_fp, train_label_fp, true, batch_size, NUMBER_MNIST_CLASSES);
-//    MNIST test_data_loader =
-//        MNIST(test_dataset_fp, test_label_fp, false, batch_size, NUMBER_MNIST_CLASSES);
+    //    MNIST train_data_loader =
+    //        MNIST(train_dataset_fp, train_label_fp, true, batch_size, NUMBER_MNIST_CLASSES);
+    //    MNIST test_data_loader =
+    //        MNIST(test_dataset_fp, test_label_fp, false, batch_size, NUMBER_MNIST_CLASSES);
     STL10 train_data_loader =
         STL10(train_dataset_fp, train_label_fp, true, batch_size, NUMBER_STL10_CLASSES);
     STL10 test_data_loader =
@@ -59,18 +59,18 @@ int main(int argc, char *argv[]) {
 
     auto model = make_resnet50();
     model->cuda();
-    //    Network model;
-    //    model.add_layer(new Conv2d("conv1", 20, 5));
-    //    model.add_layer(new Activation("relu", CUDNN_ACTIVATION_RELU));
-    //    model.add_layer(new Pooling("pool", 2, 2, 0, CUDNN_POOLING_MAX));
-    //    model.add_layer(new Conv2d("conv2", 50, 5));
-    //    model.add_layer(new Activation("relu", CUDNN_ACTIVATION_RELU));
-    //    model.add_layer(new Pooling("pool", 2, 2, 0, CUDNN_POOLING_MAX));
-    //    model.add_layer(new Dense("dense1", 500));
-    //    model.add_layer(new Activation("relu", CUDNN_ACTIVATION_RELU));
-    //    model.add_layer(new Dense("dense2", 10));
-    //    model.add_layer(new Softmax("softmax"));
-    //    model.cuda();
+//    auto model = new Network();
+//    model->add_layer(new Conv2d("conv1", 20, 5));
+//    model->add_layer(new Activation("relu", CUDNN_ACTIVATION_RELU));
+//    model->add_layer(new Pooling("pool", 2, 2, 0, CUDNN_POOLING_MAX));
+//    model->add_layer(new Conv2d("conv2", 50, 5));
+//    model->add_layer(new Activation("relu", CUDNN_ACTIVATION_RELU));
+//    model->add_layer(new Pooling("pool", 2, 2, 0, CUDNN_POOLING_MAX));
+//    model->add_layer(new Dense("dense1", 500));
+//    model->add_layer(new Activation("relu", CUDNN_ACTIVATION_RELU));
+//    model->add_layer(new Dense("dense2", 10));
+//    model->add_layer(new Softmax("softmax"));
+//    model->cuda();
 
     if (load_pretrain)
         model->load_pretrain();
