@@ -1,4 +1,5 @@
 from torchvision.datasets import FashionMNIST, STL10, VOCDetection, MNIST
+# here we download datasets
 
 mnist_train = MNIST("data", train=True, download=True)
 mnist_test = MNIST("data", train=False, download=True)
