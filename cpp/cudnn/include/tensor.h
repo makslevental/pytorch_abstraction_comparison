@@ -244,5 +244,3 @@ public:
 };
 
 #endif // _TENSOR_H_
-
-// test
