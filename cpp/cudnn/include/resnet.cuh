@@ -2,7 +2,7 @@
 // Created by Maksim Levental on 10/29/20.
 //
 
-#include "layers.cuh"
+#include "layers/layers.cuh"
 #include "network.h"
 
 class ResNet50 : public Network {

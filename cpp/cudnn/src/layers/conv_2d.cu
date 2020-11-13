@@ -2,10 +2,10 @@
 // Created by Maksim Levental on 10/29/20.
 //
 
-#include <conv_2d.cuh>
 #include <cublas_v2.h>
 #include <cuda_runtime.h>
 #include <cudnn.h>
+#include <layers/conv_2d.cuh>
 #include <vector>
 
 /**

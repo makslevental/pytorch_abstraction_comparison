@@ -1,5 +1,5 @@
 #include <cassert>
-#include <mnist.h>
+#include <datasets/mnist.h>
 // TODO: multithreading to match pytorch?
 void MNIST::load_data() {
     uint8_t ptr[4];

@@ -2,7 +2,7 @@
 // Created by Maksim Levental on 11/10/20.
 //
 
-#include <stl10.h>
+#include <datasets/stl10.h>
 
 #include "npy.h"
 #include <cassert>

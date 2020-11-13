@@ -1,8 +1,8 @@
 #include "CLI11.hpp"
-#include "mnist.h"
+#include "datasets/mnist.h"
+#include "datasets/stl10.h"
 #include "network.h"
 #include "resnet.cuh"
-#include "stl10.h"
 #include <cassert>
 #include <cmath>
 

@@ -23,19 +23,10 @@ set(CUDA_PROPAGATE_HOST_FLAGS OFF)
 include_directories($ENV{CUDNN_PATH} $ENV{CUDNN_PATH}/include)
 include_directories("include")
 link_directories($ENV{CUDNN_PATH} $ENV{CUDNN_PATH}/lib $ENV{CUDNN_PATH}/lib64)
-cuda_add_executable(main_cudnn
-        src/main.cu
-        src/layer.cu
-        src/loss.cu
-        src/network.cpp
-        src/mnist.cpp
-        src/batch_norm_2d.cu
-        src/conv_2d.cu
-        src/dense.cu
-        src/activation.cu
-        src/softmax.cu
-        src/pooling.cu
-        src/addition.cu ../generic_utils/stb_image.h src/stl10.cpp include/stl10.h include/dataset.h src/dataset.cpp include/dataset.h ../generic_utils/stacktrace.h)
+
+file(GLOB_RECURSE cudnn_SRC CONFIGURE_DEPENDS "src/*.cpp" "src/*.cu")
+message("${cudnn_SRC}")
+cuda_add_executable(main_cudnn ${cudnn_SRC})
 
 cuda_add_cublas_to_target(main_cudnn)
 

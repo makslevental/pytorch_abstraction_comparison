@@ -2,7 +2,7 @@
 // Created by Maksim Levental on 11/5/20.
 //
 
-#include <addition.cuh>
+#include <layers/addition.cuh>
 
 Tensor<float> *Addition::add(Tensor<float> *A, Tensor<float> *B) {
     fwd_initialize(A);

@@ -2,7 +2,7 @@
 // Created by Maksim Levental on 10/29/20.
 //
 
-#include <pooling.cuh>
+#include <layers/pooling.cuh>
 
 Pooling::Pooling(
     std::string name, int kernel_size, int stride, int padding, cudnnPoolingMode_t mode)

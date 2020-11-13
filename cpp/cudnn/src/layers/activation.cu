@@ -2,7 +2,7 @@
 // Created by Maksim Levental on 10/29/20.
 //
 
-#include <activation.cuh>
+#include <layers/activation.cuh>
 
 /****************************************************************
  * Activation Layer                                             *

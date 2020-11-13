@@ -3,7 +3,7 @@
 //
 
 #include <cassert>
-#include <softmax.cuh>
+#include <layers/softmax.cuh>
 
 Softmax::Softmax(std::string name) { name_ = std::move(name); }
 

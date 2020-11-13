@@ -7,7 +7,7 @@
 #include <cudnn.h>
 
 #include "helper.h"
-#include "layer.h"
+#include "layers/layer.h"
 #include "loss.h"
 
 typedef enum { training, inference } WorkloadType;

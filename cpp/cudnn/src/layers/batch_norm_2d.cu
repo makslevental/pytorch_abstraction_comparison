@@ -2,7 +2,7 @@
 // Created by Maksim Levental on 10/29/20.
 //
 
-#include <batch_norm_2d.cuh>
+#include <layers/batch_norm_2d.cuh>
 
 BatchNorm2d::BatchNorm2d(
     std::string name,

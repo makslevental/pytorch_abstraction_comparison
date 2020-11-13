@@ -2,7 +2,7 @@
 // Created by Maksim Levental on 11/10/20.
 //
 
-#include "dataset.h"
+#include "datasets/dataset.h"
 #include <cassert>
 #include <random>
 #include <utility>

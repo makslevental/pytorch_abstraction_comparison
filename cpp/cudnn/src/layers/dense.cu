@@ -2,7 +2,7 @@
 // Created by Maksim Levental on 10/29/20.
 //
 
-#include <dense.cuh>
+#include <layers/dense.cuh>
 
 /****************************************************************
  * Dense Layer                                                  *
