@@ -39,13 +39,17 @@ public:
 
     explicit Tensor(int n = 1, int c = 1, int h = 1, int w = 1)
         : batch_size_(n), channels_(c), height_(h), width_(w) {
-        host_ptr_ = new float[batch_size_ * channels_ * height_ * width_];
+        unsigned int n_elements = batch_size_ * channels_ * height_ * width_;
+        const unsigned int bytes = n_elements * sizeof(float);
+        checkCudaErrors(cudaMallocHost((void **)&host_ptr_, bytes));
         tensor_descriptor();
         checkCudaErrors(cudaMalloc((void **)&device_ptr_, sizeof(dtype) * len()));
     }
     explicit Tensor(std::array<int, 4> size)
         : batch_size_(size[0]), channels_(size[1]), height_(size[2]), width_(size[3]) {
-        host_ptr_ = new float[batch_size_ * channels_ * height_ * width_];
+        unsigned int n_elements = batch_size_ * channels_ * height_ * width_;
+        const unsigned int bytes = n_elements * sizeof(float);
+        checkCudaErrors(cudaMallocHost((void **)&host_ptr_, bytes));
         tensor_descriptor();
         checkCudaErrors(cudaMalloc((void **)&device_ptr_, sizeof(dtype) * len()));
     }
@@ -61,10 +65,14 @@ public:
     }
 
     ~Tensor() {
-        if (host_ptr_ != nullptr)
-            delete host_ptr_;
-        if (device_ptr_ != nullptr)
+        if (host_ptr_ != nullptr) {
+            checkCudaErrors(cudaFreeHost(host_ptr_));
+            host_ptr_ = nullptr;
+        }
+        if (device_ptr_ != nullptr) {
             checkCudaErrors(cudaFree(device_ptr_));
+            device_ptr_ = nullptr;
+        }
         if (tensor_desc_) {
             checkCudnnErrors(cudnnDestroyTensorDescriptor(tensor_desc_));
             tensor_desc_ = nullptr;
@@ -88,16 +96,18 @@ public:
 
         // terminate current buffers
         if (host_ptr_ != nullptr) {
-            delete host_ptr_;
+            checkCudaErrors(cudaFreeHost(host_ptr_));
             host_ptr_ = nullptr;
         }
         if (device_ptr_ != nullptr) {
-            cudaFree(device_ptr_);
+            checkCudaErrors(cudaFree(device_ptr_));
             device_ptr_ = nullptr;
         }
 
         // create new buffer
-        host_ptr_ = new float[batch_size_ * channels_ * height_ * width_];
+        unsigned int n_elements = batch_size_ * channels_ * height_ * width_;
+        const unsigned int bytes = n_elements * sizeof(float);
+        checkCudaErrors(cudaMallocHost((void **)&host_ptr_, bytes));
 
         // reset tensor descriptor if it was tensor_descriptor
         if (tensor_desc_) {
