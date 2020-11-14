@@ -40,7 +40,7 @@ public:
     explicit Tensor(int n = 1, int c = 1, int h = 1, int w = 1)
         : batch_size_(n), channels_(c), height_(h), width_(w) {
         unsigned int n_elements = batch_size_ * channels_ * height_ * width_;
-        const unsigned int bytes = n_elements * sizeof(float);
+        const unsigned int bytes = n_elements * sizeof(double);
         checkCudaErrors(cudaMallocHost((void **)&host_ptr_, bytes));
         tensor_descriptor();
         checkCudaErrors(cudaMalloc((void **)&device_ptr_, sizeof(dtype) * len()));
@@ -48,7 +48,7 @@ public:
     explicit Tensor(std::array<int, 4> size)
         : batch_size_(size[0]), channels_(size[1]), height_(size[2]), width_(size[3]) {
         unsigned int n_elements = batch_size_ * channels_ * height_ * width_;
-        const unsigned int bytes = n_elements * sizeof(float);
+        const unsigned int bytes = n_elements * sizeof(double);
         checkCudaErrors(cudaMallocHost((void **)&host_ptr_, bytes));
         tensor_descriptor();
         checkCudaErrors(cudaMalloc((void **)&device_ptr_, sizeof(dtype) * len()));
@@ -106,7 +106,7 @@ public:
 
         // create new buffer
         unsigned int n_elements = batch_size_ * channels_ * height_ * width_;
-        const unsigned int bytes = n_elements * sizeof(float);
+        const unsigned int bytes = n_elements * sizeof(double);
         checkCudaErrors(cudaMallocHost((void **)&host_ptr_, bytes));
 
         // reset tensor descriptor if it was tensor_descriptor
@@ -142,7 +142,7 @@ public:
         checkCudnnErrors(cudnnSetTensor4dDescriptor(
             tensor_desc_,
             CUDNN_TENSOR_NCHW,
-            CUDNN_DATA_FLOAT,
+            CUDNN_DATA_DOUBLE,
             batch_size_,
             channels_,
             height_,
@@ -223,7 +223,7 @@ public:
             return -1;
         }
 
-        file.read((char *)host_ptr_, sizeof(float) * this->len());
+        file.read((char *)host_ptr_, sizeof(double) * this->len());
         this->to(DeviceType::cuda);
         file.close();
 
@@ -236,7 +236,7 @@ public:
             std::cout << "fail to write " << filename << std::endl;
             return -1;
         }
-        file.write((char *)this->to(host), sizeof(float) * this->len());
+        file.write((char *)this->to(host), sizeof(double) * this->len());
         file.close();
 
         return 0;

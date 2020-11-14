@@ -19,9 +19,9 @@ public:
 
     void add_layer(Layer *layer);
 
-    virtual Tensor<float> *forward(Tensor<float> *input);
-    virtual void backward(Tensor<float> *input);
-    void update(float learning_rate = 0.02f);
+    virtual Tensor<double> *forward(Tensor<double> *input);
+    virtual void backward(Tensor<double> *input);
+    void update(double learning_rate = 0.02f);
 
     int load_pretrain();
     int write_file();
@@ -30,7 +30,7 @@ public:
     void train();
     void eval();
 
-    Tensor<float> *output_;
+    Tensor<double> *output_;
 
 protected:
     std::vector<Layer *> layers_;

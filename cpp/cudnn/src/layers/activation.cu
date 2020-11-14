@@ -8,7 +8,7 @@
  * Activation Layer                                             *
  ****************************************************************/
 
-Activation::Activation(std::string name, cudnnActivationMode_t mode, float coef) {
+Activation::Activation(std::string name, cudnnActivationMode_t mode, double coef) {
     name_ = std::move(name);
     act_mode_ = mode;
     act_coef_ = coef;
@@ -19,7 +19,7 @@ Activation::Activation(std::string name, cudnnActivationMode_t mode, float coef)
 
 Activation::~Activation() { cudnnDestroyActivationDescriptor(act_desc_); }
 
-Tensor<float> *Activation::forward(Tensor<float> *input) {
+Tensor<double> *Activation::forward(Tensor<double> *input) {
     fwd_initialize(input);
     input_ = input;
     checkCudnnErrors(cudnnActivationForward(
@@ -35,7 +35,7 @@ Tensor<float> *Activation::forward(Tensor<float> *input) {
     return output_;
 }
 
-Tensor<float> *Activation::backward(Tensor<float> *grad_output) {
+Tensor<double> *Activation::backward(Tensor<double> *grad_output) {
     bwd_initialize(grad_output);
     checkCudnnErrors(cudnnActivationBackward(
         cuda_->cudnn(),

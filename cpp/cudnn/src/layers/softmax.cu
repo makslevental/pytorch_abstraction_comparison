@@ -7,13 +7,13 @@
 
 Softmax::Softmax(std::string name) { name_ = std::move(name); }
 
-void Softmax::fwd_initialize(Tensor<float> *input) {
+void Softmax::fwd_initialize(Tensor<double> *input) {
     if (input_desc_ == nullptr || batch_size_ != input->get_batch_size()) {
         input_desc_ = input->tensor_descriptor();
         batch_size_ = input->get_batch_size();
 
         if (output_ == nullptr)
-            output_ = new Tensor<float>(input->shape());
+            output_ = new Tensor<double>(input->shape());
         else
             output_->reset(input->shape());
 
@@ -21,7 +21,7 @@ void Softmax::fwd_initialize(Tensor<float> *input) {
     }
 }
 
-Tensor<float> *Softmax::forward(Tensor<float> *input) {
+Tensor<double> *Softmax::forward(Tensor<double> *input) {
     fwd_initialize(input);
     if (DEBUG_SOFTMAX) {
         std::cout << name_ << "[FORWARD]" << std::endl;
@@ -45,16 +45,16 @@ Tensor<float> *Softmax::forward(Tensor<float> *input) {
     return output_;
 }
 
-void Softmax::bwd_initialize(Tensor<float> *target) {
+void Softmax::bwd_initialize(Tensor<double> *target) {
     if (grad_input_ == nullptr || batch_size_ != target->get_batch_size()) {
         if (grad_input_ == nullptr)
-            grad_input_ = new Tensor<float>(input_->shape());
+            grad_input_ = new Tensor<double>(input_->shape());
         else
             grad_input_->reset(input_->shape());
     }
 }
 
-Tensor<float> *Softmax::backward(Tensor<float> *target) {
+Tensor<double> *Softmax::backward(Tensor<double> *target) {
     bwd_initialize(target);
     // set grad_input_ as predict
     checkCudaErrors(cudaMemcpyAsync(
@@ -63,7 +63,7 @@ Tensor<float> *Softmax::backward(Tensor<float> *target) {
         output_->buf_size(),
         cudaMemcpyDeviceToDevice));
     // set grad_input_ = predict - target
-    checkCublasErrors(cublasSaxpy(
+    checkCublasErrors(cublasDaxpy(
         cuda_->cublas(),
         target->len(),
         &cuda_->minus_one,
@@ -75,9 +75,9 @@ Tensor<float> *Softmax::backward(Tensor<float> *target) {
     // normalize the grad_output by the batch size
     int grad_output_size = target->get_batch_size() * target->get_channels() *
                            target->get_height() * target->get_width();
-    float scale = 1.f / static_cast<float>(target->get_batch_size());
+    double scale = 1.f / static_cast<double>(target->get_batch_size());
     checkCublasErrors(
-        cublasSscal(cuda_->cublas(), grad_output_size, &scale, grad_input_->get_device_ptr(), 1));
+        cublasDscal(cuda_->cublas(), grad_output_size, &scale, grad_input_->get_device_ptr(), 1));
 
     if (DEBUG_SOFTMAX > 1) {
         std::cout << name_ << "[BACKWARD]" << std::endl;

@@ -29,12 +29,12 @@ void MNIST::load_data() {
 
     auto *q = new uint8_t[channels_ * height_ * width_];
     for (int i = 0; i < num_data; i++) {
-        std::vector<float> image = std::vector<float>(channels_ * height_ * width_);
-        float *image_ptr = image.data();
+        std::vector<double> image = std::vector<double>(channels_ * height_ * width_);
+        double *image_ptr = image.data();
 
         file.read((char *)q, channels_ * height_ * width_);
         for (int j = 0; j < channels_ * height_ * width_; j++) {
-            image_ptr[j] = (float)q[j];
+            image_ptr[j] = (double)q[j];
         }
 
         data_pool_.push_back(image);
@@ -70,7 +70,7 @@ void MNIST::load_target() {
     // prepare input buffer for label
     // read all labels and converts to one-hot encoding
     for (int i = 0; i < num_target; i++) {
-        std::vector<float> target_one_hot(num_classes_, 0.f);
+        std::vector<double> target_one_hot(num_classes_, 0.f);
         file.read((char *)ptr, 1);
         target_one_hot[static_cast<int>(ptr[0])] = 1.f;
         target_pool_.push_back(target_one_hot);
@@ -81,7 +81,7 @@ void MNIST::load_target() {
 
 void MNIST::normalize_data() {
     for (auto &sample : data_pool_) {
-        float *sample_data_ptr = sample.data();
+        double *sample_data_ptr = sample.data();
         for (int j = 0; j < channels_ * height_ * width_; j++) {
             sample_data_ptr[j] /= 255.f;
         }

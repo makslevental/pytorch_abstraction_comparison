@@ -15,8 +15,8 @@ public:
     Layer();
     virtual ~Layer();
 
-    virtual Tensor<float> *forward(Tensor<float> *input) = 0;
-    virtual Tensor<float> *backward(Tensor<float> *grad_input) = 0;
+    virtual Tensor<double> *forward(Tensor<double> *input) = 0;
+    virtual Tensor<double> *backward(Tensor<double> *grad_input) = 0;
 
     std::string get_name() { return name_; }
 
@@ -32,8 +32,8 @@ public:
     void eval() { train_ = false; }
 
 protected:
-    virtual void fwd_initialize(Tensor<float> *input);
-    virtual void bwd_initialize(Tensor<float> *grad_output);
+    virtual void fwd_initialize(Tensor<double> *input);
+    virtual void bwd_initialize(Tensor<double> *grad_output);
 
     // name of layer
     std::string name_;
@@ -46,25 +46,25 @@ protected:
     cudnnTensorDescriptor_t bias_desc_ = nullptr;
 
     // output memory
-    Tensor<float> *input_ = nullptr;       /* x  */
-    Tensor<float> *output_ = nullptr;      /* y  */
-    Tensor<float> *grad_input_ = nullptr;  /* dx */
-    Tensor<float> *grad_output_ = nullptr; /* dy */
+    Tensor<double> *input_ = nullptr;       /* x  */
+    Tensor<double> *output_ = nullptr;      /* y  */
+    Tensor<double> *grad_input_ = nullptr;  /* dx */
+    Tensor<double> *grad_output_ = nullptr; /* dy */
     int input_size_;
 
     // master weights & bias
     bool freeze_ = false; /* control parameter updates */
     bool train_ = false;
-    Tensor<float> *weights_ = nullptr;      /* w */
-    Tensor<float> *biases_ = nullptr;       /* b */
-    Tensor<float> *grad_weights_ = nullptr; /* dw */
-    Tensor<float> *grad_biases_ = nullptr;  /* db */
+    Tensor<double> *weights_ = nullptr;      /* w */
+    Tensor<double> *biases_ = nullptr;       /* b */
+    Tensor<double> *grad_weights_ = nullptr; /* dw */
+    Tensor<double> *grad_biases_ = nullptr;  /* db */
 
     int batch_size_ = 0; // mini-batch size
 
     // initialize weights along with the input size
     void init_weight_bias(unsigned int seed = 0);
-    void update_weights_biases(float learning_rate);
+    void update_weights_biases(double learning_rate);
 
     // get_device_ptr handle container
     CudaContext *cuda_ = nullptr;

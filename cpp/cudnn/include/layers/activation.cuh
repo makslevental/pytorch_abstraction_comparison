@@ -9,16 +9,16 @@
 
 class Activation : public Layer {
 public:
-    Activation(std::string name, cudnnActivationMode_t mode, float coef = 0.f);
+    Activation(std::string name, cudnnActivationMode_t mode, double coef = 0.f);
     ~Activation() override;
 
-    Tensor<float> *forward(Tensor<float> *input) override;
-    Tensor<float> *backward(Tensor<float> *grad_input) override;
+    Tensor<double> *forward(Tensor<double> *input) override;
+    Tensor<double> *backward(Tensor<double> *grad_input) override;
 
 private:
     cudnnActivationDescriptor_t act_desc_;
     cudnnActivationMode_t act_mode_;
-    float act_coef_;
+    double act_coef_;
 };
 
 #endif // PROJECTNAME_ACTIVATION_CUH

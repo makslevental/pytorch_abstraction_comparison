@@ -11,8 +11,8 @@ using namespace std;
 
 void Dataset::create_shared_space() {
     // create Tensors with batch size and sample size
-    data_ = new Tensor<float>(batch_size_, channels_, height_, width_);
-    target_ = new Tensor<float>(batch_size_, num_classes_);
+    data_ = new Tensor<double>(batch_size_, channels_, height_, width_);
+    target_ = new Tensor<double>(batch_size_, num_classes_);
 }
 
 void Dataset::shuffle_dataset() {
@@ -38,7 +38,7 @@ void Dataset::reset() {
 }
 
 int Dataset::len() { return data_pool_.size(); }
-std::tuple<Tensor<float> *, Tensor<float> *> Dataset::get_next_batch() {
+std::tuple<Tensor<double> *, Tensor<double> *> Dataset::get_next_batch() {
     if (current_batch_ < 0) {
         std::cout << "You must initialize dataset first.." << std::endl;
         exit(EXIT_FAILURE);
@@ -68,7 +68,7 @@ std::tuple<Tensor<float> *, Tensor<float> *> Dataset::get_next_batch() {
     return std::make_tuple(data_, target_);
 }
 void Dataset::test_dataset() {
-    Tensor<float> *train_data, *train_target;
+    Tensor<double> *train_data, *train_target;
     std::tie(train_data, train_target) = get_next_batch();
     train_data->print("train_data", true);
     train_target->print("train_data", true);

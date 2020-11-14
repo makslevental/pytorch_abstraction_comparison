@@ -26,7 +26,7 @@ void Network::add_layer(Layer *layer) {
         layers_.at(0)->set_gradient_stop();
 }
 
-Tensor<float> *Network::forward(Tensor<float> *input) {
+Tensor<double> *Network::forward(Tensor<double> *input) {
     output_ = input;
 
     nvtxRangePushA("Forward");
@@ -55,8 +55,8 @@ Tensor<float> *Network::forward(Tensor<float> *input) {
     return output_;
 }
 
-void Network::backward(Tensor<float> *target) {
-    Tensor<float> *gradient = target;
+void Network::backward(Tensor<double> *target) {
+    Tensor<double> *gradient = target;
 
     if (phase_ == inference)
         return;
@@ -94,7 +94,7 @@ void Network::backward(Tensor<float> *target) {
 }
 
 // TODO: SGD and all that?
-void Network::update(float learning_rate) {
+void Network::update(double learning_rate) {
     if (phase_ == inference)
         return;
 

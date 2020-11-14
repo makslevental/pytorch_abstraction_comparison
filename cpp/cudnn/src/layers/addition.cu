@@ -4,7 +4,7 @@
 
 #include <layers/addition.cuh>
 
-Tensor<float> *Addition::add(Tensor<float> *A, Tensor<float> *B) {
+Tensor<double> *Addition::add(Tensor<double> *A, Tensor<double> *B) {
     fwd_initialize(A);
     // C = A + B
     checkCudnnErrors(cudnnOpTensor(
@@ -22,14 +22,14 @@ Tensor<float> *Addition::add(Tensor<float> *A, Tensor<float> *B) {
 
     return output_;
 }
-Tensor<float> *Addition::forward(Tensor<float> *input) { exit(EXIT_FAILURE); }
-Tensor<float> *Addition::backward(Tensor<float> *grad_input) { exit(EXIT_FAILURE); }
-void Addition::fwd_initialize(Tensor<float> *A) {
+Tensor<double> *Addition::forward(Tensor<double> *input) { exit(EXIT_FAILURE); }
+Tensor<double> *Addition::backward(Tensor<double> *grad_input) { exit(EXIT_FAILURE); }
+void Addition::fwd_initialize(Tensor<double> *A) {
     Layer::fwd_initialize(A);
     if (op_descriptor == nullptr) {
         checkCudnnErrors(cudnnCreateOpTensorDescriptor(&op_descriptor));
         checkCudnnErrors(cudnnSetOpTensorDescriptor(
-            op_descriptor, CUDNN_OP_TENSOR_ADD, CUDNN_DATA_FLOAT, CUDNN_PROPAGATE_NAN));
+            op_descriptor, CUDNN_OP_TENSOR_ADD, CUDNN_DATA_DOUBLE, CUDNN_PROPAGATE_NAN));
     }
 }
 Addition::~Addition() = default;

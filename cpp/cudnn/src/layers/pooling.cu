@@ -24,7 +24,7 @@ Pooling::Pooling(
 
 Pooling::~Pooling() { cudnnDestroyPoolingDescriptor(pool_desc_); }
 
-void Pooling::fwd_initialize(Tensor<float> *input) {
+void Pooling::fwd_initialize(Tensor<double> *input) {
     if (input_desc_ == nullptr || batch_size_ != input->get_batch_size()) {
         input_size_ = input->size();
         // resource initialize
@@ -40,7 +40,7 @@ void Pooling::fwd_initialize(Tensor<float> *input) {
             &output_size_[2],
             &output_size_[3]);
         if (output_ == nullptr)
-            output_ = new Tensor<float>(output_size_);
+            output_ = new Tensor<double>(output_size_);
         else
             output_->reset(output_size_);
 
@@ -48,7 +48,7 @@ void Pooling::fwd_initialize(Tensor<float> *input) {
     }
 }
 
-Tensor<float> *Pooling::forward(Tensor<float> *input) {
+Tensor<double> *Pooling::forward(Tensor<double> *input) {
     fwd_initialize(input);
     input_ = input;
     cudnnPoolingForward(
@@ -64,7 +64,7 @@ Tensor<float> *Pooling::forward(Tensor<float> *input) {
     return output_;
 }
 
-Tensor<float> *Pooling::backward(Tensor<float> *grad_output) {
+Tensor<double> *Pooling::backward(Tensor<double> *grad_output) {
     bwd_initialize(grad_output);
     checkCudnnErrors(cudnnPoolingBackward(
         cuda_->cudnn(),

@@ -10,7 +10,6 @@
 #include <iostream>
 #include <sstream>
 
-
 /****************************************************************
  * Layer definition                                             *
  ****************************************************************/
@@ -60,11 +59,11 @@ void Layer::init_weight_bias(unsigned int seed) {
 
     // He uniform distribution
     // TODO: initialization Xi
-    float range = sqrt(6.f / input_size_); // He's initialization
+    double range = sqrt(6.f / input_size_); // He's initialization
     std::uniform_real_distribution<> dis(-range, range);
 
     for (int i = 0; i < weights_->len(); i++)
-        weights_->get_host_ptr()[i] = static_cast<float>(dis(gen));
+        weights_->get_host_ptr()[i] = static_cast<double>(dis(gen));
     for (int i = 0; i < biases_->len(); i++)
         biases_->get_host_ptr()[i] = 0.f;
 
@@ -75,8 +74,8 @@ void Layer::init_weight_bias(unsigned int seed) {
     std::cout << ".. initialized " << name_ << " layer .." << std::endl;
 }
 
-void Layer::update_weights_biases(float learning_rate) {
-    float eps = -1.f * learning_rate;
+void Layer::update_weights_biases(double learning_rate) {
+    double eps = -1.f * learning_rate;
     if (weights_ != nullptr && grad_weights_ != nullptr) {
         if (DEBUG_UPDATE) {
             weights_->print(name_ + "::weights (before update)", true);
@@ -84,7 +83,7 @@ void Layer::update_weights_biases(float learning_rate) {
         }
 
         // w = w + eps * dw
-        checkCublasErrors(cublasSaxpy(
+        checkCublasErrors(cublasDaxpy(
             cuda_->cublas(),
             weights_->len(),
             &eps,
@@ -104,7 +103,7 @@ void Layer::update_weights_biases(float learning_rate) {
         }
 
         // b = b + eps * db
-        checkCublasErrors(cublasSaxpy(
+        checkCublasErrors(cublasDaxpy(
             cuda_->cublas(),
             biases_->len(),
             &eps,
@@ -118,7 +117,7 @@ void Layer::update_weights_biases(float learning_rate) {
     }
 }
 
-void Layer::fwd_initialize(Tensor<float> *input) {
+void Layer::fwd_initialize(Tensor<double> *input) {
     if (input_desc_ == nullptr || batch_size_ != input->get_batch_size()) {
         //        input_ = input;
         input_size_ = input->size();
@@ -126,7 +125,7 @@ void Layer::fwd_initialize(Tensor<float> *input) {
         batch_size_ = input->get_batch_size();
 
         if (output_ == nullptr)
-            output_ = new Tensor<float>(input->shape());
+            output_ = new Tensor<double>(input->shape());
         else
             output_->reset(input->shape());
 
@@ -134,12 +133,12 @@ void Layer::fwd_initialize(Tensor<float> *input) {
     }
 }
 
-void Layer::bwd_initialize(Tensor<float> *grad_output) {
+void Layer::bwd_initialize(Tensor<double> *grad_output) {
     if (grad_input_ == nullptr || batch_size_ != grad_output->get_batch_size()) {
         grad_output_ = grad_output;
 
         if (grad_input_ == nullptr)
-            grad_input_ = new Tensor<float>(input_->shape());
+            grad_input_ = new Tensor<double>(input_->shape());
         else
             grad_input_->reset(input_->shape());
     }

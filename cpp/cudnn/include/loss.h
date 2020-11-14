@@ -8,14 +8,14 @@ public:
     CrossEntropyLoss();
     ~CrossEntropyLoss();
 
-    float loss(Tensor<float> *predict, Tensor<float> *target);
+    double loss(Tensor<double> *predict, Tensor<double> *target);
 
 private:
     // reduced loss
-    float h_loss_ = 0.f;
-    float *d_loss_ = nullptr;
+    double h_loss_ = 0.f;
+    double *d_loss_ = nullptr;
 
-    float *d_workspace_ = nullptr;
+    double *d_workspace_ = nullptr;
     void init_workspace(int batch_size);
 };
 

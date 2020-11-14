@@ -12,11 +12,11 @@ public:
     Pooling(std::string name, int kernel_size, int padding, int stride, cudnnPoolingMode_t mode);
     ~Pooling() override;
 
-    Tensor<float> *forward(Tensor<float> *input) override;
-    Tensor<float> *backward(Tensor<float> *grad_output) override;
+    Tensor<double> *forward(Tensor<double> *input) override;
+    Tensor<double> *backward(Tensor<double> *grad_output) override;
 
 private:
-    void fwd_initialize(Tensor<float> *input) override;
+    void fwd_initialize(Tensor<double> *input) override;
 
     int kernel_size_;
     int padding_;

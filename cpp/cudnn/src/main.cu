@@ -10,9 +10,9 @@
 #include <iomanip>
 #include <nvtx3/nvToolsExt.h>
 
-int get_accuracy(Tensor<float> *output, Tensor<float> *target);
-int arg_max(int batch, int output_size, const float *arr);
-int find_one(int batch, int output_size, const float *arr);
+int get_accuracy(Tensor<double> *output, Tensor<double> *target);
+int arg_max(int batch, int output_size, const double *arr);
+int find_one(int batch, int output_size, const double *arr);
 
 int main(int argc, char *argv[]) {
     CLI::App app{"CUDNN Harness"};
@@ -35,7 +35,7 @@ int main(int argc, char *argv[]) {
     int epochs = 100;
     int monitoring_step = 100;
 
-    double learning_rate = 1.f;
+    double learning_rate = 0.1f;
     double lr_decay = 0.00005f;
 
     bool load_pretrain = false;
@@ -56,36 +56,39 @@ int main(int argc, char *argv[]) {
     CrossEntropyLoss criterion1;
     double loss, accuracy;
     int tp_count;
+    int sample_count;
 
-    auto model = make_resnet50();
-    model->cuda();
-    //    auto model = new Network();
-    //    model->add_layer(new Conv2d("conv1", 20, 5));
-    //    model->add_layer(new Activation("relu", CUDNN_ACTIVATION_RELU));
-    //    model->add_layer(new Pooling("pool", 2, 2, 0, CUDNN_POOLING_MAX));
-    //    model->add_layer(new Conv2d("conv2", 50, 5));
-    //    model->add_layer(new Activation("relu", CUDNN_ACTIVATION_RELU));
-    //    model->add_layer(new Pooling("pool", 2, 2, 0, CUDNN_POOLING_MAX));
-    //    model->add_layer(new Dense("dense1", 500));
-    //    model->add_layer(new Activation("relu", CUDNN_ACTIVATION_RELU));
-    //    model->add_layer(new Dense("dense2", 10));
-    //    model->add_layer(new Softmax("softmax"));
+    //    auto model = make_resnet50();
     //    model->cuda();
+    auto model = new Network();
+    model->add_layer(new Conv2d("conv1", 20, 5));
+    model->add_layer(new Activation("relu", CUDNN_ACTIVATION_RELU));
+    model->add_layer(new Pooling("pool", 2, 2, 0, CUDNN_POOLING_MAX));
+    model->add_layer(new Conv2d("conv2", 50, 5));
+    model->add_layer(new Activation("relu", CUDNN_ACTIVATION_RELU));
+    model->add_layer(new Pooling("pool", 2, 2, 0, CUDNN_POOLING_MAX));
+    model->add_layer(new Dense("dense1", 500));
+    model->add_layer(new Activation("relu", CUDNN_ACTIVATION_RELU));
+    model->add_layer(new Dense("dense2", 10));
+    model->add_layer(new Softmax("softmax"));
+    model->cuda();
 
     if (load_pretrain)
         model->load_pretrain();
 
     cudaProfilerStart();
 
-    Tensor<float> *train_data, *train_target;
-    Tensor<float> *test_data, *test_target;
-    Tensor<float> *output;
+    Tensor<double> *train_data, *train_target;
+    Tensor<double> *test_data, *test_target;
+    Tensor<double> *output;
 
     std::string nvtx_message;
     for (int epoch = 0; epoch < epochs; epoch++) {
         std::cout << "[TRAIN]" << std::endl;
         model->train();
         tp_count = 0;
+        sample_count = 0;
+        loss = 0;
         train_data_loader.reset();
 
         for (int batch = 0; batch < train_data_loader.get_num_batches(); batch++) {
@@ -99,25 +102,28 @@ int main(int argc, char *argv[]) {
 
             output = model->forward(train_data);
             tp_count += get_accuracy(output, train_target);
+            loss += criterion.loss(output, train_target);
+            sample_count += batch_size;
 
             model->backward(train_target);
             model->update(learning_rate);
 
             nvtxRangePop();
 
-            if (batch % monitoring_step == 0 && batch > 0) {
+            if (batch % monitoring_step == 0) {
                 //                train_data->print("data", true, batch_size);
                 //                output->print("output", true, batch_size);
                 //                train_target->print("target", true, batch_size);
 
-                loss = criterion.loss(output, train_target);
-                accuracy = 100.f * tp_count / monitoring_step / batch_size;
+                accuracy = 100.f * tp_count / sample_count;
                 std::cout << "epoch: " << std::right << std::setw(4) << epoch
                           << ", batch: " << std::right << std::setw(4) << batch
-                          << ", loss: " << std::left << std::setw(8) << std::fixed
-                          << std::setprecision(6) << loss << ", accuracy: " << accuracy << "%"
-                          << std::endl;
+                          << ", avg loss: " << std::left << std::setw(8) << std::fixed
+                          << std::setprecision(6) << loss / (float)sample_count
+                          << ", accuracy: " << accuracy << "%" << std::endl;
                 tp_count = 0;
+                sample_count = 0;
+                loss = 0;
             }
         }
         std::cout << std::endl;
@@ -131,6 +137,7 @@ int main(int argc, char *argv[]) {
         test_data_loader.reset();
 
         tp_count = 0;
+        sample_count = 0;
         loss = 0;
         for (int batch = 0; batch < test_data_loader.get_num_batches(); batch++) {
             std::string nvtx_message = std::string("batch " + std::to_string(batch));
@@ -142,6 +149,7 @@ int main(int argc, char *argv[]) {
 
             output = model->forward(test_data);
             tp_count += get_accuracy(output, test_target);
+            sample_count += batch_size;
             loss += criterion1.loss(output, test_target);
 
             nvtxRangePop();
@@ -152,9 +160,9 @@ int main(int argc, char *argv[]) {
             }
         }
 
-        accuracy = 100.f * tp_count / test_data_loader.get_num_batches() / batch_size;
-        std::cout << "loss: " << std::setw(4) << loss << ", accuracy: " << accuracy << "%"
-                  << std::endl;
+        accuracy = 100.f * tp_count / sample_count;
+        std::cout << "avg loss: " << std::setw(4) << loss / (float)sample_count
+                  << ", accuracy: " << accuracy << "%" << std::endl;
         std::cout << std::endl;
     }
 
@@ -164,14 +172,14 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
-int get_accuracy(Tensor<float> *output, Tensor<float> *target) {
+int get_accuracy(Tensor<double> *output, Tensor<double> *target) {
     int batch_size = output->get_batch_size();
     int output_size = output->size();
 
     assert(batch_size == target->get_batch_size());
     assert(output_size == target->size());
 
-    float *h_output, *h_target;
+    double *h_output, *h_target;
     int idx_output, idx_target;
     int hit_count = 0;
 
@@ -190,7 +198,7 @@ int get_accuracy(Tensor<float> *output, Tensor<float> *target) {
     return hit_count;
 }
 
-int arg_max(int batch, int output_size, const float *arr) {
+int arg_max(int batch, int output_size, const double *arr) {
     int idx_output = 0;
     for (int i = 1; i < NUMBER_MNIST_CLASSES; i++) {
         if (arr[batch * output_size + i] > arr[batch * output_size + idx_output])
@@ -199,7 +207,7 @@ int arg_max(int batch, int output_size, const float *arr) {
     return idx_output;
 }
 
-int find_one(int batch, int output_size, const float *arr) {
+int find_one(int batch, int output_size, const double *arr) {
     for (int i = 0; i < 10; i++) {
         if (abs(arr[batch * output_size + i] - 1) < 1e-10) {
             return i;

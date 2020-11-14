@@ -12,16 +12,16 @@ public:
     Dense(std::string name, int out_size);
     ~Dense() override;
 
-    Tensor<float> *forward(Tensor<float> *input) override;
-    Tensor<float> *backward(Tensor<float> *grad_input) override;
+    Tensor<double> *forward(Tensor<double> *input) override;
+    Tensor<double> *backward(Tensor<double> *grad_input) override;
 
 private:
-    void fwd_initialize(Tensor<float> *input) override;
-    void bwd_initialize(Tensor<float> *grad_output) override;
+    void fwd_initialize(Tensor<double> *input) override;
+    void bwd_initialize(Tensor<double> *grad_output) override;
 
     int output_size_ = 0;
 
-    float *d_one_vec = nullptr;
+    double *d_one_vec = nullptr;
 };
 
 #endif // PROJECTNAME_DENSE_CUH
