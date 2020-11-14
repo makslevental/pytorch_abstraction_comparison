@@ -6,6 +6,7 @@
 #define _TENSOR_H_
 
 #include <array>
+#include <cstring>
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -40,7 +41,7 @@ public:
     explicit Tensor(int n = 1, int c = 1, int h = 1, int w = 1)
         : batch_size_(n), channels_(c), height_(h), width_(w) {
         unsigned int n_elements = batch_size_ * channels_ * height_ * width_;
-        const unsigned int bytes = n_elements * sizeof(float);
+        const unsigned int bytes = n_elements * sizeof(double);
         checkCudaErrors(cudaMallocHost((void **)&host_ptr_, bytes));
         tensor_descriptor();
         checkCudaErrors(cudaMalloc((void **)&device_ptr_, sizeof(dtype) * len()));
@@ -48,7 +49,7 @@ public:
     explicit Tensor(std::array<int, 4> size)
         : batch_size_(size[0]), channels_(size[1]), height_(size[2]), width_(size[3]) {
         unsigned int n_elements = batch_size_ * channels_ * height_ * width_;
-        const unsigned int bytes = n_elements * sizeof(float);
+        const unsigned int bytes = n_elements * sizeof(double);
         checkCudaErrors(cudaMallocHost((void **)&host_ptr_, bytes));
         tensor_descriptor();
         checkCudaErrors(cudaMalloc((void **)&device_ptr_, sizeof(dtype) * len()));
@@ -79,6 +80,11 @@ public:
         }
     }
 
+    void zero_out() {
+        std::memset(host_ptr_, 0, sizeof(dtype) * len());
+        checkCudaErrors(cudaMemset(device_ptr_, 0, sizeof(dtype) * len()));
+    }
+
     void download(const Tensor<dtype> &t) {
         checkCudaErrors(cudaMemcpy(
             get_device_ptr(), t.get_device_ptr(), sizeof(dtype) * len(), cudaMemcpyDeviceToDevice));
@@ -106,7 +112,7 @@ public:
 
         // create new buffer
         unsigned int n_elements = batch_size_ * channels_ * height_ * width_;
-        const unsigned int bytes = n_elements * sizeof(float);
+        const unsigned int bytes = n_elements * sizeof(double);
         checkCudaErrors(cudaMallocHost((void **)&host_ptr_, bytes));
 
         // reset tensor descriptor if it was tensor_descriptor
@@ -142,7 +148,7 @@ public:
         checkCudnnErrors(cudnnSetTensor4dDescriptor(
             tensor_desc_,
             CUDNN_TENSOR_NCHW,
-            CUDNN_DATA_FLOAT,
+            CUDNN_DATA_DOUBLE,
             batch_size_,
             channels_,
             height_,
@@ -173,11 +179,16 @@ public:
 
     void print(const std::string &name, bool view_param = false, int num_batch = 1) {
         // TODO: copy to host without overwriting
-        std::cout << "**" << name << "\t: (" << size() << ")\t";
-        std::cout << ".n: " << batch_size_ << ", .c: " << channels_ << ", .h: " << height_
-                  << ", .w: " << width_;
-        std::cout << std::hex << "\t(h:" << host_ptr_ << ", d:" << device_ptr_ << ")" << std::dec
-                  << std::endl;
+        auto *host_ptr_ = new double[batch_size_ * channels_ * height_ * width_];
+        checkCudaErrors(
+            cudaMemcpy(host_ptr_, get_device_ptr(), sizeof(dtype) * len(), cudaMemcpyDeviceToHost));
+        std::cout << "**" << name << "\t: (" << size() << ")\n";
+        if (width_ != 1) {
+            std::cout << ".n: " << batch_size_ << ", .c: " << channels_ << ", .h: " << height_
+                      << ", .w: " << width_;
+            std::cout << std::hex << "\t(h:" << host_ptr_ << ", d:" << device_ptr_ << ")"
+                      << std::dec << std::endl;
+        }
 
         if (view_param) {
             std::cout << std::fixed;
@@ -188,22 +199,33 @@ public:
                 std::cout.precision(3);
                 max_print_line = 28;
             }
+            if (width_ == 1) {
+                std::cout.precision(3);
+                max_print_line = 1;
+            }
             int offset = 0;
 
             for (int n = 0; n < num_batch; n++) {
-                std::cout << "<--- batch[" << n << "] --->" << std::endl;
+                if (width_ != 1) {
+
+                    std::cout << "<--- batch[" << n << "] --->" << std::endl;
+                }
                 int count = 0;
                 int print_line_count = 0;
                 while (count < size() && print_line_count < max_print_line) {
-                    std::cout << "\t";
+                    std::cout << " ";
                     for (int s = 0; s < width_ && count < size(); s++) {
                         if (width_ == 28) {
                             if (host_ptr_[size() * n + count + offset] > 0)
                                 std::cout << "*";
                             else
                                 std::cout << " ";
+                        } else if (width_ == 1) {
+                            for (int i = 0; i < 10; i++) {
+                                std::cout << host_ptr_[size() * n + i + offset] << " ";
+                            }
                         } else {
-                            std::cout << host_ptr_[size() * n + count + offset] << "\t";
+                            std::cout << host_ptr_[size() * n + count + offset] << " ";
                         }
                         count++;
                     }
@@ -223,7 +245,7 @@ public:
             return -1;
         }
 
-        file.read((char *)host_ptr_, sizeof(float) * this->len());
+        file.read((char *)host_ptr_, sizeof(double) * this->len());
         this->to(DeviceType::cuda);
         file.close();
 
@@ -236,7 +258,7 @@ public:
             std::cout << "fail to write " << filename << std::endl;
             return -1;
         }
-        file.write((char *)this->to(host), sizeof(float) * this->len());
+        file.write((char *)this->to(host), sizeof(double) * this->len());
         file.close();
 
         return 0;

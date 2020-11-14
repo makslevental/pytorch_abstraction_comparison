@@ -6,8 +6,8 @@
 
 BatchNorm2d::BatchNorm2d(
     std::string name,
-    float epsilon,
-    float momentum,
+    double epsilon,
+    double momentum,
     bool affine,
     bool track_running_stats,
     cudnnBatchNormMode_t mode)
@@ -19,7 +19,7 @@ BatchNorm2d::BatchNorm2d(
 }
 BatchNorm2d::~BatchNorm2d() = default;
 
-Tensor<float> *BatchNorm2d::forward(Tensor<float> *input) {
+Tensor<double> *BatchNorm2d::forward(Tensor<double> *input) {
     fwd_initialize(input);
     input_ = input;
     if (train_) {
@@ -70,8 +70,8 @@ Tensor<float> *BatchNorm2d::forward(Tensor<float> *input) {
     // will i need to clone this?
     return output_;
 }
-Tensor<float> *BatchNorm2d::backward(Tensor<float> *grad_output) {
-    bwd_initialize(grad_output);
+Tensor<double> *BatchNorm2d::backward(Tensor<double> *grad_of_output) {
+    bwd_initialize(grad_of_output);
     checkCudnnErrors(cudnnBatchNormalizationBackwardEx(
         /*handle*/ cuda_->cudnn(),
         /*mode*/ mode_,
@@ -84,12 +84,12 @@ Tensor<float> *BatchNorm2d::backward(Tensor<float> *grad_output) {
         /**xData*/ input_->get_device_ptr(),
         /*yDesc*/ nullptr,
         /**yData*/ nullptr,
-        /*dyDesc*/ grad_output->tensor_descriptor(),
-        /**dyData*/ grad_output->get_device_ptr(),
+        /*dyDesc*/ grad_of_output->tensor_descriptor(),
+        /**dyData*/ grad_of_output->get_device_ptr(),
         /*dzDesc*/ nullptr,
         /**dzData*/ nullptr,
-        /*dxDesc*/ grad_input_->tensor_descriptor(),
-        /**dxData*/ grad_input_->get_device_ptr(),
+        /*dxDesc*/ grad_of_input_->tensor_descriptor(),
+        /**dxData*/ grad_of_input_->get_device_ptr(),
         /*dBnScaleBiasDesc*/ derived_bn_scale_bias_mean_var_desc_,
         /**bnScaleData*/ weights_->get_device_ptr(),
         /**bnBiasData*/ biases_->get_device_ptr(),
@@ -103,21 +103,21 @@ Tensor<float> *BatchNorm2d::backward(Tensor<float> *grad_output) {
         /*workSpaceSizeInBytes*/ workspace_size_,
         /**reserveSpace*/ device_reserve_space_,
         /*reserveSpaceSizeInBytes*/ reserve_size_));
-    return grad_input_;
+    return grad_of_input_;
 }
 
-void BatchNorm2d::fwd_initialize(Tensor<float> *input) {
+void BatchNorm2d::fwd_initialize(Tensor<double> *input) {
     // initialize weights and bias
     if (weights_ == nullptr) {
         if (mode_ == CUDNN_BATCHNORM_PER_ACTIVATION) {
-            weights_ = new Tensor<float>(
+            weights_ = new Tensor<double>(
                 1, input->get_channels(), input->get_height(), input->get_width());
-            biases_ = new Tensor<float>(
+            biases_ = new Tensor<double>(
                 1, input->get_channels(), input->get_height(), input->get_width());
         } else if (
             mode_ == CUDNN_BATCHNORM_SPATIAL || mode_ == CUDNN_BATCHNORM_SPATIAL_PERSISTENT) {
-            weights_ = new Tensor<float>(1, input->get_channels());
-            biases_ = new Tensor<float>(1, input->get_channels());
+            weights_ = new Tensor<double>(1, input->get_channels());
+            biases_ = new Tensor<double>(1, input->get_channels());
         } else {
             exit(EXIT_FAILURE);
         }
@@ -129,15 +129,15 @@ void BatchNorm2d::fwd_initialize(Tensor<float> *input) {
         batch_size_ = input->get_batch_size();
         num_features_ = input->get_channels();
         if (track_running_stats_) {
-            running_mean_ = new Tensor<float>(1, num_features_);
-            running_var_ = new Tensor<float>(1, num_features_);
+            running_mean_ = new Tensor<double>(1, num_features_);
+            running_var_ = new Tensor<double>(1, num_features_);
         }
 
-        save_mean_ = new Tensor<float>(1, num_features_);
-        save_var_ = new Tensor<float>(1, num_features_);
+        save_mean_ = new Tensor<double>(1, num_features_);
+        save_var_ = new Tensor<double>(1, num_features_);
 
         if (output_ == nullptr) {
-            output_ = new Tensor<float>(input->shape());
+            output_ = new Tensor<double>(input->shape());
         } else {
             output_->reset(input->shape());
         }
@@ -161,12 +161,12 @@ void BatchNorm2d::fwd_initialize(Tensor<float> *input) {
     }
 }
 
-void BatchNorm2d::bwd_initialize(Tensor<float> *grad_output) {
+void BatchNorm2d::bwd_initialize(Tensor<double> *grad_of_output) {
     if (grad_weights_ == nullptr) {
-        grad_weights_ = new Tensor<float>(weights_->shape());
-        grad_biases_ = new Tensor<float>(biases_->shape());
+        grad_weights_ = new Tensor<double>(weights_->shape());
+        grad_biases_ = new Tensor<double>(biases_->shape());
     }
-    Layer::bwd_initialize(grad_output);
+    Layer::bwd_initialize(grad_of_output);
 }
 void BatchNorm2d::set_workspace() {
     checkCudnnErrors(cudnnGetBatchNormalizationForwardTrainingExWorkspaceSize(

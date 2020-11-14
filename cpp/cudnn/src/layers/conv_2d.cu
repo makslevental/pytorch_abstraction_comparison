@@ -37,7 +37,7 @@ Conv2d::Conv2d(
         dilation_,
         dilation_,
         CUDNN_CROSS_CORRELATION,
-        CUDNN_DATA_FLOAT));
+        CUDNN_DATA_DOUBLE));
 
     // setting cudnn convolution math type
     // CUDNN_DEFAULT_MATH operates convolution with FP32.
@@ -147,13 +147,13 @@ void Conv2d::set_workspace() {
     }
 }
 
-void Conv2d::fwd_initialize(Tensor<float> *input) {
+void Conv2d::fwd_initialize(Tensor<double> *input) {
     // initialize weights and bias
     if (weights_ == nullptr) {
         // initialize containers handles
         checkCudnnErrors(cudnnSetFilter4dDescriptor(
             filter_desc_,
-            CUDNN_DATA_FLOAT,
+            CUDNN_DATA_DOUBLE,
             CUDNN_TENSOR_NCHW,
             out_channels_,
             input->get_channels(),
@@ -161,9 +161,9 @@ void Conv2d::fwd_initialize(Tensor<float> *input) {
             kernel_size_));
 
         weights_ =
-            new Tensor<float>(out_channels_, input->get_channels(), kernel_size_, kernel_size_);
+            new Tensor<double>(out_channels_, input->get_channels(), kernel_size_, kernel_size_);
         if (bias_) {
-            biases_ = new Tensor<float>(1, out_channels_); // bias size
+            biases_ = new Tensor<double>(1, out_channels_); // bias size
             bias_desc_ = biases_->tensor_descriptor();
         }
     }
@@ -186,7 +186,7 @@ void Conv2d::fwd_initialize(Tensor<float> *input) {
             &output_size_[3]));
 
         if (output_ == nullptr)
-            output_ = new Tensor<float>(output_size_);
+            output_ = new Tensor<double>(output_size_);
         else
             output_->reset(output_size_);
 
@@ -209,7 +209,7 @@ void Conv2d::fwd_initialize(Tensor<float> *input) {
     }
 }
 
-Tensor<float> *Conv2d::forward(Tensor<float> *input) {
+Tensor<double> *Conv2d::forward(Tensor<double> *input) {
     fwd_initialize(input);
     input_ = input;
     checkCudnnErrors(cudnnConvolutionForward(
@@ -247,25 +247,25 @@ Tensor<float> *Conv2d::forward(Tensor<float> *input) {
     return output_;
 }
 
-void Conv2d::bwd_initialize(Tensor<float> *grad_output) {
+void Conv2d::bwd_initialize(Tensor<double> *grad_of_output) {
     if (grad_weights_ == nullptr) {
-        grad_weights_ = new Tensor<float>(weights_->shape());
+        grad_weights_ = new Tensor<double>(weights_->shape());
         if (bias_) {
-            grad_biases_ = new Tensor<float>(1, biases_->get_channels());
+            grad_biases_ = new Tensor<double>(1, biases_->get_channels());
         }
     }
-    Layer::bwd_initialize(grad_output);
+    Layer::bwd_initialize(grad_of_output);
 }
 
-Tensor<float> *Conv2d::backward(Tensor<float> *grad_output) {
-    bwd_initialize(grad_output);
+Tensor<double> *Conv2d::backward(Tensor<double> *grad_of_output) {
+    bwd_initialize(grad_of_output);
     // gradients of biases
     if (bias_) {
         checkCudnnErrors(cudnnConvolutionBackwardBias(
             cuda_->cudnn(),
             &cuda_->one,
             output_desc_,
-            grad_output->get_device_ptr(),
+            grad_of_output->get_device_ptr(),
             &cuda_->zero,
             bias_desc_,
             grad_biases_->get_device_ptr()));
@@ -278,7 +278,7 @@ Tensor<float> *Conv2d::backward(Tensor<float> *grad_output) {
         input_desc_,
         input_->get_device_ptr(),
         output_desc_,
-        grad_output_->get_device_ptr(),
+        grad_of_output_->get_device_ptr(),
         conv_desc_,
         conv_bwd_filter_algo_,
         device_workspace_,
@@ -295,28 +295,28 @@ Tensor<float> *Conv2d::backward(Tensor<float> *grad_output) {
             filter_desc_,
             weights_->get_device_ptr(),
             output_desc_,
-            grad_output->get_device_ptr(),
+            grad_of_output->get_device_ptr(),
             conv_desc_,
             conv_bwd_data_algo_,
             device_workspace_,
             workspace_size_,
             &cuda_->zero,
             input_desc_,
-            grad_input_->get_device_ptr()));
+            grad_of_input_->get_device_ptr()));
 
     if (DEBUG_CONV & 0x02) {
         std::cout << name_ << "[BACKWARD]" << std::endl;
-        grad_output->print(name_ + "::gradients", true);
+        grad_of_output->print(name_ + "::gradients", true);
         grad_biases_->print(name_ + "gbias", true);
         grad_weights_->print(name_ + "gfilter", true);
         if (!gradient_stop_)
-            grad_input_->print(name_ + "gdata", true);
+            grad_of_input_->print(name_ + "gdata", true);
     }
 
     if (DEBUG_CONV & 0x04) {
-        grad_output->print(name_ + "::gradients", true);
+        grad_of_output->print(name_ + "::gradients", true);
         grad_biases_->print(name_ + "::gbias", true);
     }
 
-    return grad_input_;
+    return grad_of_input_;
 }

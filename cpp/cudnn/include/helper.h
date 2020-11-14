@@ -27,7 +27,7 @@
 
 #define DEBUG_CONV 0
 #define DEBUG_DENSE 0
-#define DEBUG_SOFTMAX 0
+#define DEBUG_SOFTMAX 2
 #define DEBUG_UPDATE 0
 
 #define DEBUG_LOSS 0
@@ -202,9 +202,9 @@ public:
     };
     cudnnHandle_t cudnn() { return _cudnn_handle; };
 
-    const float one = 1.f;
-    const float zero = 0.f;
-    const float minus_one = -1.f;
+    const double one = 1.f;
+    const double zero = 0.f;
+    const double negative_one = -1.f;
 
 private:
     cublasHandle_t _cublas_handle;

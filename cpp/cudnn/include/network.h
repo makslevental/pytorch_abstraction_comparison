@@ -6,9 +6,9 @@
 
 #include <cudnn.h>
 
+#include "cross_entropy_loss.h"
 #include "helper.h"
 #include "layers/layer.h"
-#include "loss.h"
 
 typedef enum { training, inference } WorkloadType;
 
@@ -19,9 +19,10 @@ public:
 
     void add_layer(Layer *layer);
 
-    virtual Tensor<float> *forward(Tensor<float> *input);
-    virtual void backward(Tensor<float> *input);
-    void update(float learning_rate = 0.02f);
+    virtual Tensor<double> *forward(Tensor<double> *input);
+    virtual void backward(Tensor<double> *input);
+    void update(double learning_rate = 0.02f);
+    [[nodiscard]] CudaContext *get_cuda_context() const;
 
     int load_pretrain();
     int write_file();
@@ -30,11 +31,15 @@ public:
     void train();
     void eval();
 
-    Tensor<float> *output_;
+    Tensor<double> *output_;
+
+    Tensor<double> *forward(Tensor<double> *input, int DEBUG);
 
 protected:
     std::vector<Layer *> layers_;
     CudaContext *cuda_ = nullptr;
+
+protected:
     WorkloadType phase_ = inference;
 };
 

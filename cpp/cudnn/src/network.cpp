@@ -26,28 +26,28 @@ void Network::add_layer(Layer *layer) {
         layers_.at(0)->set_gradient_stop();
 }
 
-Tensor<float> *Network::forward(Tensor<float> *input) {
+Tensor<double> *Network::forward(Tensor<double> *input, int DEBUG) {
     output_ = input;
 
     nvtxRangePushA("Forward");
+    std::stringstream ss;
     for (auto layer : layers_) {
-        if (DEBUG_FORWARD) {
+        if (DEBUG) {
             std::cout << "[[Forward ]][[ ";
-            std::cout << std::setw(7) << layer->get_name() << " ]]\t(";
-            std::cout << output_->shape() << std::endl;
-            output_->print("input", true, output_->get_batch_size());
+            ss.str("");
+            ss << std::setw(7) << layer->get_name() << " layer input";
+            output_->print(ss.str(), true, output_->get_batch_size());
         }
 
         output_ = layer->forward(output_);
 
-        if (DEBUG_FORWARD) {
-            std::cout << "--> " << output_->shape() << std::endl;
+        if (DEBUG) {
             checkCudaErrors(cudaDeviceSynchronize());
         }
-        if (DEBUG_FORWARD > 1) {
-            output_->print("output", true, output_->get_batch_size());
-            if (phase_ == inference)
-                getchar();
+        if (DEBUG > 1) {
+            ss.str("");
+            ss << std::setw(7) << layer->get_name() << " layer output";
+            output_->print(ss.str(), true, output_->get_batch_size());
         }
     }
     nvtxRangePop();
@@ -55,9 +55,7 @@ Tensor<float> *Network::forward(Tensor<float> *input) {
     return output_;
 }
 
-void Network::backward(Tensor<float> *target) {
-    Tensor<float> *gradient = target;
-
+void Network::backward(Tensor<double> *gradient) {
     if (phase_ == inference)
         return;
 
@@ -94,7 +92,7 @@ void Network::backward(Tensor<float> *target) {
 }
 
 // TODO: SGD and all that?
-void Network::update(float learning_rate) {
+void Network::update(double learning_rate) {
     if (phase_ == inference)
         return;
 
@@ -153,6 +151,7 @@ void Network::train() {
     for (auto layer : layers_) {
         layer->unfreeze();
         layer->train();
+        layer->zero_out();
     }
 }
 
@@ -163,6 +162,9 @@ void Network::eval() {
     for (auto layer : layers_) {
         layer->freeze();
         layer->eval();
+        layer->zero_out();
     }
 }
 
+Tensor<double> *Network::forward(Tensor<double> *input) { return forward(input, 0); }
+CudaContext *Network::get_cuda_context() const { return cuda_; }

@@ -6,20 +6,16 @@
 #define PROJECTNAME_DATASET_H
 
 #include "tensor.h"
+#include <random>
 #include <vector>
 
 using namespace std;
 
 class Dataset {
 public:
-    Dataset(
-        string dataset_fp,
-        string label_fp,
-        bool shuffle,
-        int batch_size,
-        int num_classes);
+    Dataset(string dataset_fp, string label_fp, bool shuffle, int batch_size, int num_classes);
 
-    std::tuple<Tensor<float> *, Tensor<float> *> get_next_batch();
+    std::tuple<Tensor<double> *, Tensor<double> *> get_next_batch();
     [[nodiscard]] virtual int get_num_batches() const = 0;
     virtual int len();
     virtual void reset();
@@ -29,10 +25,10 @@ protected:
     std::string dataset_fp_;
     std::string label_fp_;
 
-    std::vector<std::vector<float>> data_pool_;
-    std::vector<std::vector<float>> target_pool_;
-    Tensor<float> *data_ = nullptr;
-    Tensor<float> *target_ = nullptr;
+    std::vector<std::vector<double>> data_pool_;
+    std::vector<std::vector<double>> target_pool_;
+    Tensor<double> *data_ = nullptr;
+    Tensor<double> *target_ = nullptr;
 
     virtual void load_data() = 0;
     virtual void load_target() = 0;

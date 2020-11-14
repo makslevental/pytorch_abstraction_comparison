@@ -20,7 +20,7 @@ Dense::~Dense() {
     }
 }
 
-__global__ void init_one_vec(float *d_one_vec, size_t length) {
+__global__ void init_one_vec(double *d_one_vec, size_t length) {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
 
     if (i >= length)
@@ -29,12 +29,12 @@ __global__ void init_one_vec(float *d_one_vec, size_t length) {
     d_one_vec[i] = 1.f;
 }
 
-void Dense::fwd_initialize(Tensor<float> *input) {
+void Dense::fwd_initialize(Tensor<double> *input) {
     // initialize weights and biases
     if (weights_ == nullptr) {
         input_size_ = input->size();
-        weights_ = new Tensor<float>(1, 1, input_size_, output_size_);
-        biases_ = new Tensor<float>(1, 1, output_size_);
+        weights_ = new Tensor<double>(1, 1, input_size_, output_size_);
+        biases_ = new Tensor<double>(1, 1, output_size_);
     }
 
     if (input_desc_ == nullptr || batch_size_ != input->get_batch_size()) {
@@ -43,7 +43,7 @@ void Dense::fwd_initialize(Tensor<float> *input) {
         batch_size_ = input->get_batch_size();
 
         if (output_ == nullptr)
-            output_ = new Tensor<float>(batch_size_, output_size_);
+            output_ = new Tensor<double>(batch_size_, output_size_);
         else
             output_->reset(batch_size_, output_size_);
 
@@ -51,7 +51,7 @@ void Dense::fwd_initialize(Tensor<float> *input) {
 
         if (d_one_vec != nullptr)
             cudaFree(d_one_vec);
-        checkCudaErrors(cudaMalloc((void **)&d_one_vec, sizeof(float) * batch_size_));
+        checkCudaErrors(cudaMalloc((void **)&d_one_vec, sizeof(double) * batch_size_));
         init_one_vec<<<(batch_size_ + BLOCK_DIM_1D - 1) / BLOCK_DIM_1D, BLOCK_DIM_1D>>>(
             d_one_vec, batch_size_);
 
@@ -67,11 +67,11 @@ void Dense::fwd_initialize(Tensor<float> *input) {
     }
 }
 
-Tensor<float> *Dense::forward(Tensor<float> *input) {
+Tensor<double> *Dense::forward(Tensor<double> *input) {
     // output = weights^T * input (without biases)
     fwd_initialize(input);
     input_ = input;
-    checkCublasErrors(cublasSgemm(
+    checkCublasErrors(cublasDgemm(
         cuda_->cublas(),
         CUBLAS_OP_T,
         CUBLAS_OP_N,
@@ -88,7 +88,7 @@ Tensor<float> *Dense::forward(Tensor<float> *input) {
         output_size_));
 
     // output += biases * d_one_vec^T
-    checkCublasErrors(cublasSgemm(
+    checkCublasErrors(cublasDgemm(
         cuda_->cublas(),
         CUBLAS_OP_N,
         CUBLAS_OP_N,
@@ -114,24 +114,24 @@ Tensor<float> *Dense::forward(Tensor<float> *input) {
     return output_;
 }
 
-void Dense::bwd_initialize(Tensor<float> *grad_output) {
+void Dense::bwd_initialize(Tensor<double> *grad_of_output) {
     if (grad_weights_ == nullptr) {
-        grad_weights_ = new Tensor<float>(weights_->shape());
-        grad_biases_ = new Tensor<float>(biases_->shape());
+        grad_weights_ = new Tensor<double>(weights_->shape());
+        grad_biases_ = new Tensor<double>(biases_->shape());
     }
-    Layer::bwd_initialize(grad_output);
+    Layer::bwd_initialize(grad_of_output);
 }
 
-Tensor<float> *Dense::backward(Tensor<float> *grad_output) {
-    bwd_initialize(grad_output);
+Tensor<double> *Dense::backward(Tensor<double> *grad_of_output) {
+    bwd_initialize(grad_of_output);
     // db = (dy) * d_one_vec
-    cublasSgemv(
+    cublasDgemv(
         cuda_->cublas(),
         CUBLAS_OP_N,
         output_size_,
         batch_size_,
         &cuda_->one,
-        grad_output_->get_device_ptr(),
+        grad_of_output_->get_device_ptr(),
         output_size_,
         d_one_vec,
         1,
@@ -140,7 +140,7 @@ Tensor<float> *Dense::backward(Tensor<float> *grad_output) {
         1);
 
     // dw = x * (dy)^T
-    cublasSgemm(
+    cublasDgemm(
         cuda_->cublas(),
         CUBLAS_OP_N,
         CUBLAS_OP_T,
@@ -150,7 +150,7 @@ Tensor<float> *Dense::backward(Tensor<float> *grad_output) {
         &cuda_->one,
         input_->get_device_ptr(),
         input_size_,
-        grad_output_->get_device_ptr(),
+        grad_of_output_->get_device_ptr(),
         output_size_,
         &cuda_->zero,
         grad_weights_->get_device_ptr(),
@@ -158,7 +158,7 @@ Tensor<float> *Dense::backward(Tensor<float> *grad_output) {
 
     // dx = W * dy
     if (!gradient_stop_)
-        cublasSgemm(
+        cublasDgemm(
             cuda_->cublas(),
             CUBLAS_OP_N,
             CUBLAS_OP_N,
@@ -168,20 +168,20 @@ Tensor<float> *Dense::backward(Tensor<float> *grad_output) {
             &cuda_->one,
             weights_->get_device_ptr(),
             input_size_,
-            grad_output_->get_device_ptr(),
+            grad_of_output_->get_device_ptr(),
             output_size_,
             &cuda_->zero,
-            grad_input_->get_device_ptr(),
+            grad_of_input_->get_device_ptr(),
             input_size_);
 
     if (DEBUG_DENSE & 0x02) {
         std::cout << name_ << "[BACKWARD]" << std::endl;
-        grad_output->print(name_ + "::gradients", true, grad_output->get_batch_size());
+        grad_of_output->print(name_ + "::gradients", true, grad_of_output->get_batch_size());
         grad_weights_->print(name_ + "::gfilter", true);
         grad_biases_->print(name_ + "::gbias", true);
         if (!gradient_stop_)
-            grad_input_->print(name_ + "::gdata", true);
+            grad_of_input_->print(name_ + "::gdata", true);
     }
 
-    return grad_input_;
+    return grad_of_input_;
 }

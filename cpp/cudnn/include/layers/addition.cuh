@@ -10,12 +10,12 @@
 class Addition : public Layer {
 public:
     ~Addition() override;
-    Tensor<float> *add(Tensor<float> *A, Tensor<float> *B);
-    Tensor<float> *forward(Tensor<float> *input) override;
-    Tensor<float> *backward(Tensor<float> *grad_input) override;
+    Tensor<double> *add(Tensor<double> *A, Tensor<double> *B);
+    Tensor<double> *forward(Tensor<double> *input) override;
+    Tensor<double> *backward(Tensor<double> *grad_of_input) override;
 
 protected:
-    void fwd_initialize(Tensor<float> *input) override;
+    void fwd_initialize(Tensor<double> *input) override;
 
 private:
     cudnnOpTensorDescriptor_t op_descriptor = nullptr;

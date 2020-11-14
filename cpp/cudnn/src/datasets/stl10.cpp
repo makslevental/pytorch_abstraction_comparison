@@ -28,7 +28,7 @@ void STL10::load_data() {
 
     auto num_pixels = channels_ * height_ * width_;
     for (int i = 0; i < n_samples; i++) {
-        std::vector<float> image(&data[i * num_pixels], &data[(i + 1) * num_pixels]);
+        std::vector<double> image(&data[i * num_pixels], &data[(i + 1) * num_pixels]);
         data_pool_.push_back(image);
     }
 
@@ -50,7 +50,7 @@ void STL10::load_target() {
     // prepare input buffer for label
     // read all labels and converts to one-hot encoding
     for (int i = 0; i < n_targets; i++) {
-        std::vector<float> target_batch(num_classes_, 0.f);
+        std::vector<double> target_batch(num_classes_, 0.f);
         target_batch[static_cast<int>(data[i])] = 1.f;
         target_pool_.push_back(target_batch);
     }
@@ -58,7 +58,7 @@ void STL10::load_target() {
 
 void STL10::normalize_data() {
     for (auto &sample : data_pool_) {
-        float *sample_data_ptr = sample.data();
+        double *sample_data_ptr = sample.data();
         for (int j = 0; j < channels_ * height_ * width_; j++) {
             sample_data_ptr[j] /= 255.f;
         }
