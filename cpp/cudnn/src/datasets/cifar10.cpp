@@ -4,6 +4,8 @@
 
 #include "datasets/cifar10.h"
 #include <filesystem>
+#include <random>
+#include <utility>
 
 void CIFAR10::load_data() {
     std::cout << "loading " << dataset_fp_ << std::endl;
@@ -41,6 +43,9 @@ void CIFAR10::normalize_data() {
         double *sample_data_ptr = sample.data();
         for (int j = 0; j < channels_ * height_ * width_; j++) {
             sample_data_ptr[j] /= 255.f;
+            sample_data_ptr[j] -= 0.5;
+            sample_data_ptr[j] /= 0.5;
+
         }
     }
 }

@@ -19,7 +19,7 @@ public:
         int batch_size,
         int num_classes);
 
-    std::tuple<Tensor<double> *, Tensor<double> *> get_next_batch();
+    virtual std::tuple<Tensor<double> *, Tensor<double> *> get_next_batch();
     [[nodiscard]] virtual int get_num_batches() const = 0;
     virtual int len();
     virtual void reset();

@@ -61,20 +61,20 @@ int main(int argc, char *argv[]) {
     int tp_count;
     int sample_count;
 
-    //    auto model = make_resnet50();
-    //    model->cuda();
-    auto model = new Network();
-    model->add_layer(new Conv2d("conv1", 20, 5));
-    model->add_layer(new Activation("relu1", CUDNN_ACTIVATION_RELU));
-    model->add_layer(new Pooling("pool1", 2, 2, 0, CUDNN_POOLING_MAX));
-    model->add_layer(new Conv2d("conv2", 50, 5));
-    model->add_layer(new Activation("relu2", CUDNN_ACTIVATION_RELU));
-    model->add_layer(new Pooling("pool2", 2, 2, 0, CUDNN_POOLING_MAX));
-    model->add_layer(new Dense("dense1", 500));
-    model->add_layer(new Activation("relu3", CUDNN_ACTIVATION_RELU));
-    model->add_layer(new Dense("dense2", 10));
-    model->add_layer(new Softmax("softmax"));
+    auto model = make_resnet50();
     model->cuda();
+    //    auto model = new Network();
+    //    model->add_layer(new Conv2d("conv1", 20, 5));
+    //    model->add_layer(new Activation("relu1", CUDNN_ACTIVATION_RELU));
+    //    model->add_layer(new Pooling("pool1", 2, 2, 0, CUDNN_POOLING_MAX));
+    //    model->add_layer(new Conv2d("conv2", 50, 5));
+    //    model->add_layer(new Activation("relu2", CUDNN_ACTIVATION_RELU));
+    //    model->add_layer(new Pooling("pool2", 2, 2, 0, CUDNN_POOLING_MAX));
+    //    model->add_layer(new Dense("dense1", 500));
+    //    model->add_layer(new Activation("relu3", CUDNN_ACTIVATION_RELU));
+    //    model->add_layer(new Dense("dense2", 10));
+    //    model->add_layer(new Softmax("softmax"));
+    //    model->cuda();
     checkCudaErrors(cudaDeviceSynchronize());
 
     if (load_pretrain)
@@ -119,17 +119,14 @@ int main(int argc, char *argv[]) {
                 //                output->print("output", true, batch_size);
                 //                train_target->print("target", true, batch_size);
 
-                accuracy = 100.f * tp_count / sample_count;
                 std::cout << "epoch: " << std::right << std::setw(4) << epoch
-                          << ", batch: " << std::right << std::setw(4) << batch
-                          << ", avg loss: " << std::left << std::setw(8) << std::fixed
-                          << std::setprecision(6) << loss / (float)sample_count
-                          << ", accuracy: " << accuracy << "%" << std::endl;
-                tp_count = 0;
-                sample_count = 0;
-                loss = 0;
+                          << ", batch: " << std::right << std::setw(4) << batch << std::endl;
             }
         }
+
+        accuracy = 100.f * tp_count / sample_count;
+        std::cout << "avg loss: " << std::left << std::setw(8) << std::fixed << std::setprecision(6)
+                  << loss / (float)sample_count << ", accuracy: " << accuracy << "%";
         std::cout << std::endl;
 
         if (file_save)
