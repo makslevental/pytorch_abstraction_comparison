@@ -1,6 +1,5 @@
 #include "CLI11.hpp"
-#include "datasets/mnist.h"
-#include "datasets/stl10.h"
+#include "datasets/datasets.h"
 #include "network.h"
 #include "resnet.cuh"
 #include <cassert>
@@ -10,7 +9,7 @@
 #include <iomanip>
 #include <nvtx3/nvToolsExt.h>
 
-int get_accuracy(Tensor<double> *output, Tensor<double> *target);
+int get_tp_count(Tensor<double> *output, Tensor<double> *target);
 int arg_max(int batch, int output_size, const double *arr);
 int find_one(int batch, int output_size, const double *arr);
 
@@ -43,14 +42,18 @@ int main(int argc, char *argv[]) {
 
     std::cout << "== MNIST training with CUDNN ==" << std::endl;
 
-    MNIST train_data_loader =
-        MNIST(train_dataset_fp, train_label_fp, true, batch_size, NUMBER_MNIST_CLASSES);
-    MNIST test_data_loader =
-        MNIST(test_dataset_fp, test_label_fp, false, batch_size, NUMBER_MNIST_CLASSES);
+    //    MNIST train_data_loader =
+    //        MNIST(train_dataset_fp, train_label_fp, true, batch_size, NUMBER_MNIST_CLASSES);
+    //    MNIST test_data_loader =
+    //        MNIST(test_dataset_fp, test_label_fp, false, batch_size, NUMBER_MNIST_CLASSES);
     //    STL10 train_data_loader =
     //        STL10(train_dataset_fp, train_label_fp, true, batch_size, NUMBER_STL10_CLASSES);
     //    STL10 test_data_loader =
     //        STL10(test_dataset_fp, test_label_fp, false, batch_size, NUMBER_STL10_CLASSES);
+    CIFAR10 train_data_loader =
+        CIFAR10(train_dataset_fp, "", true, batch_size, NUMBER_CIFAR10_CLASSES);
+    CIFAR10 test_data_loader =
+        CIFAR10(test_dataset_fp, "", false, batch_size, NUMBER_CIFAR10_CLASSES);
 
     CrossEntropyLoss criterion;
     CrossEntropyLoss criterion1;
@@ -62,16 +65,17 @@ int main(int argc, char *argv[]) {
     //    model->cuda();
     auto model = new Network();
     model->add_layer(new Conv2d("conv1", 20, 5));
-    model->add_layer(new Activation("relu", CUDNN_ACTIVATION_RELU));
-    model->add_layer(new Pooling("pool", 2, 2, 0, CUDNN_POOLING_MAX));
+    model->add_layer(new Activation("relu1", CUDNN_ACTIVATION_RELU));
+    model->add_layer(new Pooling("pool1", 2, 2, 0, CUDNN_POOLING_MAX));
     model->add_layer(new Conv2d("conv2", 50, 5));
-    model->add_layer(new Activation("relu", CUDNN_ACTIVATION_RELU));
-    model->add_layer(new Pooling("pool", 2, 2, 0, CUDNN_POOLING_MAX));
+    model->add_layer(new Activation("relu2", CUDNN_ACTIVATION_RELU));
+    model->add_layer(new Pooling("pool2", 2, 2, 0, CUDNN_POOLING_MAX));
     model->add_layer(new Dense("dense1", 500));
-    model->add_layer(new Activation("relu", CUDNN_ACTIVATION_RELU));
+    model->add_layer(new Activation("relu3", CUDNN_ACTIVATION_RELU));
     model->add_layer(new Dense("dense2", 10));
     model->add_layer(new Softmax("softmax"));
     model->cuda();
+    checkCudaErrors(cudaDeviceSynchronize());
 
     if (load_pretrain)
         model->load_pretrain();
@@ -101,7 +105,7 @@ int main(int argc, char *argv[]) {
             train_target->to(cuda);
 
             output = model->forward(train_data);
-            tp_count += get_accuracy(output, train_target);
+            tp_count += get_tp_count(output, train_target);
             loss += criterion.loss(output, train_target);
             sample_count += batch_size;
 
@@ -148,7 +152,7 @@ int main(int argc, char *argv[]) {
             test_target->to(cuda);
 
             output = model->forward(test_data);
-            tp_count += get_accuracy(output, test_target);
+            tp_count += get_tp_count(output, test_target);
             sample_count += batch_size;
             loss += criterion1.loss(output, test_target);
 
@@ -172,7 +176,7 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
-int get_accuracy(Tensor<double> *output, Tensor<double> *target) {
+int get_tp_count(Tensor<double> *output, Tensor<double> *target) {
     int batch_size = output->get_batch_size();
     int output_size = output->size();
 
@@ -181,7 +185,7 @@ int get_accuracy(Tensor<double> *output, Tensor<double> *target) {
 
     double *h_output, *h_target;
     int idx_output, idx_target;
-    int hit_count = 0;
+    int tp_count = 0;
 
     // get predicts and targets
     h_output = output->to(host);
@@ -192,10 +196,10 @@ int get_accuracy(Tensor<double> *output, Tensor<double> *target) {
         idx_output = arg_max(b, output_size, h_output);
         idx_target = find_one(b, output_size, h_target);
         if (idx_output == idx_target)
-            hit_count++;
+            tp_count++;
     }
 
-    return hit_count;
+    return tp_count;
 }
 
 int arg_max(int batch, int output_size, const double *arr) {
