@@ -233,4 +233,20 @@ static int to_int(const uint8_t *ptr) {
         (ptr[3] & 0xFF) << 0);
 }
 
+static double get_used_cuda_mem() {
+    // show memory usage of GPU
+    size_t free_byte;
+    size_t total_byte;
+    checkCudaErrors(cudaMemGetInfo(&free_byte, &total_byte));
+    auto free_db = (double)free_byte;
+    auto total_db = (double)total_byte;
+    double used_db = total_db - free_db;
+//    printf(
+//        "GPU memory usage: used = %f, free = %f MB, total = %f MB\n",
+//        used_db / 1024.0 / 1024.0,
+//        free_db / 1024.0 / 1024.0,
+//        total_db / 1024.0 / 1024.0);
+    return used_db;
+}
+
 #endif // _HELPER_H_

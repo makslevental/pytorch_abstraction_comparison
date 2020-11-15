@@ -3,6 +3,7 @@
 #include "gputimer.h"
 #include "network.h"
 #include "resnet.cuh"
+#include "helper.h"
 
 #include <cassert>
 #include <cmath>
@@ -65,7 +66,6 @@ void train(
         train_data_loader->reset();
 
         for (int batch = 0; batch < train_data_loader->get_num_batches(); batch++) {
-            std::cout << "batch: " << batch << std::endl;
             nvtx_message = std::string(
                 "train epoch " + std::to_string(epoch) + " batch " + std::to_string(batch));
             nvtxRangePushA(nvtx_message.c_str());
@@ -93,6 +93,7 @@ void train(
             elapsed_time += gpu_timer.elapsed();
 
             if (batch % monitoring_step == 0) {
+                std::cout << "batch: " << batch << std::endl;
                 accuracy = 100.f * tp_count / sample_count;
                 output_file << "[TRAIN] epoch: " << std::right << std::setw(4) << epoch
                             << ", batch: " << std::right << std::setw(4) << batch
@@ -100,7 +101,8 @@ void train(
                             << std::setprecision(6) << loss / (float)sample_count
                             << ", accuracy: " << accuracy << "%"
                             << ", avg sample time: " << elapsed_time / sample_count << "ms"
-                            << std::endl;
+                            << ", used mem: " << get_used_cuda_mem() << "ms"
+                    << std::endl;
                 total_time += elapsed_time;
                 running_loss += loss;
                 running_tp_count += tp_count;
