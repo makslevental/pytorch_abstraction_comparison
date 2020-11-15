@@ -172,7 +172,7 @@ int main(int argc, char *argv[]) {
     /* configure the network */
     int batch_size = 128;
 
-    int epochs = 1;
+    int epochs = 100;
     int monitoring_step = 20;
 
     double learning_rate = 0.001;
