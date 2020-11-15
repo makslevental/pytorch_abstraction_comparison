@@ -11,7 +11,7 @@ class ResNet50(nn.Module):
         super().__init__()
         self.conv1 = nn.Conv2d(3, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
         self.bn1 = nn.BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
-        self.relu1 = nn.ReLU(inplace=True)
+        self.relu1 = nn.ReLU(inplace=False)
         self.maxpool1 = nn.MaxPool2d(kernel_size=3, stride=2, padding=1, dilation=1, ceil_mode=False)
 
         self.conv2 = nn.Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
@@ -20,7 +20,7 @@ class ResNet50(nn.Module):
         self.bn3 = nn.BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
         self.conv4 = nn.Conv2d(64, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
         self.bn4 = nn.BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
-        self.relu2 = nn.ReLU(inplace=True)
+        self.relu2 = nn.ReLU(inplace=False)
 
         self.conv5 = nn.Conv2d(64, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
         self.bn5 = nn.BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
@@ -31,7 +31,7 @@ class ResNet50(nn.Module):
         self.bn7 = nn.BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
         self.conv8 = nn.Conv2d(64, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
         self.bn8 = nn.BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
-        self.relu3 = nn.ReLU(inplace=True)
+        self.relu3 = nn.ReLU(inplace=False)
 
         self.conv9 = nn.Conv2d(256, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
         self.bn9 = nn.BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
@@ -39,7 +39,7 @@ class ResNet50(nn.Module):
         self.bn10 = nn.BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
         self.conv11 = nn.Conv2d(64, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
         self.bn11 = nn.BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
-        self.relu4 = nn.ReLU(inplace=True)
+        self.relu4 = nn.ReLU(inplace=False)
 
         self.conv12 = nn.Conv2d(256, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
         self.bn12 = nn.BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
@@ -47,7 +47,7 @@ class ResNet50(nn.Module):
         self.bn13 = nn.BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
         self.conv14 = nn.Conv2d(128, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
         self.bn14 = nn.BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
-        self.relu5 = nn.ReLU(inplace=True)
+        self.relu5 = nn.ReLU(inplace=False)
 
         self.conv15 = nn.Conv2d(256, 512, kernel_size=(1, 1), stride=(2, 2), bias=False)
         self.bn15 = nn.BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
@@ -58,7 +58,7 @@ class ResNet50(nn.Module):
         self.bn17 = nn.BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
         self.conv18 = nn.Conv2d(128, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
         self.bn18 = nn.BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
-        self.relu6 = nn.ReLU(inplace=True)
+        self.relu6 = nn.ReLU(inplace=False)
 
         self.conv19 = nn.Conv2d(512, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
         self.bn19 = nn.BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
@@ -66,7 +66,7 @@ class ResNet50(nn.Module):
         self.bn20 = nn.BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
         self.conv21 = nn.Conv2d(128, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
         self.bn21 = nn.BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
-        self.relu7 = nn.ReLU(inplace=True)
+        self.relu7 = nn.ReLU(inplace=False)
 
         self.conv22 = nn.Conv2d(512, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
         self.bn22 = nn.BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
@@ -74,7 +74,7 @@ class ResNet50(nn.Module):
         self.bn23 = nn.BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
         self.conv24 = nn.Conv2d(128, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
         self.bn24 = nn.BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
-        self.relu8 = nn.ReLU(inplace=True)
+        self.relu8 = nn.ReLU(inplace=False)
 
         self.conv25 = nn.Conv2d(512, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
         self.bn25 = nn.BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
@@ -82,7 +82,7 @@ class ResNet50(nn.Module):
         self.bn26 = nn.BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
         self.conv27 = nn.Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
         self.bn27 = nn.BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
-        self.relu9 = nn.ReLU(inplace=True)
+        self.relu9 = nn.ReLU(inplace=False)
 
         self.conv28 = nn.Conv2d(512, 1024, kernel_size=(1, 1), stride=(2, 2), bias=False)
         self.bn28 = nn.BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
@@ -93,7 +93,7 @@ class ResNet50(nn.Module):
         self.bn30 = nn.BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
         self.conv31 = nn.Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
         self.bn31 = nn.BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
-        self.relu10 = nn.ReLU(inplace=True)
+        self.relu10 = nn.ReLU(inplace=False)
 
         self.conv32 = nn.Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
         self.bn32 = nn.BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
@@ -101,7 +101,7 @@ class ResNet50(nn.Module):
         self.bn33 = nn.BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
         self.conv34 = nn.Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
         self.bn34 = nn.BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
-        self.relu11 = nn.ReLU(inplace=True)
+        self.relu11 = nn.ReLU(inplace=False)
 
         self.conv35 = nn.Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
         self.bn35 = nn.BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
@@ -109,7 +109,7 @@ class ResNet50(nn.Module):
         self.bn36 = nn.BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
         self.conv37 = nn.Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
         self.bn37 = nn.BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
-        self.relu12 = nn.ReLU(inplace=True)
+        self.relu12 = nn.ReLU(inplace=False)
 
         self.conv38 = nn.Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
         self.bn38 = nn.BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
@@ -117,7 +117,7 @@ class ResNet50(nn.Module):
         self.bn39 = nn.BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
         self.conv40 = nn.Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
         self.bn40 = nn.BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
-        self.relu13 = nn.ReLU(inplace=True)
+        self.relu13 = nn.ReLU(inplace=False)
 
         self.conv41 = nn.Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
         self.bn41 = nn.BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
@@ -125,7 +125,7 @@ class ResNet50(nn.Module):
         self.bn42 = nn.BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
         self.conv43 = nn.Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
         self.bn43 = nn.BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
-        self.relu14 = nn.ReLU(inplace=True)
+        self.relu14 = nn.ReLU(inplace=False)
 
         self.conv44 = nn.Conv2d(1024, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
         self.bn44 = nn.BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
@@ -133,7 +133,7 @@ class ResNet50(nn.Module):
         self.bn45 = nn.BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
         self.conv46 = nn.Conv2d(512, 2048, kernel_size=(1, 1), stride=(1, 1), bias=False)
         self.bn46 = nn.BatchNorm2d(2048, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
-        self.relu15 = nn.ReLU(inplace=True)
+        self.relu15 = nn.ReLU(inplace=False)
 
         self.conv47 = nn.Conv2d(1024, 2048, kernel_size=(1, 1), stride=(2, 2), bias=False)
         self.bn47 = nn.BatchNorm2d(2048, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
@@ -144,7 +144,7 @@ class ResNet50(nn.Module):
         self.bn49 = nn.BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
         self.conv50 = nn.Conv2d(512, 2048, kernel_size=(1, 1), stride=(1, 1), bias=False)
         self.bn50 = nn.BatchNorm2d(2048, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
-        self.relu16 = nn.ReLU(inplace=True)
+        self.relu16 = nn.ReLU(inplace=False)
 
         self.conv51 = nn.Conv2d(2048, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
         self.bn51 = nn.BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
@@ -152,7 +152,7 @@ class ResNet50(nn.Module):
         self.bn52 = nn.BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
         self.conv53 = nn.Conv2d(512, 2048, kernel_size=(1, 1), stride=(1, 1), bias=False)
         self.bn53 = nn.BatchNorm2d(2048, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
-        self.relu17 = nn.ReLU(inplace=True)
+        self.relu17 = nn.ReLU(inplace=False)
 
         self.avgpool1 = nn.AdaptiveAvgPool2d(output_size=(1, 1))
         self.fc1 = nn.Linear(in_features=2048, out_features=1000, bias=True)
@@ -363,7 +363,7 @@ class BasicBlock(nn.Module):
         # Both self.conv1 and self.downsample layers downsample the input when stride != 1
         self.conv1 = conv3x3(inplanes, planes, stride)
         self.bn1 = norm_layer(planes)
-        self.relu = nn.ReLU(inplace=True)
+        self.relu = nn.ReLU(inplace=False)
         self.conv2 = conv3x3(planes, planes)
         self.bn2 = norm_layer(planes)
         self.downsample = downsample
@@ -413,7 +413,7 @@ class Bottleneck(nn.Module):
         self.bn2 = norm_layer(width)
         self.conv3 = conv1x1(width, planes * self.expansion)
         self.bn3 = norm_layer(planes * self.expansion)
-        self.relu = nn.ReLU(inplace=True)
+        self.relu = nn.ReLU(inplace=False)
         self.downsample = downsample
         self.stride = stride
 
@@ -474,7 +474,7 @@ class ResNet(nn.Module):
             3, self.inplanes, kernel_size=7, stride=2, padding=3, bias=False
         )
         self.bn1 = norm_layer(self.inplanes)
-        self.relu = nn.ReLU(inplace=True)
+        self.relu = nn.ReLU(inplace=False)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
         self.layer1 = self._make_layer(block, 64, layers[0])
         self.layer2 = self._make_layer(

@@ -37,12 +37,22 @@ __global__ void softmax_loss_kernel(
     int num_outputs) {
     int batch_idx = blockDim.x * blockIdx.x + threadIdx.x;
 
-    extern __shared__ double s_data[];
+    extern __shared__ dtype s_data[];
     dtype loss = 0.f;
 
     // each thread calculate entropy for each data and accumulate to shared memory
+    //    if constexpr (std::is_same<dtype, float>{}) {
+    //        for (int c = 0; c < num_outputs; c++)
+    //            loss +=
+    //                target[batch_idx * num_outputs + c] * log(predict[batch_idx * num_outputs +
+    //                c]);
+    //    } else if constexpr (std::is_same<dtype, double>{}) {
+    //        for (int c = 0; c < num_outputs; c++)
+    //            loss += target[batch_idx * num_outputs + c] * log(predict[batch_idx * num_outputs
+    //            + c]);
+    //    }
     for (int c = 0; c < num_outputs; c++)
-        loss += target[batch_idx * num_outputs + c] * logb(predict[batch_idx * num_outputs + c]);
+        loss += target[batch_idx * num_outputs + c] * log(predict[batch_idx * num_outputs + c]);
     workspace[batch_idx] = -loss;
 
     // then, we do reduction the result to calculate loss using 1 thread block
@@ -81,7 +91,10 @@ dtype CrossEntropyLoss<dtype>::loss(Tensor<dtype> *predict, Tensor<dtype> *targe
     int num_blocks_per_sm;
     checkCudaErrors(cudaDeviceGetAttribute(&num_sms, cudaDevAttrMultiProcessorCount, 0));
     checkCudaErrors(cudaOccupancyMaxActiveBlocksPerMultiprocessor(
-        &num_blocks_per_sm, softmax_loss_kernel<dtype>, BLOCK_DIM_1D, BLOCK_DIM_1D * sizeof(dtype)));
+        &num_blocks_per_sm,
+        softmax_loss_kernel<dtype>,
+        BLOCK_DIM_1D,
+        BLOCK_DIM_1D * sizeof(dtype)));
 
     int batch_size = target->get_batch_size();
     int num_outputs = target->get_channels();
@@ -111,4 +124,4 @@ dtype CrossEntropyLoss<dtype>::loss(Tensor<dtype> *predict, Tensor<dtype> *targe
 }
 
 template class CrossEntropyLoss<float>;
-template class CrossEntropyLoss<double>;
+// template class CrossEntropyLoss<double>;

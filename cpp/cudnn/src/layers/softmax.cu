@@ -69,7 +69,7 @@ template <typename dtype> Tensor<dtype> *Softmax<dtype>::backward(Tensor<dtype> 
         checkCublasErrors(cublasSaxpy(
             this->cuda_->cublas(),
             target->len(),
-            reinterpret_cast<const float *>(&this->cuda_->minus_one),
+            &this->cuda_->minus_one,
             target->get_device_ptr(),
             1,
             this->grad_input_->get_device_ptr(),

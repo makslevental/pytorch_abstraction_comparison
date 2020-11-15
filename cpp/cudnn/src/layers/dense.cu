@@ -81,12 +81,12 @@ template <typename dtype> Tensor<dtype> *Dense<dtype>::forward(Tensor<dtype> *in
             output_size_,
             this->batch_size_,
             this->input_size_,
-            reinterpret_cast<const float *>(&this->cuda_->one),
+            &this->cuda_->one,
             this->weights_->get_device_ptr(),
             this->input_size_,
             input->get_device_ptr(),
             this->input_size_,
-            reinterpret_cast<const float *>(&this->cuda_->zero),
+            &this->cuda_->zero,
             this->output_->get_device_ptr(),
             output_size_));
 
@@ -98,12 +98,12 @@ template <typename dtype> Tensor<dtype> *Dense<dtype>::forward(Tensor<dtype> *in
             output_size_,
             this->batch_size_,
             1,
-            reinterpret_cast<const float *>(&this->cuda_->one),
+            &this->cuda_->one,
             this->biases_->get_device_ptr(),
             output_size_,
             d_one_vec,
             1,
-            reinterpret_cast<const float *>(&this->cuda_->one),
+            &this->cuda_->one,
             this->output_->get_device_ptr(),
             output_size_));
     } else if constexpr (std::is_same<dtype, double>{}) {
@@ -168,12 +168,12 @@ template <typename dtype> Tensor<dtype> *Dense<dtype>::backward(Tensor<dtype> *g
             CUBLAS_OP_N,
             output_size_,
             this->batch_size_,
-            reinterpret_cast<const float *>(&this->cuda_->one),
+            &this->cuda_->one,
             this->grad_output_->get_device_ptr(),
             output_size_,
             d_one_vec,
             1,
-            reinterpret_cast<const float *>(&this->cuda_->zero),
+            &this->cuda_->zero,
             this->grad_biases_->get_device_ptr(),
             1));
 
@@ -185,12 +185,12 @@ template <typename dtype> Tensor<dtype> *Dense<dtype>::backward(Tensor<dtype> *g
             this->input_size_,
             output_size_,
             this->batch_size_,
-            reinterpret_cast<const float *>(&this->cuda_->one),
+            &this->cuda_->one,
             this->input_->get_device_ptr(),
             this->input_size_,
             this->grad_output_->get_device_ptr(),
             output_size_,
-            reinterpret_cast<const float *>(&this->cuda_->zero),
+            &this->cuda_->zero,
             this->grad_weights_->get_device_ptr(),
             this->input_size_));
 
@@ -237,12 +237,12 @@ template <typename dtype> Tensor<dtype> *Dense<dtype>::backward(Tensor<dtype> *g
                 this->input_size_,
                 this->batch_size_,
                 output_size_,
-                reinterpret_cast<const float *>(&this->cuda_->one),
+                &this->cuda_->one,
                 this->weights_->get_device_ptr(),
                 this->input_size_,
                 this->grad_output_->get_device_ptr(),
                 output_size_,
-                reinterpret_cast<const float *>(&this->cuda_->zero),
+                &this->cuda_->zero,
                 this->grad_input_->get_device_ptr(),
                 this->input_size_));
 

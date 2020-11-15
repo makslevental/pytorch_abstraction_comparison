@@ -43,5 +43,8 @@ template <typename dtype> void Addition<dtype>::fwd_initialize(Tensor<dtype> *A)
             cudnnSetOpTensorDescriptor(op_descriptor, CUDNN_OP_TENSOR_ADD, t, CUDNN_PROPAGATE_NAN));
     }
 }
+template <typename dtype> Addition<dtype>::Addition(std::string name) {
+    this->name_ = std::move(name);
+}
 template class Addition<float>;
 template class Addition<double>;

@@ -9,30 +9,15 @@
 #include <iomanip>
 #include <nvtx3/nvToolsExt.h>
 
-int get_tp_count(Tensor<double> *output, Tensor<double> *target);
-int arg_max(int batch, int output_size, const double *arr);
-int find_one(int batch, int output_size, const double *arr);
+template <typename dtype> int get_tp_count(Tensor<dtype> *output, Tensor<dtype> *target);
+template <typename dtype> int arg_max(int batch, int output_size, const dtype *arr);
+template <typename dtype> int find_one(int batch, int output_size, const dtype *arr);
 
-int main(int argc, char *argv[]) {
-//    CLI::App app{"CUDNN Harness"};
-//
-//    std::string train_dataset_fp = "default";
-//    std::string train_label_fp = "default";
-//    app.add_option("--train_dataset_fp", train_dataset_fp, "dataset file path");
-//    app.add_option("--train_label_fp", train_label_fp, "label file path");
-//
-//    std::string test_dataset_fp = "default";
-//    std::string test_label_fp = "default";
-//    app.add_option("--test_dataset_fp", test_dataset_fp, "dataset file path");
-//    app.add_option("--test_label_fp", test_label_fp, "label file path");
-//
-//    CLI11_PARSE(app, argc, argv);
-
-    /* configure the network */
+template <typename dtype> void train() {
     int batch_size = 32;
 
     int epochs = 100;
-    int monitoring_step = 100;
+    int monitoring_step = 20;
 
     double learning_rate = 0.1f;
     double lr_decay = 0.00005f;
@@ -50,40 +35,40 @@ int main(int argc, char *argv[]) {
     //        STL10(train_dataset_fp, train_label_fp, true, batch_size, NUMBER_STL10_CLASSES);
     //    STL10 test_data_loader =
     //        STL10(test_dataset_fp, test_label_fp, false, batch_size, NUMBER_STL10_CLASSES);
-    CIFAR10<double> train_data_loader = CIFAR10<double>(
+    auto train_data_loader = CIFAR10<dtype>(
         "/home/maksim/dev_projects/pytorch_abstraction_comparison/data/cifar-10-batches-bin/"
-        "first_four.bin",
+        "all_train_data.bin",
         "",
         true,
         batch_size,
         NUMBER_CIFAR10_CLASSES);
-    CIFAR10<double> test_data_loader = CIFAR10<double>(
+    auto test_data_loader = CIFAR10<dtype>(
         "/home/maksim/dev_projects/pytorch_abstraction_comparison/data/cifar-10-batches-bin/"
-        "data_batch_5.bin",
+        "test_batch.bin",
         "",
         false,
         batch_size,
         NUMBER_CIFAR10_CLASSES);
 
-    CrossEntropyLoss<double> criterion;
-    CrossEntropyLoss<double> criterion1;
+    CrossEntropyLoss<dtype> criterion;
+    CrossEntropyLoss<dtype> criterion1;
     double loss, accuracy;
     int tp_count;
     int sample_count;
 
-    auto model = make_resnet50<double>();
+    auto model = make_resnet50<dtype>();
     model->cuda();
-    //    auto model = new Network();
-    //    model->add_layer(new Conv2d("conv1", 20, 5));
-    //    model->add_layer(new Activation("relu1", CUDNN_ACTIVATION_RELU));
-    //    model->add_layer(new Pooling("pool1", 2, 2, 0, CUDNN_POOLING_MAX));
-    //    model->add_layer(new Conv2d("conv2", 50, 5));
-    //    model->add_layer(new Activation("relu2", CUDNN_ACTIVATION_RELU));
-    //    model->add_layer(new Pooling("pool2", 2, 2, 0, CUDNN_POOLING_MAX));
-    //    model->add_layer(new Dense("dense1", 500));
-    //    model->add_layer(new Activation("relu3", CUDNN_ACTIVATION_RELU));
-    //    model->add_layer(new Dense("dense2", 10));
-    //    model->add_layer(new Softmax("softmax"));
+    //    auto model = new Network<double>();
+    //    model->add_layer(new Conv2d<double>("conv1", 20, 5));
+    //    model->add_layer(new Activation<double>("relu1", CUDNN_ACTIVATION_RELU));
+    //    model->add_layer(new Pooling<double>("pool1", 2, 2, 0, CUDNN_POOLING_MAX));
+    //    model->add_layer(new Conv2d<double>("conv2", 50, 5));
+    //    model->add_layer(new Activation<double>("relu2", CUDNN_ACTIVATION_RELU));
+    //    model->add_layer(new Pooling<double>("pool2", 2, 2, 0, CUDNN_POOLING_MAX));
+    //    model->add_layer(new Dense<double>("dense1", 500));
+    //    model->add_layer(new Activation<double>("relu3", CUDNN_ACTIVATION_RELU));
+    //    model->add_layer(new Dense<double>("dense2", 10));
+    //    model->add_layer(new Softmax<double>("softmax"));
     //    model->cuda();
     checkCudaErrors(cudaDeviceSynchronize());
 
@@ -92,9 +77,9 @@ int main(int argc, char *argv[]) {
 
     cudaProfilerStart();
 
-    Tensor<double> *train_data, *train_target;
-    Tensor<double> *test_data, *test_target;
-    Tensor<double> *output;
+    Tensor<dtype> *train_data, *train_target;
+    Tensor<dtype> *test_data, *test_target;
+    Tensor<dtype> *output;
 
     std::string nvtx_message;
     for (int epoch = 0; epoch < epochs; epoch++) {
@@ -111,11 +96,12 @@ int main(int argc, char *argv[]) {
             nvtxRangePushA(nvtx_message.c_str());
 
             std::tie(train_data, train_target) = train_data_loader.get_next_batch();
+            checkCudaErrors(cudaDeviceSynchronize());
             train_data->to(cuda);
             train_target->to(cuda);
 
             output = model->forward(train_data);
-            tp_count += get_tp_count(output, train_target);
+            tp_count += get_tp_count<dtype>(output, train_target);
             loss += criterion.loss(output, train_target);
             sample_count += batch_size;
 
@@ -123,21 +109,34 @@ int main(int argc, char *argv[]) {
             model->update(learning_rate);
 
             nvtxRangePop();
+            checkCudaErrors(cudaDeviceSynchronize());
 
             if (batch % monitoring_step == 0) {
                 //                train_data->print("data", true, batch_size);
                 //                output->print("output", true, batch_size);
                 //                train_target->print("target", true, batch_size);
 
+                accuracy = 100.f * tp_count / sample_count;
                 std::cout << "epoch: " << std::right << std::setw(4) << epoch
-                          << ", batch: " << std::right << std::setw(4) << batch << std::endl;
+                          << ", batch: " << std::right << std::setw(4) << batch
+                          << ", avg loss: " << std::left << std::setw(8) << std::fixed
+                          << std::setprecision(6) << loss / (float)sample_count
+                          << ", accuracy: " << accuracy << "%";
+                std::cout << std::endl;
+                tp_count = 0;
+                sample_count = 0;
+                loss = 0;
             }
         }
 
-        accuracy = 100.f * tp_count / sample_count;
-        std::cout << "avg loss: " << std::left << std::setw(8) << std::fixed << std::setprecision(6)
-                  << loss / (float)sample_count << ", accuracy: " << accuracy << "%";
-        std::cout << std::endl;
+        //        accuracy = 100.f * tp_count / sample_count;
+        //        std::cout << "avg loss: " << std::left << std::setw(8) << std::fixed <<
+        //        std::setprecision(6)
+        //                  << loss / (float)sample_count << ", accuracy: " << accuracy << "%";
+        //        std::cout << std::endl;
+        //        tp_count = 0;
+        //        sample_count = 0;
+        //        loss = 0;
 
         if (file_save)
             model->write_file();
@@ -147,9 +146,6 @@ int main(int argc, char *argv[]) {
         model->eval();
         test_data_loader.reset();
 
-        tp_count = 0;
-        sample_count = 0;
-        loss = 0;
         for (int batch = 0; batch < test_data_loader.get_num_batches(); batch++) {
             std::string nvtx_message = std::string("batch " + std::to_string(batch));
             nvtxRangePushA(nvtx_message.c_str());
@@ -159,7 +155,7 @@ int main(int argc, char *argv[]) {
             test_target->to(cuda);
 
             output = model->forward(test_data);
-            tp_count += get_tp_count(output, test_target);
+            tp_count += get_tp_count<dtype>(output, test_target);
             sample_count += batch_size;
             loss += criterion1.loss(output, test_target);
 
@@ -179,18 +175,37 @@ int main(int argc, char *argv[]) {
 
     cudaProfilerStop();
     std::cout << "Done." << std::endl;
+}
+
+int main(int argc, char *argv[]) {
+    //    CLI::App app{"CUDNN Harness"};
+    //
+    //    std::string train_dataset_fp = "default";
+    //    std::string train_label_fp = "default";
+    //    app.add_option("--train_dataset_fp", train_dataset_fp, "dataset file path");
+    //    app.add_option("--train_label_fp", train_label_fp, "label file path");
+    //
+    //    std::string test_dataset_fp = "default";
+    //    std::string test_label_fp = "default";
+    //    app.add_option("--test_dataset_fp", test_dataset_fp, "dataset file path");
+    //    app.add_option("--test_label_fp", test_label_fp, "label file path");
+    //
+    //    CLI11_PARSE(app, argc, argv);
+
+    /* configure the network */
+    train<float>();
 
     return 0;
 }
 
-int get_tp_count(Tensor<double> *output, Tensor<double> *target) {
+template <typename dtype> int get_tp_count(Tensor<dtype> *output, Tensor<dtype> *target) {
     int batch_size = output->get_batch_size();
     int output_size = output->size();
 
     assert(batch_size == target->get_batch_size());
     assert(output_size == target->size());
 
-    double *h_output, *h_target;
+    dtype *h_output, *h_target;
     int idx_output, idx_target;
     int tp_count = 0;
 
@@ -200,8 +215,8 @@ int get_tp_count(Tensor<double> *output, Tensor<double> *target) {
 
     // idx_output = idx_target = 0;
     for (int b = 0; b < batch_size; b++) {
-        idx_output = arg_max(b, output_size, h_output);
-        idx_target = find_one(b, output_size, h_target);
+        idx_output = arg_max<dtype>(b, output_size, h_output);
+        idx_target = find_one<dtype>(b, output_size, h_target);
         if (idx_output == idx_target)
             tp_count++;
     }
@@ -209,7 +224,7 @@ int get_tp_count(Tensor<double> *output, Tensor<double> *target) {
     return tp_count;
 }
 
-int arg_max(int batch, int output_size, const double *arr) {
+template <typename dtype> int arg_max(int batch, int output_size, const dtype *arr) {
     int idx_output = 0;
     for (int i = 1; i < NUMBER_MNIST_CLASSES; i++) {
         if (arr[batch * output_size + i] > arr[batch * output_size + idx_output])
@@ -218,7 +233,7 @@ int arg_max(int batch, int output_size, const double *arr) {
     return idx_output;
 }
 
-int find_one(int batch, int output_size, const double *arr) {
+template <typename dtype> int find_one(int batch, int output_size, const dtype *arr) {
     for (int i = 0; i < 10; i++) {
         if (abs(arr[batch * output_size + i] - 1) < 1e-10) {
             return i;

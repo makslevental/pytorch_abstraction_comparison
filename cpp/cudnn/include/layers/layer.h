@@ -20,7 +20,7 @@ public:
 
     std::string get_name() { return name_; }
 
-    void set_cuda_context(CudaContext *context) { cuda_ = context; }
+    void set_cuda_context(CudaContext<dtype> *context) { cuda_ = context; }
 
     void set_load_pretrain() { load_pretrain_ = true; };
     void set_gradient_stop() { gradient_stop_ = true; }
@@ -30,7 +30,7 @@ public:
     void unfreeze() { freeze_ = false; }
     void train() { train_ = true; }
     void eval() { train_ = false; }
-    void update_weights_biases(double learning_rate);
+    void update_weights_biases(dtype learning_rate);
 
 protected:
     virtual void fwd_initialize(Tensor<dtype> *input);
@@ -67,7 +67,7 @@ protected:
     void init_weight_bias(unsigned int seed = 0);
 
     // get_device_ptr handle container
-    CudaContext *cuda_ = nullptr;
+    CudaContext<dtype> *cuda_ = nullptr;
 
     // pretrain parameters
     bool load_pretrain_ = false;

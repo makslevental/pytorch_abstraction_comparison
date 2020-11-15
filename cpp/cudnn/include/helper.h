@@ -184,7 +184,7 @@ static const char *_curandGetErrorEnum(curandStatus_t error) {
 #define PRINT(x) std::cout << x << std::endl;
 
 // container for get_device_ptr resources
-class CudaContext {
+template <typename dtype> class CudaContext {
 public:
     CudaContext() {
         cublasCreate(&_cublas_handle);
@@ -202,9 +202,9 @@ public:
     };
     cudnnHandle_t cudnn() { return _cudnn_handle; };
 
-    const double one = 1.f;
-    const double zero = 0.f;
-    const double minus_one = -1.f;
+    const dtype one = 1.f;
+    const dtype zero = 0.f;
+    const dtype minus_one = -1.f;
 
 private:
     cublasHandle_t _cublas_handle;

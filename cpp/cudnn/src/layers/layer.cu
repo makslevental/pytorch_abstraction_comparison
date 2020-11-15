@@ -73,8 +73,8 @@ template <typename dtype> void Layer<dtype>::init_weight_bias(unsigned int seed)
     std::cout << ".. initialized " << name_ << " layer .." << std::endl;
 }
 
-template <typename dtype> void Layer<dtype>::update_weights_biases(double learning_rate) {
-    double eps = -1.f * learning_rate;
+template <typename dtype> void Layer<dtype>::update_weights_biases(dtype learning_rate) {
+    dtype eps = -1.f * learning_rate;
     if (weights_ != nullptr && grad_weights_ != nullptr) {
         if (DEBUG_UPDATE) {
             weights_->print(name_ + "::weights (before update)", true);
@@ -86,7 +86,7 @@ template <typename dtype> void Layer<dtype>::update_weights_biases(double learni
             checkCublasErrors(cublasSaxpy(
                 cuda_->cublas(),
                 weights_->len(),
-                reinterpret_cast<const float *>(&eps),
+                &eps,
                 grad_weights_->get_device_ptr(),
                 1,
                 weights_->get_device_ptr(),
@@ -117,7 +117,7 @@ template <typename dtype> void Layer<dtype>::update_weights_biases(double learni
             checkCublasErrors(cublasSaxpy(
                 cuda_->cublas(),
                 biases_->len(),
-                reinterpret_cast<const float *>(&eps),
+                &eps,
                 grad_biases_->get_device_ptr(),
                 1,
                 biases_->get_device_ptr(),

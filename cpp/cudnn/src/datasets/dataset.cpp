@@ -50,13 +50,12 @@ std::tuple<Tensor<dtype> *, Tensor<dtype> *> Dataset<dtype>::get_next_batch() {
 
     // index cliping
     assert(num_batches_ > -1);
-    int data_idx = (current_batch_ * batch_size_) % num_batches_;
+    int data_idx = (current_batch_ * batch_size_) % (num_batches_ * batch_size_);
     int data_size = channels_ * width_ * height_;
     assert(data_size == data_->size());
     assert(num_classes_ == target_->size());
 
-    for (int batch = 0, sample = data_idx; batch < batch_size_;
-         batch++, sample = data_idx + batch) {
+    for (int batch = 0, sample = data_idx; batch < batch_size_; batch++, sample++) {
         std::copy(
             data_pool_[sample].begin(),
             data_pool_[sample].end(),

@@ -136,7 +136,7 @@ template <typename dtype> int Network<dtype>::load_pretrain() {
 }
 
 template <typename dtype> void Network<dtype>::cuda() {
-    cuda_ = new CudaContext();
+    cuda_ = new CudaContext<dtype>();
 
     std::cout << ".. model Configuration .." << std::endl;
     for (auto layer : layers_) {

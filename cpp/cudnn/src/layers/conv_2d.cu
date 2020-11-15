@@ -29,6 +29,12 @@ Conv2d<dtype>::Conv2d(
     cudnnCreateFilterDescriptor(&this->filter_desc_);
 
     cudnnCreateConvolutionDescriptor(&conv_desc_);
+    cudnnDataType_t t;
+    if constexpr (std::is_same<dtype, float>{}) {
+        t = CUDNN_DATA_FLOAT;
+    } else if constexpr (std::is_same<dtype, double>{}) {
+        t = CUDNN_DATA_DOUBLE;
+    }
     checkCudnnErrors(cudnnSetConvolution2dDescriptor(
         conv_desc_,
         padding_,
@@ -38,7 +44,7 @@ Conv2d<dtype>::Conv2d(
         dilation_,
         dilation_,
         CUDNN_CROSS_CORRELATION,
-        CUDNN_DATA_DOUBLE));
+        t));
 
     // setting cudnn convolution math type
     // CUDNN_DEFAULT_MATH operates convolution with FP32.

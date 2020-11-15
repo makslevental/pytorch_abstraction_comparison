@@ -34,7 +34,7 @@ public:
 
 protected:
     std::vector<Layer<dtype> *> layers_;
-    CudaContext *cuda_ = nullptr;
+    CudaContext<dtype> *cuda_ = nullptr;
     WorkloadType phase_ = inference;
 };
 

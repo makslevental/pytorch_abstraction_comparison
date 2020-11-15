@@ -32,7 +32,7 @@ public:
         this->conv5 = new Conv2d<dtype>(
             "conv5", /*out_channels*/ 256, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0);
         this->bn5 = new BatchNorm2d<dtype>("bn5");
-        this->add1 = new Addition<dtype>();
+        this->add1 = new Addition<dtype>("add1");
 
         // bottleneck 2
 
@@ -75,7 +75,7 @@ public:
         this->conv15 = new Conv2d<dtype>(
             "conv15", /*out_channels*/ 512, /*kernel*/ 1, /*stride*/ 2, /*padding*/ 0);
         this->bn15 = new BatchNorm2d<dtype>("bn15");
-        this->add2 = new Addition<dtype>();
+        this->add2 = new Addition<dtype>("add2");
 
         // bottleneck 2
         this->conv16 = new Conv2d<dtype>(
@@ -129,7 +129,7 @@ public:
         this->conv28 = new Conv2d<dtype>(
             "conv28", /*out_channels*/ 1024, /*kernel*/ 1, /*stride*/ 2, /*padding*/ 0);
         this->bn28 = new BatchNorm2d<dtype>("bn28");
-        this->add3 = new Addition<dtype>();
+        this->add3 = new Addition<dtype>("add3");
 
         // bottleneck 2
         this->conv29 = new Conv2d<dtype>(
@@ -195,7 +195,7 @@ public:
         this->conv44 = new Conv2d<dtype>(
             "conv44", /*out_channels*/ 2048, /*kernel*/ 1, /*stride*/ 2, /*padding*/ 0);
         this->bn44 = new BatchNorm2d<dtype>("bn44");
-        this->add4 = new Addition<dtype>();
+        this->add4 = new Addition<dtype>("add4");
 
         // bottleneck 2
         this->conv45 = new Conv2d<dtype>(
@@ -225,10 +225,10 @@ public:
         this->dense1 = new Dense<dtype>("dense1", 10);
         this->softmax1 = new Softmax<dtype>("softmax1");
 
-        this->add5 = new Addition<dtype>();
-        this->add6 = new Addition<dtype>();
-        this->add7 = new Addition<dtype>();
-        this->add8 = new Addition<dtype>();
+        this->add5 = new Addition<dtype>("add5");
+        this->add6 = new Addition<dtype>("add6");
+        this->add7 = new Addition<dtype>("add7");
+        this->add8 = new Addition<dtype>("add8");
 
         this->layers_ = {conv1,  conv2,  conv3,  conv4,  conv5,  conv6,  conv7,  conv8,  conv9,  conv10,
                    conv11, conv12, conv13, conv14, conv15, conv16, conv17, conv18, conv19, conv20,
@@ -244,7 +244,7 @@ public:
                    relu11, relu12, relu13, relu14, relu15, relu16, pool1,  pool2,  dense1, softmax1,
                    add1,   add2,   add3,   add4,   add5,   add6,   add7,   add8};
     }
-    Tensor<double> *forward(Tensor<double> *input) override {
+    Tensor<dtype> *forward(Tensor<dtype> *input) override {
         auto output = this->conv1->forward(input);
         output = this->bn1->forward(output);
         output = this->relu1->forward(output);
@@ -256,7 +256,7 @@ public:
         if (identity1) {
             identity1->download(*output);
         } else {
-            identity1 = new Tensor<double>(*output);
+            identity1 = new Tensor<dtype>(*output);
         }
         output = this->conv2->forward(output);
         output = this->bn2->forward(output);
@@ -293,7 +293,7 @@ public:
         if (identity2) {
             identity2->download(*output);
         } else {
-            identity2 = new Tensor<double>(*output);
+            identity2 = new Tensor<dtype>(*output);
         }
         output = this->conv12->forward(output);
         output = this->bn12->forward(output);
@@ -339,7 +339,7 @@ public:
         if (identity3) {
             identity3->download(*output);
         } else {
-            identity3 = new Tensor<double>(*output);
+            identity3 = new Tensor<dtype>(*output);
         }
         output = this->conv25->forward(output);
         output = this->bn25->forward(output);
@@ -395,7 +395,7 @@ public:
         if (identity4) {
             identity4->download(*output);
         } else {
-            identity4 = new Tensor<double>(*output);
+            identity4 = new Tensor<dtype>(*output);
         }
         output = this->conv41->forward(output);
         output = this->bn41->forward(output);
@@ -434,7 +434,7 @@ public:
 
         return output;
     }
-    void backward(Tensor<double> *target) override {
+    void backward(Tensor<dtype> *target) override {
         auto gradient = this->softmax1->backward(target);
         gradient = this->dense1->backward(gradient);
         gradient = this->pool2->backward(gradient);
@@ -461,7 +461,7 @@ public:
         if (orig_grad1) {
             orig_grad1->download(*gradient);
         } else {
-            orig_grad1 = new Tensor<double>(*gradient);
+            orig_grad1 = new Tensor<dtype>(*gradient);
         }
         auto downsample_grad = this->bn44->backward(gradient);
         downsample_grad = this->conv44->backward(downsample_grad);
@@ -516,7 +516,7 @@ public:
         if (orig_grad2) {
             orig_grad2->download(*gradient);
         } else {
-            orig_grad2 = new Tensor<double>(*gradient);
+            orig_grad2 = new Tensor<dtype>(*gradient);
         }
         downsample_grad = this->bn28->backward(gradient);
         downsample_grad = this->conv28->backward(downsample_grad);
@@ -562,7 +562,7 @@ public:
         if (orig_grad3) {
             orig_grad3->download(*gradient);
         } else {
-            orig_grad3 = new Tensor<double>(*gradient);
+            orig_grad3 = new Tensor<dtype>(*gradient);
         }
         downsample_grad = this->bn15->backward(orig_grad3);
         downsample_grad = this->conv15->backward(downsample_grad);
@@ -599,7 +599,7 @@ public:
         if (orig_grad4) {
             orig_grad4->download(*gradient);
         } else {
-            orig_grad4 = new Tensor<double>(*gradient);
+            orig_grad4 = new Tensor<dtype>(*gradient);
         }
         downsample_grad = this->bn5->backward(gradient);
         downsample_grad = this->conv5->backward(downsample_grad);
@@ -751,14 +751,14 @@ private:
     Addition<dtype> *add7;
     Addition<dtype> *add8;
 
-    Tensor<double> *identity1 = nullptr;
-    Tensor<double> *identity2 = nullptr;
-    Tensor<double> *identity3 = nullptr;
-    Tensor<double> *identity4 = nullptr;
-    Tensor<double> *orig_grad1 = nullptr;
-    Tensor<double> *orig_grad2 = nullptr;
-    Tensor<double> *orig_grad3 = nullptr;
-    Tensor<double> *orig_grad4 = nullptr;
+    Tensor<dtype> *identity1 = nullptr;
+    Tensor<dtype> *identity2 = nullptr;
+    Tensor<dtype> *identity3 = nullptr;
+    Tensor<dtype> *identity4 = nullptr;
+    Tensor<dtype> *orig_grad1 = nullptr;
+    Tensor<dtype> *orig_grad2 = nullptr;
+    Tensor<dtype> *orig_grad3 = nullptr;
+    Tensor<dtype> *orig_grad4 = nullptr;
 };
 
 template <typename dtype> Network<dtype> *make_resnet50() { return new ResNet50<dtype>(); }

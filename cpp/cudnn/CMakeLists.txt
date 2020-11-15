@@ -9,6 +9,7 @@ set(CUDNN_LIBRARY_PATH "/usr/lib/x86_64-linux-gnu/libcudnn.so")
 set(CUDA_cublas_LIBRARY "/usr/lib/x86_64-linux-gnu/libcublas.so")
 set(CUDA_cublas_device_LIBRARY "/usr/lib/x86_64-linux-gnu/libcublas.so")
 set(CMAKE_PREFIX_PATH "/home/maksim/dev_projects/cpp/cudnn")
+set(CUDA_NVCC_FLAGS "--expt-relaxed-constexpr")
 
 find_package(CUDA REQUIRED)
 if (APPLE)

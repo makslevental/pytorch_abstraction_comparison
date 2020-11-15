@@ -7,10 +7,10 @@
 
 #include "layer.h"
 
-template <typename dtype>
-class Addition : public Layer<dtype> {
+template <typename dtype> class Addition : public Layer<dtype> {
 public:
     ~Addition() override;
+    explicit Addition(std::string name);
     Tensor<dtype> *add(Tensor<dtype> *A, Tensor<dtype> *B);
     Tensor<dtype> *forward(Tensor<dtype> *input) override;
     Tensor<dtype> *backward(Tensor<dtype> *grad_input) override;
