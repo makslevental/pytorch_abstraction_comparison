@@ -1,9 +1,9 @@
 //#include "CLI11.hpp"
 #include "datasets/datasets.h"
 #include "gputimer.h"
+#include "helper.h"
 #include "network.h"
 #include "resnet.cuh"
-#include "helper.h"
 
 #include <cassert>
 #include <cmath>
@@ -101,8 +101,7 @@ void train(
                             << std::setprecision(6) << loss / (float)sample_count
                             << ", accuracy: " << accuracy << "%"
                             << ", avg sample time: " << elapsed_time / sample_count << "ms"
-                            << ", used mem: " << get_used_cuda_mem() << "ms"
-                    << std::endl;
+                            << ", used mem: " << get_used_cuda_mem() << "mb" << std::endl;
                 total_time += elapsed_time;
                 running_loss += loss;
                 running_tp_count += tp_count;
