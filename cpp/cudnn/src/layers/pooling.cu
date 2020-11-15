@@ -4,10 +4,10 @@
 
 #include <layers/pooling.cuh>
 
-Pooling::Pooling(
+template <typename dtype> Pooling<dtype>::Pooling(
     std::string name, int kernel_size, int stride, int padding, cudnnPoolingMode_t mode)
     : kernel_size_(kernel_size), padding_(padding), stride_(stride), mode_(mode) {
-    name_ = std::move(name);
+    this->name_ = std::move(name);
 
     cudnnCreatePoolingDescriptor(&pool_desc_);
     cudnnSetPooling2dDescriptor(
@@ -22,63 +22,66 @@ Pooling::Pooling(
         stride_);
 }
 
-Pooling::~Pooling() { cudnnDestroyPoolingDescriptor(pool_desc_); }
+template <typename dtype> Pooling<dtype>::~Pooling() { cudnnDestroyPoolingDescriptor(pool_desc_); }
 
-void Pooling::fwd_initialize(Tensor<double> *input) {
-    if (input_desc_ == nullptr || batch_size_ != input->get_batch_size()) {
-        input_size_ = input->size();
+template <typename dtype> void Pooling<dtype>::fwd_initialize(Tensor<dtype> *input) {
+    if (this->input_desc_ == nullptr || this->batch_size_ != input->get_batch_size()) {
+        this->input_size_ = input->size();
         // resource initialize
-        input_desc_ = input->tensor_descriptor();
-        batch_size_ = input->get_batch_size();
+        this->input_desc_ = input->tensor_descriptor();
+        this->batch_size_ = input->get_batch_size();
 
         // setting output
         cudnnGetPooling2dForwardOutputDim(
             pool_desc_,
-            input_desc_,
+            this->input_desc_,
             &output_size_[0],
             &output_size_[1],
             &output_size_[2],
             &output_size_[3]);
-        if (output_ == nullptr)
-            output_ = new Tensor<double>(output_size_);
+        if (this->output_ == nullptr)
+            this->output_ = new Tensor<dtype>(output_size_);
         else
-            output_->reset(output_size_);
+            this->output_->reset(output_size_);
 
-        output_desc_ = output_->tensor_descriptor();
+        this->output_desc_ = this->output_->tensor_descriptor();
     }
 }
 
-Tensor<double> *Pooling::forward(Tensor<double> *input) {
+template <typename dtype> Tensor<dtype> *Pooling<dtype>::forward(Tensor<dtype> *input) {
     fwd_initialize(input);
-    input_ = input;
+    this->input_ = input;
     cudnnPoolingForward(
-        cuda_->cudnn(),
+        this->cuda_->cudnn(),
         pool_desc_,
-        &cuda_->one,
-        input_desc_,
+        &this->cuda_->one,
+        this->input_desc_,
         input->get_device_ptr(),
-        &cuda_->zero,
-        output_desc_,
-        output_->get_device_ptr());
+        &this->cuda_->zero,
+        this->output_desc_,
+        this->output_->get_device_ptr());
 
-    return output_;
+    return this->output_;
 }
 
-Tensor<double> *Pooling::backward(Tensor<double> *grad_output) {
-    bwd_initialize(grad_output);
+template <typename dtype> Tensor<dtype> *Pooling<dtype>::backward(Tensor<dtype> *grad_output) {
+    this->bwd_initialize(grad_output);
     checkCudnnErrors(cudnnPoolingBackward(
-        cuda_->cudnn(),
+        this->cuda_->cudnn(),
         pool_desc_,
-        &cuda_->one,
-        output_desc_,
-        output_->get_device_ptr(),
-        output_desc_,
+        &this->cuda_->one,
+        this->output_desc_,
+        this->output_->get_device_ptr(),
+        this->output_desc_,
         grad_output->get_device_ptr(),
-        input_desc_,
-        input_->get_device_ptr(),
-        &cuda_->zero,
-        input_desc_,
-        grad_input_->get_device_ptr()));
+        this->input_desc_,
+        this->input_->get_device_ptr(),
+        &this->cuda_->zero,
+        this->input_desc_,
+        this->grad_input_->get_device_ptr()));
 
-    return grad_input_;
+    return this->grad_input_;
 }
+
+template class Pooling<float>;
+template class Pooling<double>;

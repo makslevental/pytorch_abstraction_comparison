@@ -135,18 +135,21 @@ public:
     int buf_size() { return sizeof(dtype) * len(); }
 
     /* Tensor Control */
+
     cudnnTensorDescriptor_t tensor_descriptor() {
         if (tensor_desc_)
             return tensor_desc_;
         checkCudnnErrors(cudnnCreateTensorDescriptor(&tensor_desc_));
+
+        cudnnDataType_t t;
+        if constexpr (std::is_same<dtype, float>{}) {
+            t = CUDNN_DATA_FLOAT;
+        } else if constexpr (std::is_same<dtype, double>{}) {
+            t = CUDNN_DATA_DOUBLE;
+        }
+
         checkCudnnErrors(cudnnSetTensor4dDescriptor(
-            tensor_desc_,
-            CUDNN_TENSOR_NCHW,
-            CUDNN_DATA_DOUBLE,
-            batch_size_,
-            channels_,
-            height_,
-            width_));
+            tensor_desc_, CUDNN_TENSOR_NCHW, t, batch_size_, channels_, height_, width_));
 
         return tensor_desc_;
     }

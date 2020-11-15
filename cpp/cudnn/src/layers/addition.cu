@@ -4,32 +4,44 @@
 
 #include <layers/addition.cuh>
 
-Tensor<double> *Addition::add(Tensor<double> *A, Tensor<double> *B) {
+template <typename dtype> Addition<dtype>::~Addition() {}
+template <typename dtype> Tensor<dtype> *Addition<dtype>::add(Tensor<dtype> *A, Tensor<dtype> *B) {
     fwd_initialize(A);
     // C = A + B
     checkCudnnErrors(cudnnOpTensor(
-        cuda_->cudnn(),
+        this->cuda_->cudnn(),
         op_descriptor,
-        &cuda_->one,
+        &this->cuda_->one,
         A->tensor_descriptor(),
         A->get_device_ptr(),
-        &cuda_->one,
+        &this->cuda_->one,
         B->tensor_descriptor(),
         B->get_device_ptr(),
-        &cuda_->zero,
-        output_->tensor_descriptor(),
-        output_->get_device_ptr()));
+        &this->cuda_->zero,
+        this->output_->tensor_descriptor(),
+        this->output_->get_device_ptr()));
 
-    return output_;
+    return this->output_;
 }
-Tensor<double> *Addition::forward(Tensor<double> *input) { exit(EXIT_FAILURE); }
-Tensor<double> *Addition::backward(Tensor<double> *grad_input) { exit(EXIT_FAILURE); }
-void Addition::fwd_initialize(Tensor<double> *A) {
-    Layer::fwd_initialize(A);
+template <typename dtype> Tensor<dtype> *Addition<dtype>::forward(Tensor<dtype> *input) {
+    exit(EXIT_FAILURE);
+}
+template <typename dtype> Tensor<dtype> *Addition<dtype>::backward(Tensor<dtype> *grad_input) {
+    exit(EXIT_FAILURE);
+}
+template <typename dtype> void Addition<dtype>::fwd_initialize(Tensor<dtype> *A) {
+    Layer<dtype>::fwd_initialize(A);
     if (op_descriptor == nullptr) {
         checkCudnnErrors(cudnnCreateOpTensorDescriptor(&op_descriptor));
-        checkCudnnErrors(cudnnSetOpTensorDescriptor(
-            op_descriptor, CUDNN_OP_TENSOR_ADD, CUDNN_DATA_DOUBLE, CUDNN_PROPAGATE_NAN));
+        cudnnDataType_t t;
+        if constexpr (std::is_same<dtype, float>{}) {
+            t = CUDNN_DATA_FLOAT;
+        } else if constexpr (std::is_same<dtype, double>{}) {
+            t = CUDNN_DATA_DOUBLE;
+        }
+        checkCudnnErrors(
+            cudnnSetOpTensorDescriptor(op_descriptor, CUDNN_OP_TENSOR_ADD, t, CUDNN_PROPAGATE_NAN));
     }
 }
-Addition::~Addition() = default;
+template class Addition<float>;
+template class Addition<double>;

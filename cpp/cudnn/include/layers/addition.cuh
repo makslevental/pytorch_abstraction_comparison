@@ -7,15 +7,16 @@
 
 #include "layer.h"
 
-class Addition : public Layer {
+template <typename dtype>
+class Addition : public Layer<dtype> {
 public:
     ~Addition() override;
-    Tensor<double> *add(Tensor<double> *A, Tensor<double> *B);
-    Tensor<double> *forward(Tensor<double> *input) override;
-    Tensor<double> *backward(Tensor<double> *grad_input) override;
+    Tensor<dtype> *add(Tensor<dtype> *A, Tensor<dtype> *B);
+    Tensor<dtype> *forward(Tensor<dtype> *input) override;
+    Tensor<dtype> *backward(Tensor<dtype> *grad_input) override;
 
 protected:
-    void fwd_initialize(Tensor<double> *input) override;
+    void fwd_initialize(Tensor<dtype> *input) override;
 
 private:
     cudnnOpTensorDescriptor_t op_descriptor = nullptr;

@@ -7,16 +7,17 @@
 
 #include "layer.h"
 
-class Pooling : public Layer {
+template <typename dtype>
+class Pooling : public Layer<dtype> {
 public:
     Pooling(std::string name, int kernel_size, int padding, int stride, cudnnPoolingMode_t mode);
     ~Pooling() override;
 
-    Tensor<double> *forward(Tensor<double> *input) override;
-    Tensor<double> *backward(Tensor<double> *grad_output) override;
+    Tensor<dtype> *forward(Tensor<dtype> *input) override;
+    Tensor<dtype> *backward(Tensor<dtype> *grad_output) override;
 
 private:
-    void fwd_initialize(Tensor<double> *input) override;
+    void fwd_initialize(Tensor<dtype> *input) override;
 
     int kernel_size_;
     int padding_;

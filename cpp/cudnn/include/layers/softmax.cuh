@@ -7,17 +7,18 @@
 
 #include "layer.h"
 
-class Softmax : public Layer {
+template <typename dtype>
+class Softmax : public Layer<dtype> {
 public:
     explicit Softmax(std::string name);
     ~Softmax() override = default;
 
-    Tensor<double> *forward(Tensor<double> *input) override;
-    Tensor<double> *backward(Tensor<double> *grad_input) override;
+    Tensor<dtype> *forward(Tensor<dtype> *input) override;
+    Tensor<dtype> *backward(Tensor<dtype> *grad_input) override;
 
 protected:
-    void fwd_initialize(Tensor<double> *input) override;
-    void bwd_initialize(Tensor<double> *grad_output) override;
+    void fwd_initialize(Tensor<dtype> *input) override;
+    void bwd_initialize(Tensor<dtype> *grad_output) override;
 };
 
 #endif // PROJECTNAME_SOFTMAX_CUH

@@ -1,11 +1,12 @@
 #include <cassert>
 #include <datasets/mnist.h>
 // TODO: multithreading to match pytorch?
-void MNIST::load_data() {
+
+template <typename dtype> void MNIST<dtype>::load_data() {
     uint8_t ptr[4];
 
-    std::cout << "loading " << dataset_fp_ << std::endl;
-    std::ifstream file(dataset_fp_.c_str(), std::ios::in | std::ios::binary);
+    std::cout << "loading " << this->dataset_fp_ << std::endl;
+    std::ifstream file(this->dataset_fp_.c_str(), std::ios::in | std::ios::binary);
     if (!file.is_open()) {
         std::cout << "Download dataset first!!" << std::endl;
         std::cout << "You can get the MNIST dataset from 'http://yann.lecun.com/exdb/mnist/' or "
@@ -22,38 +23,39 @@ void MNIST::load_data() {
     file.read((char *)ptr, 4);
     num_data = to_int(ptr);
     file.read((char *)ptr, 4);
-    height_ = to_int(ptr);
+    this->height_ = to_int(ptr);
     file.read((char *)ptr, 4);
-    width_ = to_int(ptr);
-    channels_ = 1;
+    this->width_ = to_int(ptr);
+    this->channels_ = 1;
 
-    auto *q = new uint8_t[channels_ * height_ * width_];
+    auto *q = new uint8_t[this->channels_ * this->height_ * this->width_];
     for (int i = 0; i < num_data; i++) {
-        std::vector<double> image = std::vector<double>(channels_ * height_ * width_);
+        std::vector<double> image =
+            std::vector<double>(this->channels_ * this->height_ * this->width_);
         double *image_ptr = image.data();
 
-        file.read((char *)q, channels_ * height_ * width_);
-        for (int j = 0; j < channels_ * height_ * width_; j++) {
+        file.read((char *)q, this->channels_ * this->height_ * this->width_);
+        for (int j = 0; j < this->channels_ * this->height_ * this->width_; j++) {
             image_ptr[j] = (double)q[j];
         }
 
-        data_pool_.push_back(image);
+        this->data_pool_.push_back(image);
     }
 
     delete q;
 
-    num_batches_ = num_data / batch_size_;
-    std::cout << "num_batches: " << num_batches_ << std::endl;
-    std::cout << "loaded " << data_pool_.size() << " items.." << std::endl;
+    this->num_batches_ = num_data / this->batch_size_;
+    std::cout << "num_batches: " << this->num_batches_ << std::endl;
+    std::cout << "loaded " << this->data_pool_.size() << " items.." << std::endl;
 
     file.close();
 }
 
-void MNIST::load_target() {
+template <typename dtype> void MNIST<dtype>::load_target() {
     uint8_t ptr[4];
 
-    std::ifstream file(label_fp_.c_str(), std::ios::in | std::ios::binary);
-    std::cout << "loading " << label_fp_ << std::endl;
+    std::ifstream file(this->label_fp_.c_str(), std::ios::in | std::ios::binary);
+    std::cout << "loading " << this->label_fp_ << std::endl;
 
     if (!file.is_open()) {
         std::cout << "Check dataset existance!!" << std::endl;
@@ -70,36 +72,40 @@ void MNIST::load_target() {
     // prepare input buffer for label
     // read all labels and converts to one-hot encoding
     for (int i = 0; i < num_target; i++) {
-        std::vector<double> target_one_hot(num_classes_, 0.f);
+        std::vector<double> target_one_hot(this->num_classes_, 0.f);
         file.read((char *)ptr, 1);
         target_one_hot[static_cast<int>(ptr[0])] = 1.f;
-        target_pool_.push_back(target_one_hot);
+        this->target_pool_.push_back(target_one_hot);
     }
 
     file.close();
 }
 
-void MNIST::normalize_data() {
-    for (auto &sample : data_pool_) {
+template <typename dtype> void MNIST<dtype>::normalize_data() {
+    for (auto &sample : this->data_pool_) {
         double *sample_data_ptr = sample.data();
-        for (int j = 0; j < channels_ * height_ * width_; j++) {
+        for (int j = 0; j < this->channels_ * this->height_ * this->width_; j++) {
             sample_data_ptr[j] /= 255.f;
         }
     }
 }
 
-MNIST::MNIST(
+template <typename dtype>
+MNIST<dtype>::MNIST(
     const string &dataset_fp, const string &label_fp, bool shuffle, int batch_size, int num_classes)
-    : Dataset(dataset_fp, label_fp, shuffle, batch_size, num_classes) {
+    : Dataset<dtype>(dataset_fp, label_fp, shuffle, batch_size, num_classes) {
 
     // https://wiki.sei.cmu.edu/confluence/display/cplusplus/OOP50-CPP.+Do+not+invoke+virtual+functions+from+constructors+or+destructors
     MNIST::load_data();
     MNIST::normalize_data();
     MNIST::load_target();
 
-    if (shuffle_)
-        shuffle_dataset();
-    create_shared_space();
+    if (this->shuffle_)
+        this->shuffle_dataset();
+    this->create_shared_space();
 }
 
-int MNIST::get_num_batches() const { return num_batches_; }
+template <typename dtype> int MNIST<dtype>::get_num_batches() const { return this->num_batches_; }
+
+template class MNIST<float>;
+template class MNIST<double>;

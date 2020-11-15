@@ -11,7 +11,8 @@
 /**
  * Convolutional layer with bias
  */
-Conv2d::Conv2d(
+template <typename dtype>
+Conv2d<dtype>::Conv2d(
     std::string name,
     int out_channels,
     int kernel_size,
@@ -22,10 +23,10 @@ Conv2d::Conv2d(
     : out_channels_(out_channels), kernel_size_(kernel_size), stride_(stride), padding_(padding),
       dilation_(dilation), bias_(bias) {
 
-    name_ = std::move(name);
+    this->name_ = std::move(name);
 
     // create cudnn container handles
-    cudnnCreateFilterDescriptor(&filter_desc_);
+    cudnnCreateFilterDescriptor(&this->filter_desc_);
 
     cudnnCreateConvolutionDescriptor(&conv_desc_);
     checkCudnnErrors(cudnnSetConvolution2dDescriptor(
@@ -47,9 +48,9 @@ Conv2d::Conv2d(
     device_workspace_ = nullptr;
 }
 
-Conv2d::~Conv2d() {
+template <typename dtype> Conv2d<dtype>::~Conv2d() {
     // distroy cudnn container resources
-    cudnnDestroyFilterDescriptor(filter_desc_);
+    cudnnDestroyFilterDescriptor(this->filter_desc_);
     cudnnDestroyConvolutionDescriptor(conv_desc_);
 
     // terminate internal created blobs
@@ -59,7 +60,7 @@ Conv2d::~Conv2d() {
     }
 }
 
-void Conv2d::set_workspace() {
+template <typename dtype> void Conv2d<dtype>::set_workspace() {
     size_t temp_size = 0;
 
     // forward
@@ -72,70 +73,71 @@ void Conv2d::set_workspace() {
 
     int algo_max_count;
     int returnedAlgoCount = 0;
-    checkCudnnErrors(cudnnGetConvolutionForwardAlgorithmMaxCount(cuda_->cudnn(), &algo_max_count));
+    checkCudnnErrors(
+        cudnnGetConvolutionForwardAlgorithmMaxCount(this->cuda_->cudnn(), &algo_max_count));
     checkCudnnErrors(cudnnGetConvolutionForwardAlgorithm_v7(
-        cuda_->cudnn(),
-        input_desc_,
-        filter_desc_,
+        this->cuda_->cudnn(),
+        this->input_desc_,
+        this->filter_desc_,
         conv_desc_,
-        output_desc_,
+        this->output_desc_,
         algo_max_count,
         &returnedAlgoCount,
         &fwd_algo_perf_results[0]));
     // choose the fastest algorithm
     conv_fwd_algo_ = fwd_algo_perf_results[0].algo;
     checkCudnnErrors(cudnnGetConvolutionForwardWorkspaceSize(
-        cuda_->cudnn(),
-        input_desc_,
-        filter_desc_,
+        this->cuda_->cudnn(),
+        this->input_desc_,
+        this->filter_desc_,
         conv_desc_,
-        output_desc_,
+        this->output_desc_,
         conv_fwd_algo_,
         &temp_size));
     workspace_size_ = std::max(workspace_size_, temp_size);
 
     // bwd - filter
     checkCudnnErrors(
-        cudnnGetConvolutionBackwardFilterAlgorithmMaxCount(cuda_->cudnn(), &algo_max_count));
+        cudnnGetConvolutionBackwardFilterAlgorithmMaxCount(this->cuda_->cudnn(), &algo_max_count));
     checkCudnnErrors(cudnnGetConvolutionBackwardFilterAlgorithm_v7(
-        cuda_->cudnn(),
-        input_desc_,
-        output_desc_,
+        this->cuda_->cudnn(),
+        this->input_desc_,
+        this->output_desc_,
         conv_desc_,
-        filter_desc_,
+        this->filter_desc_,
         algo_max_count,
         &returnedAlgoCount,
         &bwd_filter_algo_perf_results[0]));
     conv_bwd_filter_algo_ = bwd_filter_algo_perf_results[0].algo;
     checkCudnnErrors(cudnnGetConvolutionBackwardFilterWorkspaceSize(
-        cuda_->cudnn(),
-        input_desc_,
-        output_desc_,
+        this->cuda_->cudnn(),
+        this->input_desc_,
+        this->output_desc_,
         conv_desc_,
-        filter_desc_,
+        this->filter_desc_,
         conv_bwd_filter_algo_,
         &temp_size));
     workspace_size_ = std::max(workspace_size_, temp_size);
 
     // bwd - data
     checkCudnnErrors(
-        cudnnGetConvolutionBackwardDataAlgorithmMaxCount(cuda_->cudnn(), &algo_max_count));
+        cudnnGetConvolutionBackwardDataAlgorithmMaxCount(this->cuda_->cudnn(), &algo_max_count));
     checkCudnnErrors(cudnnGetConvolutionBackwardDataAlgorithm_v7(
-        cuda_->cudnn(),
-        filter_desc_,
-        output_desc_,
+        this->cuda_->cudnn(),
+        this->filter_desc_,
+        this->output_desc_,
         conv_desc_,
-        input_desc_,
+        this->input_desc_,
         algo_max_count,
         &returnedAlgoCount,
         &bwd_data_algo_perf_results[0]));
     conv_bwd_data_algo_ = bwd_data_algo_perf_results[0].algo;
     checkCudnnErrors(cudnnGetConvolutionBackwardDataWorkspaceSize(
-        cuda_->cudnn(),
-        filter_desc_,
-        output_desc_,
+        this->cuda_->cudnn(),
+        this->filter_desc_,
+        this->output_desc_,
         conv_desc_,
-        input_desc_,
+        this->input_desc_,
         conv_bwd_data_algo_,
         &temp_size));
     workspace_size_ = std::max(workspace_size_, temp_size);
@@ -147,176 +149,187 @@ void Conv2d::set_workspace() {
     }
 }
 
-void Conv2d::fwd_initialize(Tensor<double> *input) {
+template <typename dtype> void Conv2d<dtype>::fwd_initialize(Tensor<dtype> *input) {
     // initialize weights and bias
-    if (weights_ == nullptr) {
+    if (this->weights_ == nullptr) {
         // initialize containers handles
+        cudnnDataType_t t;
+        if constexpr (std::is_same<dtype, float>{}) {
+            t = CUDNN_DATA_FLOAT;
+        } else if constexpr (std::is_same<dtype, double>{}) {
+            t = CUDNN_DATA_DOUBLE;
+        }
+
         checkCudnnErrors(cudnnSetFilter4dDescriptor(
-            filter_desc_,
-            CUDNN_DATA_DOUBLE,
+            this->filter_desc_,
+            t,
             CUDNN_TENSOR_NCHW,
             out_channels_,
             input->get_channels(),
             kernel_size_,
             kernel_size_));
 
-        weights_ =
-            new Tensor<double>(out_channels_, input->get_channels(), kernel_size_, kernel_size_);
+        this->weights_ =
+            new Tensor<dtype>(out_channels_, input->get_channels(), kernel_size_, kernel_size_);
         if (bias_) {
-            biases_ = new Tensor<double>(1, out_channels_); // bias size
-            bias_desc_ = biases_->tensor_descriptor();
+            this->biases_ = new Tensor<dtype>(1, out_channels_); // bias size
+            this->bias_desc_ = this->biases_->tensor_descriptor();
         }
     }
 
     // initilaize input and output
-    if (input_desc_ == nullptr || batch_size_ != input->get_batch_size()) {
+    if (this->input_desc_ == nullptr || this->batch_size_ != input->get_batch_size()) {
         // initialize input
-        input_size_ = input->size();
-        input_desc_ = input->tensor_descriptor();
-        batch_size_ = input->get_batch_size();
+        this->input_size_ = input->size();
+        this->input_desc_ = input->tensor_descriptor();
+        this->batch_size_ = input->get_batch_size();
 
         // initilaize output
         checkCudnnErrors(cudnnGetConvolution2dForwardOutputDim(
             conv_desc_,
-            input_desc_,
-            filter_desc_,
+            this->input_desc_,
+            this->filter_desc_,
             &output_size_[0],
             &output_size_[1],
             &output_size_[2],
             &output_size_[3]));
 
-        if (output_ == nullptr)
-            output_ = new Tensor<double>(output_size_);
+        if (this->output_ == nullptr)
+            this->output_ = new Tensor<dtype>(output_size_);
         else
-            output_->reset(output_size_);
+            this->output_->reset(output_size_);
 
-        output_desc_ = output_->tensor_descriptor();
+        this->output_desc_ = this->output_->tensor_descriptor();
 
         // initialize workspace for cudnn
         set_workspace();
 
         // initialize weights
-        if (load_pretrain_ && !freeze_) {
-            if (load_parameter()) {
+        if (this->load_pretrain_ && !this->freeze_) {
+            if (this->load_parameter()) {
                 std::cout << "error occurred.." << std::endl;
                 exit(-1);
             }
-        } else if (!freeze_) {
-            init_weight_bias();
+        } else if (!this->freeze_) {
+            this->init_weight_bias();
         } else {
             /* do nothing */
         }
     }
 }
 
-Tensor<double> *Conv2d::forward(Tensor<double> *input) {
+template <typename dtype> Tensor<dtype> *Conv2d<dtype>::forward(Tensor<dtype> *input) {
     fwd_initialize(input);
-    input_ = input;
+    this->input_ = input;
     checkCudnnErrors(cudnnConvolutionForward(
-        cuda_->cudnn(),
-        &cuda_->one,
-        input_desc_,
+        this->cuda_->cudnn(),
+        &this->cuda_->one,
+        this->input_desc_,
         input->get_device_ptr(),
-        filter_desc_,
-        weights_->get_device_ptr(),
+        this->filter_desc_,
+        this->weights_->get_device_ptr(),
         conv_desc_,
         conv_fwd_algo_,
         device_workspace_,
         workspace_size_,
-        &cuda_->zero,
-        output_desc_,
-        output_->get_device_ptr()));
+        &this->cuda_->zero,
+        this->output_desc_,
+        this->output_->get_device_ptr()));
     if (bias_) {
         checkCudnnErrors(cudnnAddTensor(
-            cuda_->cudnn(),
-            &cuda_->one,
-            bias_desc_,
-            biases_->get_device_ptr(),
-            &cuda_->one,
-            output_desc_,
-            output_->get_device_ptr()));
+            this->cuda_->cudnn(),
+            &this->cuda_->one,
+            this->bias_desc_,
+            this->biases_->get_device_ptr(),
+            &this->cuda_->one,
+            this->output_desc_,
+            this->output_->get_device_ptr()));
     }
 
     if (DEBUG_CONV & 0x01) {
-        input->print(name_ + "::input", true, input->get_batch_size());
-        weights_->print(name_ + "::weight", true);
-        biases_->print(name_ + "::bias", true);
-        output_->print(name_ + "::output", true);
+        input->print(this->name_ + "::input", true, input->get_batch_size());
+        this->weights_->print(this->name_ + "::weight", true);
+        this->biases_->print(this->name_ + "::bias", true);
+        this->output_->print(this->name_ + "::output", true);
     }
 
-    return output_;
+    return this->output_;
 }
 
-void Conv2d::bwd_initialize(Tensor<double> *grad_output) {
-    if (grad_weights_ == nullptr) {
-        grad_weights_ = new Tensor<double>(weights_->shape());
+template <typename dtype> void Conv2d<dtype>::bwd_initialize(Tensor<dtype> *grad_output) {
+    if (this->grad_weights_ == nullptr) {
+        this->grad_weights_ = new Tensor<dtype>(this->weights_->shape());
         if (bias_) {
-            grad_biases_ = new Tensor<double>(1, biases_->get_channels());
+            this->grad_biases_ = new Tensor<dtype>(1, this->biases_->get_channels());
         }
     }
-    Layer::bwd_initialize(grad_output);
+    Layer<dtype>::bwd_initialize(grad_output);
 }
 
-Tensor<double> *Conv2d::backward(Tensor<double> *grad_output) {
+template <typename dtype> Tensor<dtype> *Conv2d<dtype>::backward(Tensor<dtype> *grad_output) {
     bwd_initialize(grad_output);
     // gradients of biases
     if (bias_) {
         checkCudnnErrors(cudnnConvolutionBackwardBias(
-            cuda_->cudnn(),
-            &cuda_->one,
-            output_desc_,
+            this->cuda_->cudnn(),
+            &this->cuda_->one,
+            this->output_desc_,
             grad_output->get_device_ptr(),
-            &cuda_->zero,
-            bias_desc_,
-            grad_biases_->get_device_ptr()));
+            &this->cuda_->zero,
+            this->bias_desc_,
+            this->grad_biases_->get_device_ptr()));
     }
 
     // gradients of weights
     checkCudnnErrors(cudnnConvolutionBackwardFilter(
-        cuda_->cudnn(),
-        &cuda_->one,
-        input_desc_,
-        input_->get_device_ptr(),
-        output_desc_,
-        grad_output_->get_device_ptr(),
+        this->cuda_->cudnn(),
+        &this->cuda_->one,
+        this->input_desc_,
+        this->input_->get_device_ptr(),
+        this->output_desc_,
+        this->grad_output_->get_device_ptr(),
         conv_desc_,
         conv_bwd_filter_algo_,
         device_workspace_,
         workspace_size_,
-        &cuda_->zero,
-        filter_desc_,
-        grad_weights_->get_device_ptr()));
+        &this->cuda_->zero,
+        this->filter_desc_,
+        this->grad_weights_->get_device_ptr()));
 
     // gradients of input data
-    if (!gradient_stop_)
+    if (!this->gradient_stop_)
         checkCudnnErrors(cudnnConvolutionBackwardData(
-            cuda_->cudnn(),
-            &cuda_->one,
-            filter_desc_,
-            weights_->get_device_ptr(),
-            output_desc_,
+            this->cuda_->cudnn(),
+            &this->cuda_->one,
+            this->filter_desc_,
+            this->weights_->get_device_ptr(),
+            this->output_desc_,
             grad_output->get_device_ptr(),
             conv_desc_,
             conv_bwd_data_algo_,
             device_workspace_,
             workspace_size_,
-            &cuda_->zero,
-            input_desc_,
-            grad_input_->get_device_ptr()));
+            &this->cuda_->zero,
+            this->input_desc_,
+            this->grad_input_->get_device_ptr()));
 
     if (DEBUG_CONV & 0x02) {
-        std::cout << name_ << "[BACKWARD]" << std::endl;
-        grad_output->print(name_ + "::gradients", true);
-        grad_biases_->print(name_ + "gbias", true);
-        grad_weights_->print(name_ + "gfilter", true);
-        if (!gradient_stop_)
-            grad_input_->print(name_ + "gdata", true);
+        std::cout << this->name_ << "[BACKWARD]" << std::endl;
+        grad_output->print(this->name_ + "::gradients", true);
+        this->grad_biases_->print(this->name_ + "gbias", true);
+        this->grad_weights_->print(this->name_ + "gfilter", true);
+        if (!this->gradient_stop_)
+            this->grad_input_->print(this->name_ + "gdata", true);
     }
 
     if (DEBUG_CONV & 0x04) {
-        grad_output->print(name_ + "::gradients", true);
-        grad_biases_->print(name_ + "::gbias", true);
+        grad_output->print(this->name_ + "::gradients", true);
+        this->grad_biases_->print(this->name_ + "::gbias", true);
     }
 
-    return grad_input_;
+    return this->grad_input_;
 }
+
+template class Conv2d<float>;
+
+template class Conv2d<double>;

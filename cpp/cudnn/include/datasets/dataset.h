@@ -10,6 +10,7 @@
 
 using namespace std;
 
+template <typename dtype>
 class Dataset {
 public:
     Dataset(
@@ -19,7 +20,7 @@ public:
         int batch_size,
         int num_classes);
 
-    virtual std::tuple<Tensor<double> *, Tensor<double> *> get_next_batch();
+    virtual std::tuple<Tensor<dtype> *, Tensor<dtype> *> get_next_batch();
     [[nodiscard]] virtual int get_num_batches() const = 0;
     virtual int len();
     virtual void reset();
@@ -31,8 +32,8 @@ protected:
 
     std::vector<std::vector<double>> data_pool_;
     std::vector<std::vector<double>> target_pool_;
-    Tensor<double> *data_ = nullptr;
-    Tensor<double> *target_ = nullptr;
+    Tensor<dtype> *data_ = nullptr;
+    Tensor<dtype> *target_ = nullptr;
 
     virtual void load_data() = 0;
     virtual void load_target() = 0;

@@ -4,11 +4,11 @@
 #include <iostream>
 #include <nvtx3/nvToolsExt.h>
 
-Network::Network() {
+template <typename dtype> Network<dtype>::Network() {
     // do nothing
 }
 
-Network::~Network() {
+template <typename dtype> Network<dtype>::~Network() {
     // destroy network
     for (auto layer : layers_)
         delete layer;
@@ -18,7 +18,7 @@ Network::~Network() {
         delete cuda_;
 }
 
-void Network::add_layer(Layer *layer) {
+template <typename dtype> void Network<dtype>::add_layer(Layer<dtype> *layer) {
     layers_.push_back(layer);
 
     // tagging layer to stop gradient if it is the first layer
@@ -26,7 +26,7 @@ void Network::add_layer(Layer *layer) {
         layers_.at(0)->set_gradient_stop();
 }
 
-Tensor<double> *Network::forward(Tensor<double> *input) {
+template <typename dtype> Tensor<dtype> *Network<dtype>::forward(Tensor<dtype> *input) {
     output_ = input;
 
     nvtxRangePushA("Forward");
@@ -55,8 +55,8 @@ Tensor<double> *Network::forward(Tensor<double> *input) {
     return output_;
 }
 
-void Network::backward(Tensor<double> *target) {
-    Tensor<double> *gradient = target;
+template <typename dtype> void Network<dtype>::backward(Tensor<dtype> *target) {
+    Tensor<dtype> *gradient = target;
 
     if (phase_ == inference)
         return;
@@ -94,7 +94,7 @@ void Network::backward(Tensor<double> *target) {
 }
 
 // TODO: SGD and all that?
-void Network::update(double learning_rate) {
+template <typename dtype> void Network<dtype>::update(double learning_rate) {
     if (phase_ == inference)
         return;
 
@@ -113,7 +113,7 @@ void Network::update(double learning_rate) {
     nvtxRangePop();
 }
 
-int Network::write_file() {
+template <typename dtype> int Network<dtype>::write_file() {
     std::cout << ".. store weights to the storage .." << std::endl;
     for (auto layer : layers_) {
         int err = layer->save_parameter();
@@ -127,7 +127,7 @@ int Network::write_file() {
     return 0;
 }
 
-int Network::load_pretrain() {
+template <typename dtype> int Network<dtype>::load_pretrain() {
     for (auto layer : layers_) {
         layer->set_load_pretrain();
     }
@@ -135,7 +135,7 @@ int Network::load_pretrain() {
     return 0;
 }
 
-void Network::cuda() {
+template <typename dtype> void Network<dtype>::cuda() {
     cuda_ = new CudaContext();
 
     std::cout << ".. model Configuration .." << std::endl;
@@ -146,7 +146,7 @@ void Network::cuda() {
 }
 
 //
-void Network::train() {
+template <typename dtype> void Network<dtype>::train() {
     phase_ = training;
 
     // unfreeze all layers
@@ -156,7 +156,7 @@ void Network::train() {
     }
 }
 
-void Network::eval() {
+template <typename dtype> void Network<dtype>::eval() {
     phase_ = inference;
 
     // freeze all layers
@@ -166,3 +166,6 @@ void Network::eval() {
     }
 }
 
+template class Network<float>;
+
+template class Network<double>;

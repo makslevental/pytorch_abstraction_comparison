@@ -9,11 +9,11 @@
  * https://deepnotes.io/softmax-crossentropy
  * */
 
-CrossEntropyLoss::CrossEntropyLoss() {
-    checkCudaErrors(cudaMalloc((void **)&d_loss_, sizeof(double)));
+template <typename dtype> CrossEntropyLoss<dtype>::CrossEntropyLoss() {
+    checkCudaErrors(cudaMalloc((void **)&d_loss_, sizeof(dtype)));
 }
 
-CrossEntropyLoss::~CrossEntropyLoss() {
+template <typename dtype> CrossEntropyLoss<dtype>::~CrossEntropyLoss() {
     if (d_loss_ != nullptr) {
         checkCudaErrors(cudaFree(d_loss_));
         d_loss_ = nullptr;
@@ -27,17 +27,18 @@ __device__ double clip(double prediction, double epsilon = 1e-12) {
     return fmin(fmax(prediction, epsilon), 1.f - epsilon);
 }
 
+template <typename dtype>
 __global__ void softmax_loss_kernel(
-    double *reduced_loss,
-    double *predict,
-    double *target,
-    double *workspace,
+    dtype *reduced_loss,
+    dtype *predict,
+    dtype *target,
+    dtype *workspace,
     int batch_size,
     int num_outputs) {
     int batch_idx = blockDim.x * blockIdx.x + threadIdx.x;
 
     extern __shared__ double s_data[];
-    double loss = 0.f;
+    dtype loss = 0.f;
 
     // each thread calculate entropy for each data and accumulate to shared memory
     for (int c = 0; c < num_outputs; c++)
@@ -69,17 +70,18 @@ __global__ void softmax_loss_kernel(
     }
 }
 
-void CrossEntropyLoss::init_workspace(int batch_size) {
+template <typename dtype> void CrossEntropyLoss<dtype>::init_workspace(int batch_size) {
     if (d_workspace_ == nullptr)
-        checkCudaErrors(cudaMalloc((void **)&d_workspace_, sizeof(double) * batch_size));
+        checkCudaErrors(cudaMalloc((void **)&d_workspace_, sizeof(dtype) * batch_size));
 }
 
-double CrossEntropyLoss::loss(Tensor<double> *predict, Tensor<double> *target) {
+template <typename dtype>
+dtype CrossEntropyLoss<dtype>::loss(Tensor<dtype> *predict, Tensor<dtype> *target) {
     int num_sms;
     int num_blocks_per_sm;
     checkCudaErrors(cudaDeviceGetAttribute(&num_sms, cudaDevAttrMultiProcessorCount, 0));
     checkCudaErrors(cudaOccupancyMaxActiveBlocksPerMultiprocessor(
-        &num_blocks_per_sm, softmax_loss_kernel, BLOCK_DIM_1D, BLOCK_DIM_1D * sizeof(double)));
+        &num_blocks_per_sm, softmax_loss_kernel<dtype>, BLOCK_DIM_1D, BLOCK_DIM_1D * sizeof(dtype)));
 
     int batch_size = target->get_batch_size();
     int num_outputs = target->get_channels();
@@ -94,16 +96,19 @@ double CrossEntropyLoss::loss(Tensor<double> *predict, Tensor<double> *target) {
 
     int num_blocks =
         std::min(num_blocks_per_sm * num_sms, (target->size() + BLOCK_DIM_1D - 1) / BLOCK_DIM_1D);
-    softmax_loss_kernel<<<num_blocks, BLOCK_DIM_1D, BLOCK_DIM_1D * sizeof(double), 0>>>(
+    softmax_loss_kernel<<<num_blocks, BLOCK_DIM_1D, BLOCK_DIM_1D * sizeof(dtype), 0>>>(
         d_loss_,
         predict->get_device_ptr(),
         target->get_device_ptr(),
         d_workspace_,
         batch_size,
         num_outputs);
-    checkCudaErrors(cudaMemcpy(&h_loss_, d_loss_, sizeof(double), cudaMemcpyDeviceToHost));
+    checkCudaErrors(cudaMemcpy(&h_loss_, d_loss_, sizeof(dtype), cudaMemcpyDeviceToHost));
 
     // batch mean loss
-    auto loss = h_loss_ / double(batch_size);
+    auto loss = h_loss_ / dtype(batch_size);
     return loss;
 }
+
+template class CrossEntropyLoss<float>;
+template class CrossEntropyLoss<double>;

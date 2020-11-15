@@ -12,15 +12,15 @@
 
 typedef enum { training, inference } WorkloadType;
 
-class Network {
+template <typename dtype> class Network {
 public:
     Network();
     ~Network();
 
-    void add_layer(Layer *layer);
+    void add_layer(Layer<dtype> *layer);
 
-    virtual Tensor<double> *forward(Tensor<double> *input);
-    virtual void backward(Tensor<double> *input);
+    virtual Tensor<dtype> *forward(Tensor<dtype> *input);
+    virtual void backward(Tensor<dtype> *input);
     void update(double learning_rate = 0.02f);
 
     int load_pretrain();
@@ -30,10 +30,10 @@ public:
     void train();
     void eval();
 
-    Tensor<double> *output_;
+    Tensor<dtype> *output_;
 
 protected:
-    std::vector<Layer *> layers_;
+    std::vector<Layer<dtype> *> layers_;
     CudaContext *cuda_ = nullptr;
     WorkloadType phase_ = inference;
 };

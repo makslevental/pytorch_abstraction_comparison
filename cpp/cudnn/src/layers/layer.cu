@@ -13,10 +13,10 @@
 /****************************************************************
  * Layer definition                                             *
  ****************************************************************/
-Layer::Layer() { /* do nothing */
+template <typename dtype> Layer<dtype>::Layer() { /* do nothing */
 }
 
-Layer::~Layer() {
+template <typename dtype> Layer<dtype>::~Layer() {
     if (DEBUG_FORWARD > 0 || DEBUG_BACKWARD > 0)
         std::cout << "Destroy Layer: " << name_ << std::endl;
 
@@ -47,12 +47,11 @@ Layer::~Layer() {
     }
 }
 
-void Layer::init_weight_bias(unsigned int seed) {
+template <typename dtype> void Layer<dtype>::init_weight_bias(unsigned int seed) {
     checkCudaErrors(cudaDeviceSynchronize());
 
     if (weights_ == nullptr || biases_ == nullptr)
         return;
-    PRINT("init weights biases");
     // Create random network
     std::random_device rd;
     std::mt19937 gen(seed == 0 ? rd() : static_cast<unsigned int>(seed));
@@ -74,7 +73,7 @@ void Layer::init_weight_bias(unsigned int seed) {
     std::cout << ".. initialized " << name_ << " layer .." << std::endl;
 }
 
-void Layer::update_weights_biases(double learning_rate) {
+template <typename dtype> void Layer<dtype>::update_weights_biases(double learning_rate) {
     double eps = -1.f * learning_rate;
     if (weights_ != nullptr && grad_weights_ != nullptr) {
         if (DEBUG_UPDATE) {
@@ -83,14 +82,25 @@ void Layer::update_weights_biases(double learning_rate) {
         }
 
         // w = w + eps * dw
-        checkCublasErrors(cublasDaxpy(
-            cuda_->cublas(),
-            weights_->len(),
-            &eps,
-            grad_weights_->get_device_ptr(),
-            1,
-            weights_->get_device_ptr(),
-            1));
+        if constexpr (std::is_same<dtype, float>{}) {
+            checkCublasErrors(cublasSaxpy(
+                cuda_->cublas(),
+                weights_->len(),
+                reinterpret_cast<const float *>(&eps),
+                grad_weights_->get_device_ptr(),
+                1,
+                weights_->get_device_ptr(),
+                1));
+        } else if constexpr (std::is_same<dtype, double>{}) {
+            checkCublasErrors(cublasDaxpy(
+                cuda_->cublas(),
+                weights_->len(),
+                &eps,
+                grad_weights_->get_device_ptr(),
+                1,
+                weights_->get_device_ptr(),
+                1));
+        }
 
         if (DEBUG_UPDATE)
             weights_->print(name_ + "weights (after update)", true);
@@ -103,21 +113,32 @@ void Layer::update_weights_biases(double learning_rate) {
         }
 
         // b = b + eps * db
-        checkCublasErrors(cublasDaxpy(
-            cuda_->cublas(),
-            biases_->len(),
-            &eps,
-            grad_biases_->get_device_ptr(),
-            1,
-            biases_->get_device_ptr(),
-            1));
+        if constexpr (std::is_same<dtype, float>{}) {
+            checkCublasErrors(cublasSaxpy(
+                cuda_->cublas(),
+                biases_->len(),
+                reinterpret_cast<const float *>(&eps),
+                grad_biases_->get_device_ptr(),
+                1,
+                biases_->get_device_ptr(),
+                1));
+        } else if constexpr (std::is_same<dtype, double>{}) {
+            checkCublasErrors(cublasDaxpy(
+                cuda_->cublas(),
+                biases_->len(),
+                &eps,
+                grad_biases_->get_device_ptr(),
+                1,
+                biases_->get_device_ptr(),
+                1));
+        }
 
         if (DEBUG_UPDATE)
             biases_->print(name_ + "biases (after update)", true);
     }
 }
 
-void Layer::fwd_initialize(Tensor<double> *input) {
+template <typename dtype> void Layer<dtype>::fwd_initialize(Tensor<dtype> *input) {
     if (input_desc_ == nullptr || batch_size_ != input->get_batch_size()) {
         //        input_ = input;
         input_size_ = input->size();
@@ -125,7 +146,7 @@ void Layer::fwd_initialize(Tensor<double> *input) {
         batch_size_ = input->get_batch_size();
 
         if (output_ == nullptr)
-            output_ = new Tensor<double>(input->shape());
+            output_ = new Tensor<dtype>(input->shape());
         else
             output_->reset(input->shape());
 
@@ -133,18 +154,18 @@ void Layer::fwd_initialize(Tensor<double> *input) {
     }
 }
 
-void Layer::bwd_initialize(Tensor<double> *grad_output) {
+template <typename dtype> void Layer<dtype>::bwd_initialize(Tensor<dtype> *grad_output) {
     if (grad_input_ == nullptr || batch_size_ != grad_output->get_batch_size()) {
         grad_output_ = grad_output;
 
         if (grad_input_ == nullptr)
-            grad_input_ = new Tensor<double>(input_->shape());
+            grad_input_ = new Tensor<dtype>(input_->shape());
         else
             grad_input_->reset(input_->shape());
     }
 }
 
-int Layer::load_parameter() {
+template <typename dtype> int Layer<dtype>::load_parameter() {
     std::stringstream filename_weights, filename_biases;
 
     // load weights and biases pretrained parameters
@@ -161,7 +182,7 @@ int Layer::load_parameter() {
     return 0;
 }
 
-int Layer::save_parameter() {
+template <typename dtype> int Layer<dtype>::save_parameter() {
     std::stringstream filename_weights, filename_biases;
 
     std::cout << ".. saving " << name_ << " parameter ..";
@@ -184,3 +205,6 @@ int Layer::save_parameter() {
 
     return 0;
 }
+
+template class Layer<float>;
+template class Layer<double>;

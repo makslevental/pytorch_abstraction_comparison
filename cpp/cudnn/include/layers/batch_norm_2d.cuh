@@ -7,7 +7,8 @@
 
 #include "layer.h"
 
-class BatchNorm2d : public Layer {
+template <typename dtype>
+class BatchNorm2d : public Layer<dtype> {
 public:
     explicit BatchNorm2d(
         std::string name,
@@ -16,14 +17,13 @@ public:
         bool affine = true,
         bool track_running_stats = true,
         cudnnBatchNormMode_t mode = CUDNN_BATCHNORM_SPATIAL_PERSISTENT);
-    ~BatchNorm2d() override;
 
-    Tensor<double> *forward(Tensor<double> *input) override;
-    Tensor<double> *backward(Tensor<double> *grad_output) override;
+    Tensor<dtype> *forward(Tensor<dtype> *input) override;
+    Tensor<dtype> *backward(Tensor<dtype> *grad_output) override;
 
 private:
-    void fwd_initialize(Tensor<double> *input) override;
-    void bwd_initialize(Tensor<double> *grad_output) override;
+    void fwd_initialize(Tensor<dtype> *input) override;
+    void bwd_initialize(Tensor<dtype> *grad_output) override;
 
     size_t workspace_size_ = 0;
     size_t reserve_size_ = 0;
@@ -36,10 +36,10 @@ private:
     double momentum_;
     bool affine_;
     bool track_running_stats_;
-    Tensor<double> *running_mean_ = nullptr;
-    Tensor<double> *running_var_ = nullptr;
-    Tensor<double> *save_mean_ = nullptr;
-    Tensor<double> *save_var_ = nullptr;
+    Tensor<dtype> *running_mean_ = nullptr;
+    Tensor<dtype> *running_var_ = nullptr;
+    Tensor<dtype> *save_mean_ = nullptr;
+    Tensor<dtype> *save_var_ = nullptr;
 
     cudnnBatchNormMode_t mode_;
     cudnnTensorDescriptor_t derived_bn_scale_bias_mean_var_desc_;

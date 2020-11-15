@@ -7,13 +7,14 @@
 
 #include "layer.h"
 
-class Activation : public Layer {
+template <typename dtype>
+class Activation : public Layer<dtype> {
 public:
     Activation(std::string name, cudnnActivationMode_t mode, double coef = 0.f);
     ~Activation() override;
 
-    Tensor<double> *forward(Tensor<double> *input) override;
-    Tensor<double> *backward(Tensor<double> *grad_input) override;
+    Tensor<dtype> *forward(Tensor<dtype> *input) override;
+    Tensor<dtype> *backward(Tensor<dtype> *grad_input) override;
 
 private:
     cudnnActivationDescriptor_t act_desc_;

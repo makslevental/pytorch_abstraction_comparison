@@ -7,21 +7,22 @@
 
 #include "layer.h"
 
-class Dense : public Layer {
+template <typename dtype>
+class Dense : public Layer<dtype> {
 public:
     Dense(std::string name, int out_size);
     ~Dense() override;
 
-    Tensor<double> *forward(Tensor<double> *input) override;
-    Tensor<double> *backward(Tensor<double> *grad_input) override;
+    Tensor<dtype> *forward(Tensor<dtype> *input) override;
+    Tensor<dtype> *backward(Tensor<dtype> *grad_input) override;
 
 private:
-    void fwd_initialize(Tensor<double> *input) override;
-    void bwd_initialize(Tensor<double> *grad_output) override;
+    void fwd_initialize(Tensor<dtype> *input) override;
+    void bwd_initialize(Tensor<dtype> *grad_output) override;
 
     int output_size_ = 0;
 
-    double *d_one_vec = nullptr;
+    dtype *d_one_vec = nullptr;
 };
 
 #endif // PROJECTNAME_DENSE_CUH

@@ -9,13 +9,13 @@
 
 using namespace std;
 
-void Dataset::create_shared_space() {
+template <typename dtype> void Dataset<dtype>::create_shared_space() {
     // create Tensors with batch size and sample size
-    data_ = new Tensor<double>(batch_size_, channels_, height_, width_);
-    target_ = new Tensor<double>(batch_size_, num_classes_);
+    data_ = new Tensor<dtype>(batch_size_, channels_, height_, width_);
+    target_ = new Tensor<dtype>(batch_size_, num_classes_);
 }
 
-void Dataset::shuffle_dataset() {
+template <typename dtype> void Dataset<dtype>::shuffle_dataset() {
     std::random_device rd;
     std::mt19937 g_data(rd());
     auto g_target = g_data;
@@ -23,7 +23,9 @@ void Dataset::shuffle_dataset() {
     std::shuffle(std::begin(data_pool_), std::end(data_pool_), g_data);
     std::shuffle(std::begin(target_pool_), std::end(target_pool_), g_target);
 }
-Dataset::Dataset(string dataset_fp, string label_fp, bool shuffle, int batch_size, int num_classes)
+template <typename dtype>
+Dataset<dtype>::Dataset(
+    string dataset_fp, string label_fp, bool shuffle, int batch_size, int num_classes)
     : dataset_fp_(std::move(dataset_fp)), label_fp_(std::move(label_fp)), shuffle_(shuffle),
       batch_size_(batch_size), num_classes_(num_classes) {
 
@@ -31,14 +33,15 @@ Dataset::Dataset(string dataset_fp, string label_fp, bool shuffle, int batch_siz
     num_batches_ = -1;
 }
 
-void Dataset::reset() {
+template <typename dtype> void Dataset<dtype>::reset() {
     if (shuffle_)
         shuffle_dataset();
     current_batch_ = 0;
 }
 
-int Dataset::len() { return data_pool_.size(); }
-std::tuple<Tensor<double> *, Tensor<double> *> Dataset::get_next_batch() {
+template <typename dtype> int Dataset<dtype>::len() { return data_pool_.size(); }
+template <typename dtype>
+std::tuple<Tensor<dtype> *, Tensor<dtype> *> Dataset<dtype>::get_next_batch() {
     if (current_batch_ < 0) {
         std::cout << "You must initialize dataset first.." << std::endl;
         exit(EXIT_FAILURE);
@@ -67,10 +70,13 @@ std::tuple<Tensor<double> *, Tensor<double> *> Dataset::get_next_batch() {
     current_batch_++;
     return std::make_tuple(data_, target_);
 }
-void Dataset::test_dataset() {
-    Tensor<double> *train_data, *train_target;
+template <typename dtype> void Dataset<dtype>::test_dataset() {
+    Tensor<dtype> *train_data, *train_target;
     std::tie(train_data, train_target) = get_next_batch();
     train_data->print("train_data", true);
     train_target->print("train_data", true);
     reset();
 }
+
+template class Dataset<float>;
+template class Dataset<double>;

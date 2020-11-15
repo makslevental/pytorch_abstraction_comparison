@@ -1,4 +1,4 @@
-#include "CLI11.hpp"
+//#include "CLI11.hpp"
 #include "datasets/datasets.h"
 #include "network.h"
 #include "resnet.cuh"
@@ -14,19 +14,19 @@ int arg_max(int batch, int output_size, const double *arr);
 int find_one(int batch, int output_size, const double *arr);
 
 int main(int argc, char *argv[]) {
-    CLI::App app{"CUDNN Harness"};
-
-    std::string train_dataset_fp = "default";
-    std::string train_label_fp = "default";
-    app.add_option("--train_dataset_fp", train_dataset_fp, "dataset file path");
-    app.add_option("--train_label_fp", train_label_fp, "label file path");
-
-    std::string test_dataset_fp = "default";
-    std::string test_label_fp = "default";
-    app.add_option("--test_dataset_fp", test_dataset_fp, "dataset file path");
-    app.add_option("--test_label_fp", test_label_fp, "label file path");
-
-    CLI11_PARSE(app, argc, argv);
+//    CLI::App app{"CUDNN Harness"};
+//
+//    std::string train_dataset_fp = "default";
+//    std::string train_label_fp = "default";
+//    app.add_option("--train_dataset_fp", train_dataset_fp, "dataset file path");
+//    app.add_option("--train_label_fp", train_label_fp, "label file path");
+//
+//    std::string test_dataset_fp = "default";
+//    std::string test_label_fp = "default";
+//    app.add_option("--test_dataset_fp", test_dataset_fp, "dataset file path");
+//    app.add_option("--test_label_fp", test_label_fp, "label file path");
+//
+//    CLI11_PARSE(app, argc, argv);
 
     /* configure the network */
     int batch_size = 32;
@@ -50,18 +50,28 @@ int main(int argc, char *argv[]) {
     //        STL10(train_dataset_fp, train_label_fp, true, batch_size, NUMBER_STL10_CLASSES);
     //    STL10 test_data_loader =
     //        STL10(test_dataset_fp, test_label_fp, false, batch_size, NUMBER_STL10_CLASSES);
-    CIFAR10 train_data_loader =
-        CIFAR10(train_dataset_fp, "", true, batch_size, NUMBER_CIFAR10_CLASSES);
-    CIFAR10 test_data_loader =
-        CIFAR10(test_dataset_fp, "", false, batch_size, NUMBER_CIFAR10_CLASSES);
+    CIFAR10<double> train_data_loader = CIFAR10<double>(
+        "/home/maksim/dev_projects/pytorch_abstraction_comparison/data/cifar-10-batches-bin/"
+        "first_four.bin",
+        "",
+        true,
+        batch_size,
+        NUMBER_CIFAR10_CLASSES);
+    CIFAR10<double> test_data_loader = CIFAR10<double>(
+        "/home/maksim/dev_projects/pytorch_abstraction_comparison/data/cifar-10-batches-bin/"
+        "data_batch_5.bin",
+        "",
+        false,
+        batch_size,
+        NUMBER_CIFAR10_CLASSES);
 
-    CrossEntropyLoss criterion;
-    CrossEntropyLoss criterion1;
+    CrossEntropyLoss<double> criterion;
+    CrossEntropyLoss<double> criterion1;
     double loss, accuracy;
     int tp_count;
     int sample_count;
 
-    auto model = make_resnet50();
+    auto model = make_resnet50<double>();
     model->cuda();
     //    auto model = new Network();
     //    model->add_layer(new Conv2d("conv1", 20, 5));

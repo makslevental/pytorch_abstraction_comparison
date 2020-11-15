@@ -5,232 +5,232 @@
 #include "layers/layers.cuh"
 #include "network.h"
 
-class ResNet50 : public Network {
+template <typename dtype> class ResNet50 : public Network<dtype> {
 public:
     ResNet50() {
-        this->conv1 =
-            new Conv2d("conv1", /*out_channels*/ 64, /*kernel*/ 7, /*stride*/ 2, /*padding*/ 3);
+        this->conv1 = new Conv2d<dtype>(
+            "conv1", /*out_channels*/ 64, /*kernel*/ 7, /*stride*/ 2, /*padding*/ 3);
         this->conv1->set_gradient_stop();
-        this->bn1 = new BatchNorm2d("bn1");
-        this->relu1 = new Activation("relu1", CUDNN_ACTIVATION_RELU);
-        this->pool1 =
-            new Pooling("pool1", /*kernel*/ 3, /*stride*/ 2, /*padding*/ 1, CUDNN_POOLING_MAX);
+        this->bn1 = new BatchNorm2d<dtype>("bn1");
+        this->relu1 = new Activation<dtype>("relu1", CUDNN_ACTIVATION_RELU);
+        this->pool1 = new Pooling<dtype>(
+            "pool1", /*kernel*/ 3, /*stride*/ 2, /*padding*/ 1, CUDNN_POOLING_MAX);
 
         // layer 1
         // bottleneck 1
-        this->conv2 =
-            new Conv2d("conv2", /*out_channels*/ 64, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0);
-        this->bn2 = new BatchNorm2d("bn2");
-        this->conv3 =
-            new Conv2d("conv3", /*out_channels*/ 64, /*kernel*/ 3, /*stride*/ 1, /*padding*/ 1);
-        this->bn3 = new BatchNorm2d("bn3");
-        this->conv4 =
-            new Conv2d("conv4", /*out_channels*/ 256, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0);
-        this->bn4 = new BatchNorm2d("bn4");
-        this->relu2 = new Activation("relu2", CUDNN_ACTIVATION_RELU);
+        this->conv2 = new Conv2d<dtype>(
+            "conv2", /*out_channels*/ 64, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0);
+        this->bn2 = new BatchNorm2d<dtype>("bn2");
+        this->conv3 = new Conv2d<dtype>(
+            "conv3", /*out_channels*/ 64, /*kernel*/ 3, /*stride*/ 1, /*padding*/ 1);
+        this->bn3 = new BatchNorm2d<dtype>("bn3");
+        this->conv4 = new Conv2d<dtype>(
+            "conv4", /*out_channels*/ 256, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0);
+        this->bn4 = new BatchNorm2d<dtype>("bn4");
+        this->relu2 = new Activation<dtype>("relu2", CUDNN_ACTIVATION_RELU);
         // downsample
-        this->conv5 =
-            new Conv2d("conv5", /*out_channels*/ 256, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0);
-        this->bn5 = new BatchNorm2d("bn5");
-        this->add1 = new Addition();
+        this->conv5 = new Conv2d<dtype>(
+            "conv5", /*out_channels*/ 256, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0);
+        this->bn5 = new BatchNorm2d<dtype>("bn5");
+        this->add1 = new Addition<dtype>();
 
         // bottleneck 2
 
-        this->conv6 =
-            new Conv2d("conv6", /*out_channels*/ 64, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0);
-        this->bn6 = new BatchNorm2d("bn6");
-        this->conv7 =
-            new Conv2d("conv7", /*out_channels*/ 64, /*kernel*/ 3, /*stride*/ 1, /*padding*/ 1);
-        this->bn7 = new BatchNorm2d("bn7");
-        this->conv8 =
-            new Conv2d("conv8", /*out_channels*/ 256, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0);
-        this->bn8 = new BatchNorm2d("bn8");
-        this->relu3 = new Activation("relu3", CUDNN_ACTIVATION_RELU);
+        this->conv6 = new Conv2d<dtype>(
+            "conv6", /*out_channels*/ 64, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0);
+        this->bn6 = new BatchNorm2d<dtype>("bn6");
+        this->conv7 = new Conv2d<dtype>(
+            "conv7", /*out_channels*/ 64, /*kernel*/ 3, /*stride*/ 1, /*padding*/ 1);
+        this->bn7 = new BatchNorm2d<dtype>("bn7");
+        this->conv8 = new Conv2d<dtype>(
+            "conv8", /*out_channels*/ 256, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0);
+        this->bn8 = new BatchNorm2d<dtype>("bn8");
+        this->relu3 = new Activation<dtype>("relu3", CUDNN_ACTIVATION_RELU);
 
         // bottleneck 3
-        this->conv9 =
-            new Conv2d("conv9", /*out_channels*/ 64, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0);
-        this->bn9 = new BatchNorm2d("bn9");
-        this->conv10 =
-            new Conv2d("conv10", /*out_channels*/ 64, /*kernel*/ 3, /*stride*/ 1, /*padding*/ 1);
-        this->bn10 = new BatchNorm2d("bn10");
-        this->conv11 =
-            new Conv2d("conv11", /*out_channels*/ 256, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0);
-        this->bn11 = new BatchNorm2d("bn11");
-        this->relu4 = new Activation("relu4", CUDNN_ACTIVATION_RELU);
+        this->conv9 = new Conv2d<dtype>(
+            "conv9", /*out_channels*/ 64, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0);
+        this->bn9 = new BatchNorm2d<dtype>("bn9");
+        this->conv10 = new Conv2d<dtype>(
+            "conv10", /*out_channels*/ 64, /*kernel*/ 3, /*stride*/ 1, /*padding*/ 1);
+        this->bn10 = new BatchNorm2d<dtype>("bn10");
+        this->conv11 = new Conv2d<dtype>(
+            "conv11", /*out_channels*/ 256, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0);
+        this->bn11 = new BatchNorm2d<dtype>("bn11");
+        this->relu4 = new Activation<dtype>("relu4", CUDNN_ACTIVATION_RELU);
 
         // layer 2
         // bottleneck 1
-        this->conv12 =
-            new Conv2d("conv12", /*out_channels*/ 128, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0);
-        this->bn12 = new BatchNorm2d("bn12");
-        this->conv13 =
-            new Conv2d("conv13", /*out_channels*/ 128, /*kernel*/ 3, /*stride*/ 2, /*padding*/ 1);
-        this->bn13 = new BatchNorm2d("bn13");
-        this->conv14 =
-            new Conv2d("conv14", /*out_channels*/ 512, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0);
-        this->bn14 = new BatchNorm2d("bn14");
-        this->relu5 = new Activation("relu5", CUDNN_ACTIVATION_RELU);
+        this->conv12 = new Conv2d<dtype>(
+            "conv12", /*out_channels*/ 128, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0);
+        this->bn12 = new BatchNorm2d<dtype>("bn12");
+        this->conv13 = new Conv2d<dtype>(
+            "conv13", /*out_channels*/ 128, /*kernel*/ 3, /*stride*/ 2, /*padding*/ 1);
+        this->bn13 = new BatchNorm2d<dtype>("bn13");
+        this->conv14 = new Conv2d<dtype>(
+            "conv14", /*out_channels*/ 512, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0);
+        this->bn14 = new BatchNorm2d<dtype>("bn14");
+        this->relu5 = new Activation<dtype>("relu5", CUDNN_ACTIVATION_RELU);
         // downsample
-        this->conv15 =
-            new Conv2d("conv15", /*out_channels*/ 512, /*kernel*/ 1, /*stride*/ 2, /*padding*/ 0);
-        this->bn15 = new BatchNorm2d("bn15");
-        this->add2 = new Addition();
+        this->conv15 = new Conv2d<dtype>(
+            "conv15", /*out_channels*/ 512, /*kernel*/ 1, /*stride*/ 2, /*padding*/ 0);
+        this->bn15 = new BatchNorm2d<dtype>("bn15");
+        this->add2 = new Addition<dtype>();
 
         // bottleneck 2
-        this->conv16 =
-            new Conv2d("conv16", /*out_channels*/ 128, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0);
-        this->bn16 = new BatchNorm2d("bn16");
-        this->conv17 =
-            new Conv2d("conv17", /*out_channels*/ 128, /*kernel*/ 3, /*stride*/ 1, /*padding*/ 1);
-        this->bn17 = new BatchNorm2d("bn17");
-        this->conv18 =
-            new Conv2d("conv18", /*out_channels*/ 512, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0);
-        this->bn18 = new BatchNorm2d("bn18");
-        this->relu6 = new Activation("relu6", CUDNN_ACTIVATION_RELU);
+        this->conv16 = new Conv2d<dtype>(
+            "conv16", /*out_channels*/ 128, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0);
+        this->bn16 = new BatchNorm2d<dtype>("bn16");
+        this->conv17 = new Conv2d<dtype>(
+            "conv17", /*out_channels*/ 128, /*kernel*/ 3, /*stride*/ 1, /*padding*/ 1);
+        this->bn17 = new BatchNorm2d<dtype>("bn17");
+        this->conv18 = new Conv2d<dtype>(
+            "conv18", /*out_channels*/ 512, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0);
+        this->bn18 = new BatchNorm2d<dtype>("bn18");
+        this->relu6 = new Activation<dtype>("relu6", CUDNN_ACTIVATION_RELU);
 
         // bottleneck 3
-        this->conv19 =
-            new Conv2d("conv19", /*out_channels*/ 128, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0);
-        this->bn19 = new BatchNorm2d("bn19");
-        this->conv20 =
-            new Conv2d("conv20", /*out_channels*/ 128, /*kernel*/ 3, /*stride*/ 1, /*padding*/ 1);
-        this->bn20 = new BatchNorm2d("bn20");
-        this->conv21 =
-            new Conv2d("conv21", /*out_channels*/ 512, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0);
-        this->bn21 = new BatchNorm2d("bn21");
-        this->relu7 = new Activation("relu7", CUDNN_ACTIVATION_RELU);
+        this->conv19 = new Conv2d<dtype>(
+            "conv19", /*out_channels*/ 128, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0);
+        this->bn19 = new BatchNorm2d<dtype>("bn19");
+        this->conv20 = new Conv2d<dtype>(
+            "conv20", /*out_channels*/ 128, /*kernel*/ 3, /*stride*/ 1, /*padding*/ 1);
+        this->bn20 = new BatchNorm2d<dtype>("bn20");
+        this->conv21 = new Conv2d<dtype>(
+            "conv21", /*out_channels*/ 512, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0);
+        this->bn21 = new BatchNorm2d<dtype>("bn21");
+        this->relu7 = new Activation<dtype>("relu7", CUDNN_ACTIVATION_RELU);
 
         // bottleneck 4
-        this->conv22 =
-            new Conv2d("conv22", /*out_channels*/ 128, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0);
-        this->bn22 = new BatchNorm2d("bn22");
-        this->conv23 =
-            new Conv2d("conv23", /*out_channels*/ 128, /*kernel*/ 3, /*stride*/ 1, /*padding*/ 1);
-        this->bn23 = new BatchNorm2d("bn23");
-        this->conv24 =
-            new Conv2d("conv24", /*out_channels*/ 512, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0);
-        this->bn24 = new BatchNorm2d("bn24");
-        this->relu8 = new Activation("relu8", CUDNN_ACTIVATION_RELU);
+        this->conv22 = new Conv2d<dtype>(
+            "conv22", /*out_channels*/ 128, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0);
+        this->bn22 = new BatchNorm2d<dtype>("bn22");
+        this->conv23 = new Conv2d<dtype>(
+            "conv23", /*out_channels*/ 128, /*kernel*/ 3, /*stride*/ 1, /*padding*/ 1);
+        this->bn23 = new BatchNorm2d<dtype>("bn23");
+        this->conv24 = new Conv2d<dtype>(
+            "conv24", /*out_channels*/ 512, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0);
+        this->bn24 = new BatchNorm2d<dtype>("bn24");
+        this->relu8 = new Activation<dtype>("relu8", CUDNN_ACTIVATION_RELU);
 
         // layer 3
         // bottleneck 1
-        this->conv25 =
-            new Conv2d("conv25", /*out_channels*/ 256, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0);
-        this->bn25 = new BatchNorm2d("bn25");
-        this->conv26 =
-            new Conv2d("conv26", /*out_channels*/ 256, /*kernel*/ 3, /*stride*/ 2, /*padding*/ 1);
-        this->bn26 = new BatchNorm2d("bn26");
-        this->conv27 =
-            new Conv2d("conv27", /*out_channels*/ 1024, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0);
-        this->bn27 = new BatchNorm2d("bn27");
-        this->relu9 = new Activation("relu9", CUDNN_ACTIVATION_RELU);
+        this->conv25 = new Conv2d<dtype>(
+            "conv25", /*out_channels*/ 256, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0);
+        this->bn25 = new BatchNorm2d<dtype>("bn25");
+        this->conv26 = new Conv2d<dtype>(
+            "conv26", /*out_channels*/ 256, /*kernel*/ 3, /*stride*/ 2, /*padding*/ 1);
+        this->bn26 = new BatchNorm2d<dtype>("bn26");
+        this->conv27 = new Conv2d<dtype>(
+            "conv27", /*out_channels*/ 1024, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0);
+        this->bn27 = new BatchNorm2d<dtype>("bn27");
+        this->relu9 = new Activation<dtype>("relu9", CUDNN_ACTIVATION_RELU);
         // downsample
-        this->conv28 =
-            new Conv2d("conv28", /*out_channels*/ 1024, /*kernel*/ 1, /*stride*/ 2, /*padding*/ 0);
-        this->bn28 = new BatchNorm2d("bn28");
-        this->add3 = new Addition();
+        this->conv28 = new Conv2d<dtype>(
+            "conv28", /*out_channels*/ 1024, /*kernel*/ 1, /*stride*/ 2, /*padding*/ 0);
+        this->bn28 = new BatchNorm2d<dtype>("bn28");
+        this->add3 = new Addition<dtype>();
 
         // bottleneck 2
-        this->conv29 =
-            new Conv2d("conv29", /*out_channels*/ 256, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0);
-        this->bn29 = new BatchNorm2d("bn29");
-        this->conv30 =
-            new Conv2d("conv30", /*out_channels*/ 256, /*kernel*/ 3, /*stride*/ 1, /*padding*/ 1);
-        this->bn30 = new BatchNorm2d("bn30");
-        this->conv31 =
-            new Conv2d("conv31", /*out_channels*/ 1024, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0);
-        this->bn31 = new BatchNorm2d("bn31");
-        this->relu10 = new Activation("relu10", CUDNN_ACTIVATION_RELU);
+        this->conv29 = new Conv2d<dtype>(
+            "conv29", /*out_channels*/ 256, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0);
+        this->bn29 = new BatchNorm2d<dtype>("bn29");
+        this->conv30 = new Conv2d<dtype>(
+            "conv30", /*out_channels*/ 256, /*kernel*/ 3, /*stride*/ 1, /*padding*/ 1);
+        this->bn30 = new BatchNorm2d<dtype>("bn30");
+        this->conv31 = new Conv2d<dtype>(
+            "conv31", /*out_channels*/ 1024, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0);
+        this->bn31 = new BatchNorm2d<dtype>("bn31");
+        this->relu10 = new Activation<dtype>("relu10", CUDNN_ACTIVATION_RELU);
 
         // bottleneck 3
-        this->conv32 =
-            new Conv2d("conv32", /*out_channels*/ 256, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0);
-        this->bn32 = new BatchNorm2d("bn32");
-        this->conv33 =
-            new Conv2d("conv33", /*out_channels*/ 256, /*kernel*/ 3, /*stride*/ 1, /*padding*/ 1);
-        this->bn33 = new BatchNorm2d("bn33");
-        this->conv34 =
-            new Conv2d("conv34", /*out_channels*/ 1024, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0);
-        this->bn34 = new BatchNorm2d("bn34");
-        this->relu11 = new Activation("relu11", CUDNN_ACTIVATION_RELU);
+        this->conv32 = new Conv2d<dtype>(
+            "conv32", /*out_channels*/ 256, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0);
+        this->bn32 = new BatchNorm2d<dtype>("bn32");
+        this->conv33 = new Conv2d<dtype>(
+            "conv33", /*out_channels*/ 256, /*kernel*/ 3, /*stride*/ 1, /*padding*/ 1);
+        this->bn33 = new BatchNorm2d<dtype>("bn33");
+        this->conv34 = new Conv2d<dtype>(
+            "conv34", /*out_channels*/ 1024, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0);
+        this->bn34 = new BatchNorm2d<dtype>("bn34");
+        this->relu11 = new Activation<dtype>("relu11", CUDNN_ACTIVATION_RELU);
 
         // bottleneck 4
-        this->conv35 =
-            new Conv2d("conv35", /*out_channels*/ 256, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0);
-        this->bn35 = new BatchNorm2d("bn35");
-        this->conv36 =
-            new Conv2d("conv36", /*out_channels*/ 256, /*kernel*/ 3, /*stride*/ 1, /*padding*/ 1);
-        this->bn36 = new BatchNorm2d("bn36");
-        this->conv37 =
-            new Conv2d("conv37", /*out_channels*/ 1024, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0);
-        this->bn37 = new BatchNorm2d("bn37");
-        this->relu12 = new Activation("relu12", CUDNN_ACTIVATION_RELU);
+        this->conv35 = new Conv2d<dtype>(
+            "conv35", /*out_channels*/ 256, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0);
+        this->bn35 = new BatchNorm2d<dtype>("bn35");
+        this->conv36 = new Conv2d<dtype>(
+            "conv36", /*out_channels*/ 256, /*kernel*/ 3, /*stride*/ 1, /*padding*/ 1);
+        this->bn36 = new BatchNorm2d<dtype>("bn36");
+        this->conv37 = new Conv2d<dtype>(
+            "conv37", /*out_channels*/ 1024, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0);
+        this->bn37 = new BatchNorm2d<dtype>("bn37");
+        this->relu12 = new Activation<dtype>("relu12", CUDNN_ACTIVATION_RELU);
 
         // bottleneck 5
-        this->conv38 =
-            new Conv2d("conv38", /*out_channels*/ 256, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0);
-        this->bn38 = new BatchNorm2d("bn38");
-        this->conv39 =
-            new Conv2d("conv39", /*out_channels*/ 256, /*kernel*/ 3, /*stride*/ 1, /*padding*/ 1);
-        this->bn39 = new BatchNorm2d("bn39");
-        this->conv40 =
-            new Conv2d("conv40", /*out_channels*/ 1024, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0);
-        this->bn40 = new BatchNorm2d("bn40");
-        this->relu13 = new Activation("relu13", CUDNN_ACTIVATION_RELU);
+        this->conv38 = new Conv2d<dtype>(
+            "conv38", /*out_channels*/ 256, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0);
+        this->bn38 = new BatchNorm2d<dtype>("bn38");
+        this->conv39 = new Conv2d<dtype>(
+            "conv39", /*out_channels*/ 256, /*kernel*/ 3, /*stride*/ 1, /*padding*/ 1);
+        this->bn39 = new BatchNorm2d<dtype>("bn39");
+        this->conv40 = new Conv2d<dtype>(
+            "conv40", /*out_channels*/ 1024, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0);
+        this->bn40 = new BatchNorm2d<dtype>("bn40");
+        this->relu13 = new Activation<dtype>("relu13", CUDNN_ACTIVATION_RELU);
 
         // layer 4
         // bottleneck 1
-        this->conv41 =
-            new Conv2d("conv41", /*out_channels*/ 512, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0);
-        this->bn41 = new BatchNorm2d("bn41");
-        this->conv42 =
-            new Conv2d("conv42", /*out_channels*/ 512, /*kernel*/ 3, /*stride*/ 2, /*padding*/ 1);
-        this->bn42 = new BatchNorm2d("bn42");
-        this->conv43 =
-            new Conv2d("conv43", /*out_channels*/ 2048, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0);
-        this->bn43 = new BatchNorm2d("bn43");
-        this->relu14 = new Activation("relu14", CUDNN_ACTIVATION_RELU);
+        this->conv41 = new Conv2d<dtype>(
+            "conv41", /*out_channels*/ 512, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0);
+        this->bn41 = new BatchNorm2d<dtype>("bn41");
+        this->conv42 = new Conv2d<dtype>(
+            "conv42", /*out_channels*/ 512, /*kernel*/ 3, /*stride*/ 2, /*padding*/ 1);
+        this->bn42 = new BatchNorm2d<dtype>("bn42");
+        this->conv43 = new Conv2d<dtype>(
+            "conv43", /*out_channels*/ 2048, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0);
+        this->bn43 = new BatchNorm2d<dtype>("bn43");
+        this->relu14 = new Activation<dtype>("relu14", CUDNN_ACTIVATION_RELU);
         // downsample
-        this->conv44 =
-            new Conv2d("conv44", /*out_channels*/ 2048, /*kernel*/ 1, /*stride*/ 2, /*padding*/ 0);
-        this->bn44 = new BatchNorm2d("bn44");
-        this->add4 = new Addition();
+        this->conv44 = new Conv2d<dtype>(
+            "conv44", /*out_channels*/ 2048, /*kernel*/ 1, /*stride*/ 2, /*padding*/ 0);
+        this->bn44 = new BatchNorm2d<dtype>("bn44");
+        this->add4 = new Addition<dtype>();
 
         // bottleneck 2
-        this->conv45 =
-            new Conv2d("conv45", /*out_channels*/ 512, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0);
-        this->bn45 = new BatchNorm2d("bn45");
-        this->conv46 =
-            new Conv2d("conv46", /*out_channels*/ 512, /*kernel*/ 3, /*stride*/ 1, /*padding*/ 1);
-        this->bn46 = new BatchNorm2d("bn46");
-        this->conv47 =
-            new Conv2d("conv47", /*out_channels*/ 2048, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0);
-        this->bn47 = new BatchNorm2d("bn47");
-        this->relu15 = new Activation("relu15", CUDNN_ACTIVATION_RELU);
+        this->conv45 = new Conv2d<dtype>(
+            "conv45", /*out_channels*/ 512, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0);
+        this->bn45 = new BatchNorm2d<dtype>("bn45");
+        this->conv46 = new Conv2d<dtype>(
+            "conv46", /*out_channels*/ 512, /*kernel*/ 3, /*stride*/ 1, /*padding*/ 1);
+        this->bn46 = new BatchNorm2d<dtype>("bn46");
+        this->conv47 = new Conv2d<dtype>(
+            "conv47", /*out_channels*/ 2048, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0);
+        this->bn47 = new BatchNorm2d<dtype>("bn47");
+        this->relu15 = new Activation<dtype>("relu15", CUDNN_ACTIVATION_RELU);
 
         // bottleneck 3
-        this->conv48 =
-            new Conv2d("conv48", /*out_channels*/ 512, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0);
-        this->bn48 = new BatchNorm2d("bn48");
-        this->conv49 =
-            new Conv2d("conv49", /*out_channels*/ 512, /*kernel*/ 3, /*stride*/ 1, /*padding*/ 1);
-        this->bn49 = new BatchNorm2d("bn49");
-        this->conv50 =
-            new Conv2d("conv50", /*out_channels*/ 2048, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0);
-        this->bn50 = new BatchNorm2d("bn50");
-        this->relu16 = new Activation("relu16", CUDNN_ACTIVATION_RELU);
-        this->pool2 =
-            new Pooling("pool2", /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0, CUDNN_POOLING_MAX);
-        this->dense1 = new Dense("dense1", 10);
-        this->softmax1 = new Softmax("softmax1");
+        this->conv48 = new Conv2d<dtype>(
+            "conv48", /*out_channels*/ 512, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0);
+        this->bn48 = new BatchNorm2d<dtype>("bn48");
+        this->conv49 = new Conv2d<dtype>(
+            "conv49", /*out_channels*/ 512, /*kernel*/ 3, /*stride*/ 1, /*padding*/ 1);
+        this->bn49 = new BatchNorm2d<dtype>("bn49");
+        this->conv50 = new Conv2d<dtype>(
+            "conv50", /*out_channels*/ 2048, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0);
+        this->bn50 = new BatchNorm2d<dtype>("bn50");
+        this->relu16 = new Activation<dtype>("relu16", CUDNN_ACTIVATION_RELU);
+        this->pool2 = new Pooling<dtype>(
+            "pool2", /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0, CUDNN_POOLING_MAX);
+        this->dense1 = new Dense<dtype>("dense1", 10);
+        this->softmax1 = new Softmax<dtype>("softmax1");
 
-        this->add5 = new Addition();
-        this->add6 = new Addition();
-        this->add7 = new Addition();
-        this->add8 = new Addition();
+        this->add5 = new Addition<dtype>();
+        this->add6 = new Addition<dtype>();
+        this->add7 = new Addition<dtype>();
+        this->add8 = new Addition<dtype>();
 
-        layers_ = {conv1,  conv2,  conv3,  conv4,  conv5,  conv6,  conv7,  conv8,  conv9,  conv10,
+        this->layers_ = {conv1,  conv2,  conv3,  conv4,  conv5,  conv6,  conv7,  conv8,  conv9,  conv10,
                    conv11, conv12, conv13, conv14, conv15, conv16, conv17, conv18, conv19, conv20,
                    conv21, conv22, conv23, conv24, conv25, conv26, conv27, conv28, conv29, conv30,
                    conv31, conv32, conv33, conv34, conv35, conv36, conv37, conv38, conv39, conv40,
@@ -622,134 +622,134 @@ public:
     }
 
 private:
-    Conv2d *conv1;
-    Conv2d *conv2;
-    Conv2d *conv3;
-    Conv2d *conv4;
-    Conv2d *conv5;
-    Conv2d *conv6;
-    Conv2d *conv7;
-    Conv2d *conv8;
-    Conv2d *conv9;
-    Conv2d *conv10;
-    Conv2d *conv11;
-    Conv2d *conv12;
-    Conv2d *conv13;
-    Conv2d *conv14;
-    Conv2d *conv15;
-    Conv2d *conv16;
-    Conv2d *conv17;
-    Conv2d *conv18;
-    Conv2d *conv19;
-    Conv2d *conv20;
-    Conv2d *conv21;
-    Conv2d *conv22;
-    Conv2d *conv23;
-    Conv2d *conv24;
-    Conv2d *conv25;
-    Conv2d *conv26;
-    Conv2d *conv27;
-    Conv2d *conv28;
-    Conv2d *conv29;
-    Conv2d *conv30;
-    Conv2d *conv31;
-    Conv2d *conv32;
-    Conv2d *conv33;
-    Conv2d *conv34;
-    Conv2d *conv35;
-    Conv2d *conv36;
-    Conv2d *conv37;
-    Conv2d *conv38;
-    Conv2d *conv39;
-    Conv2d *conv40;
-    Conv2d *conv41;
-    Conv2d *conv42;
-    Conv2d *conv43;
-    Conv2d *conv44;
-    Conv2d *conv45;
-    Conv2d *conv46;
-    Conv2d *conv47;
-    Conv2d *conv48;
-    Conv2d *conv49;
-    Conv2d *conv50;
-    BatchNorm2d *bn1;
-    BatchNorm2d *bn2;
-    BatchNorm2d *bn3;
-    BatchNorm2d *bn4;
-    BatchNorm2d *bn5;
-    BatchNorm2d *bn6;
-    BatchNorm2d *bn7;
-    BatchNorm2d *bn8;
-    BatchNorm2d *bn9;
-    BatchNorm2d *bn10;
-    BatchNorm2d *bn11;
-    BatchNorm2d *bn12;
-    BatchNorm2d *bn13;
-    BatchNorm2d *bn14;
-    BatchNorm2d *bn15;
-    BatchNorm2d *bn16;
-    BatchNorm2d *bn17;
-    BatchNorm2d *bn18;
-    BatchNorm2d *bn19;
-    BatchNorm2d *bn20;
-    BatchNorm2d *bn21;
-    BatchNorm2d *bn22;
-    BatchNorm2d *bn23;
-    BatchNorm2d *bn24;
-    BatchNorm2d *bn25;
-    BatchNorm2d *bn26;
-    BatchNorm2d *bn27;
-    BatchNorm2d *bn28;
-    BatchNorm2d *bn29;
-    BatchNorm2d *bn30;
-    BatchNorm2d *bn31;
-    BatchNorm2d *bn32;
-    BatchNorm2d *bn33;
-    BatchNorm2d *bn34;
-    BatchNorm2d *bn35;
-    BatchNorm2d *bn36;
-    BatchNorm2d *bn37;
-    BatchNorm2d *bn38;
-    BatchNorm2d *bn39;
-    BatchNorm2d *bn40;
-    BatchNorm2d *bn41;
-    BatchNorm2d *bn42;
-    BatchNorm2d *bn43;
-    BatchNorm2d *bn44;
-    BatchNorm2d *bn45;
-    BatchNorm2d *bn46;
-    BatchNorm2d *bn47;
-    BatchNorm2d *bn48;
-    BatchNorm2d *bn49;
-    BatchNorm2d *bn50;
-    Activation *relu1;
-    Activation *relu2;
-    Activation *relu3;
-    Activation *relu4;
-    Activation *relu5;
-    Activation *relu6;
-    Activation *relu7;
-    Activation *relu8;
-    Activation *relu9;
-    Activation *relu10;
-    Activation *relu11;
-    Activation *relu12;
-    Activation *relu13;
-    Activation *relu14;
-    Activation *relu15;
-    Activation *relu16;
-    Pooling *pool1;
-    Pooling *pool2;
-    Dense *dense1;
-    Softmax *softmax1;
-    Addition *add1;
-    Addition *add2;
-    Addition *add3;
-    Addition *add4;
-    Addition *add5;
-    Addition *add6;
-    Addition *add7;
-    Addition *add8;
+    Conv2d<dtype> *conv1;
+    Conv2d<dtype> *conv2;
+    Conv2d<dtype> *conv3;
+    Conv2d<dtype> *conv4;
+    Conv2d<dtype> *conv5;
+    Conv2d<dtype> *conv6;
+    Conv2d<dtype> *conv7;
+    Conv2d<dtype> *conv8;
+    Conv2d<dtype> *conv9;
+    Conv2d<dtype> *conv10;
+    Conv2d<dtype> *conv11;
+    Conv2d<dtype> *conv12;
+    Conv2d<dtype> *conv13;
+    Conv2d<dtype> *conv14;
+    Conv2d<dtype> *conv15;
+    Conv2d<dtype> *conv16;
+    Conv2d<dtype> *conv17;
+    Conv2d<dtype> *conv18;
+    Conv2d<dtype> *conv19;
+    Conv2d<dtype> *conv20;
+    Conv2d<dtype> *conv21;
+    Conv2d<dtype> *conv22;
+    Conv2d<dtype> *conv23;
+    Conv2d<dtype> *conv24;
+    Conv2d<dtype> *conv25;
+    Conv2d<dtype> *conv26;
+    Conv2d<dtype> *conv27;
+    Conv2d<dtype> *conv28;
+    Conv2d<dtype> *conv29;
+    Conv2d<dtype> *conv30;
+    Conv2d<dtype> *conv31;
+    Conv2d<dtype> *conv32;
+    Conv2d<dtype> *conv33;
+    Conv2d<dtype> *conv34;
+    Conv2d<dtype> *conv35;
+    Conv2d<dtype> *conv36;
+    Conv2d<dtype> *conv37;
+    Conv2d<dtype> *conv38;
+    Conv2d<dtype> *conv39;
+    Conv2d<dtype> *conv40;
+    Conv2d<dtype> *conv41;
+    Conv2d<dtype> *conv42;
+    Conv2d<dtype> *conv43;
+    Conv2d<dtype> *conv44;
+    Conv2d<dtype> *conv45;
+    Conv2d<dtype> *conv46;
+    Conv2d<dtype> *conv47;
+    Conv2d<dtype> *conv48;
+    Conv2d<dtype> *conv49;
+    Conv2d<dtype> *conv50;
+    BatchNorm2d<dtype> *bn1;
+    BatchNorm2d<dtype> *bn2;
+    BatchNorm2d<dtype> *bn3;
+    BatchNorm2d<dtype> *bn4;
+    BatchNorm2d<dtype> *bn5;
+    BatchNorm2d<dtype> *bn6;
+    BatchNorm2d<dtype> *bn7;
+    BatchNorm2d<dtype> *bn8;
+    BatchNorm2d<dtype> *bn9;
+    BatchNorm2d<dtype> *bn10;
+    BatchNorm2d<dtype> *bn11;
+    BatchNorm2d<dtype> *bn12;
+    BatchNorm2d<dtype> *bn13;
+    BatchNorm2d<dtype> *bn14;
+    BatchNorm2d<dtype> *bn15;
+    BatchNorm2d<dtype> *bn16;
+    BatchNorm2d<dtype> *bn17;
+    BatchNorm2d<dtype> *bn18;
+    BatchNorm2d<dtype> *bn19;
+    BatchNorm2d<dtype> *bn20;
+    BatchNorm2d<dtype> *bn21;
+    BatchNorm2d<dtype> *bn22;
+    BatchNorm2d<dtype> *bn23;
+    BatchNorm2d<dtype> *bn24;
+    BatchNorm2d<dtype> *bn25;
+    BatchNorm2d<dtype> *bn26;
+    BatchNorm2d<dtype> *bn27;
+    BatchNorm2d<dtype> *bn28;
+    BatchNorm2d<dtype> *bn29;
+    BatchNorm2d<dtype> *bn30;
+    BatchNorm2d<dtype> *bn31;
+    BatchNorm2d<dtype> *bn32;
+    BatchNorm2d<dtype> *bn33;
+    BatchNorm2d<dtype> *bn34;
+    BatchNorm2d<dtype> *bn35;
+    BatchNorm2d<dtype> *bn36;
+    BatchNorm2d<dtype> *bn37;
+    BatchNorm2d<dtype> *bn38;
+    BatchNorm2d<dtype> *bn39;
+    BatchNorm2d<dtype> *bn40;
+    BatchNorm2d<dtype> *bn41;
+    BatchNorm2d<dtype> *bn42;
+    BatchNorm2d<dtype> *bn43;
+    BatchNorm2d<dtype> *bn44;
+    BatchNorm2d<dtype> *bn45;
+    BatchNorm2d<dtype> *bn46;
+    BatchNorm2d<dtype> *bn47;
+    BatchNorm2d<dtype> *bn48;
+    BatchNorm2d<dtype> *bn49;
+    BatchNorm2d<dtype> *bn50;
+    Activation<dtype> *relu1;
+    Activation<dtype> *relu2;
+    Activation<dtype> *relu3;
+    Activation<dtype> *relu4;
+    Activation<dtype> *relu5;
+    Activation<dtype> *relu6;
+    Activation<dtype> *relu7;
+    Activation<dtype> *relu8;
+    Activation<dtype> *relu9;
+    Activation<dtype> *relu10;
+    Activation<dtype> *relu11;
+    Activation<dtype> *relu12;
+    Activation<dtype> *relu13;
+    Activation<dtype> *relu14;
+    Activation<dtype> *relu15;
+    Activation<dtype> *relu16;
+    Pooling<dtype> *pool1;
+    Pooling<dtype> *pool2;
+    Dense<dtype> *dense1;
+    Softmax<dtype> *softmax1;
+    Addition<dtype> *add1;
+    Addition<dtype> *add2;
+    Addition<dtype> *add3;
+    Addition<dtype> *add4;
+    Addition<dtype> *add5;
+    Addition<dtype> *add6;
+    Addition<dtype> *add7;
+    Addition<dtype> *add8;
 
     Tensor<double> *identity1 = nullptr;
     Tensor<double> *identity2 = nullptr;
@@ -761,257 +761,297 @@ private:
     Tensor<double> *orig_grad4 = nullptr;
 };
 
-Network *make_resnet50() { return new ResNet50(); }
+template <typename dtype> Network<dtype> *make_resnet50() { return new ResNet50<dtype>(); }
 //
 // Network make_resnet50() {
 //    Network model;
 //
 //    model.add_layer(
-//        new Conv2d("conv1", /*out_channels*/ 64, /*kernel*/ 7, /*stride*/ 2, /*padding*/ 3));
-//    model.add_layer(new BatchNorm2d("bn1"));
-//    model.add_layer(new Activation("relu1", CUDNN_ACTIVATION_RELU));
+//        new Conv2d<dtype>("conv1", /*out_channels*/ 64, /*kernel*/ 7, /*stride*/ 2, /*padding*/
+//        3));
+//    model.add_layer(new BatchNorm2d<dtype>("bn1"));
+//    model.add_layer(new Activation<dtype>("relu1", CUDNN_ACTIVATION_RELU));
 //    model.add_layer(
-//        new Pooling("pool1", /*kernel*/ 3, /*stride*/ 2, /*padding*/ 1, CUDNN_POOLING_MAX));
+//        new Pooling<dtype>("pool1", /*kernel*/ 3, /*stride*/ 2, /*padding*/ 1,
+//        CUDNN_POOLING_MAX));
 //
 //    // layer 1
 //    // bottleneck 1
 //    model.add_layer(
-//        new Conv2d("conv1", /*out_channels*/ 64, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0));
-//    model.add_layer(new BatchNorm2d("bn1"));
+//        new Conv2d<dtype>("conv1", /*out_channels*/ 64, /*kernel*/ 1, /*stride*/ 1, /*padding*/
+//        0));
+//    model.add_layer(new BatchNorm2d<dtype>("bn1"));
 //    model.add_layer(
-//        new Conv2d("conv2", /*out_channels*/ 64, /*kernel*/ 3, /*stride*/ 1, /*padding*/ 1));
-//    model.add_layer(new BatchNorm2d("bn2"));
+//        new Conv2d<dtype>("conv2", /*out_channels*/ 64, /*kernel*/ 3, /*stride*/ 1, /*padding*/
+//        1));
+//    model.add_layer(new BatchNorm2d<dtype>("bn2"));
 //    model.add_layer(
-//        new Conv2d("conv3", /*out_channels*/ 256, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0));
-//    model.add_layer(new BatchNorm2d("bn3"));
-//    model.add_layer(new Activation("relu", CUDNN_ACTIVATION_RELU));
+//        new Conv2d<dtype>("conv3", /*out_channels*/ 256, /*kernel*/ 1, /*stride*/ 1, /*padding*/
+//        0));
+//    model.add_layer(new BatchNorm2d<dtype>("bn3"));
+//    model.add_layer(new Activation<dtype>("relu", CUDNN_ACTIVATION_RELU));
 //
 //    // downsample
 //    model.add_layer(
-//        new Conv2d("0", /*out_channels*/ 256, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0));
-//    model.add_layer(new BatchNorm2d("1"));
+//        new Conv2d<dtype>("0", /*out_channels*/ 256, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0));
+//    model.add_layer(new BatchNorm2d<dtype>("1"));
 //
 //    // bottleneck 2
 //    model.add_layer(
-//        new Conv2d("conv1", /*out_channels*/ 64, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0));
-//    model.add_layer(new BatchNorm2d("bn1"));
+//        new Conv2d<dtype>("conv1", /*out_channels*/ 64, /*kernel*/ 1, /*stride*/ 1, /*padding*/
+//        0));
+//    model.add_layer(new BatchNorm2d<dtype>("bn1"));
 //    model.add_layer(
-//        new Conv2d("conv2", /*out_channels*/ 64, /*kernel*/ 3, /*stride*/ 1, /*padding*/ 1));
-//    model.add_layer(new BatchNorm2d("bn2"));
+//        new Conv2d<dtype>("conv2", /*out_channels*/ 64, /*kernel*/ 3, /*stride*/ 1, /*padding*/
+//        1));
+//    model.add_layer(new BatchNorm2d<dtype>("bn2"));
 //    model.add_layer(
-//        new Conv2d("conv3", /*out_channels*/ 256, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0));
-//    model.add_layer(new BatchNorm2d("bn3"));
-//    model.add_layer(new Activation("relu", CUDNN_ACTIVATION_RELU));
+//        new Conv2d<dtype>("conv3", /*out_channels*/ 256, /*kernel*/ 1, /*stride*/ 1, /*padding*/
+//        0));
+//    model.add_layer(new BatchNorm2d<dtype>("bn3"));
+//    model.add_layer(new Activation<dtype>("relu", CUDNN_ACTIVATION_RELU));
 //
 //    // bottleneck 3
 //    model.add_layer(
-//        new Conv2d("conv1", /*out_channels*/ 64, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0));
-//    model.add_layer(new BatchNorm2d("bn1"));
+//        new Conv2d<dtype>("conv1", /*out_channels*/ 64, /*kernel*/ 1, /*stride*/ 1, /*padding*/
+//        0));
+//    model.add_layer(new BatchNorm2d<dtype>("bn1"));
 //    model.add_layer(
-//        new Conv2d("conv2", /*out_channels*/ 64, /*kernel*/ 3, /*stride*/ 1, /*padding*/ 1));
-//    model.add_layer(new BatchNorm2d("bn2"));
+//        new Conv2d<dtype>("conv2", /*out_channels*/ 64, /*kernel*/ 3, /*stride*/ 1, /*padding*/
+//        1));
+//    model.add_layer(new BatchNorm2d<dtype>("bn2"));
 //    model.add_layer(
-//        new Conv2d("conv3", /*out_channels*/ 256, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0));
-//    model.add_layer(new BatchNorm2d("bn3"));
-//    model.add_layer(new Activation("relu", CUDNN_ACTIVATION_RELU));
+//        new Conv2d<dtype>("conv3", /*out_channels*/ 256, /*kernel*/ 1, /*stride*/ 1, /*padding*/
+//        0));
+//    model.add_layer(new BatchNorm2d<dtype>("bn3"));
+//    model.add_layer(new Activation<dtype>("relu", CUDNN_ACTIVATION_RELU));
 //
 //    // layer 2
 //    // bottleneck 1
 //    model.add_layer(
-//        new Conv2d("conv1", /*out_channels*/ 128, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0));
-//    model.add_layer(new BatchNorm2d("bn1"));
+//        new Conv2d<dtype>("conv1", /*out_channels*/ 128, /*kernel*/ 1, /*stride*/ 1, /*padding*/
+//        0));
+//    model.add_layer(new BatchNorm2d<dtype>("bn1"));
 //    model.add_layer(
-//        new Conv2d("conv2", /*out_channels*/ 128, /*kernel*/ 3, /*stride*/ 2, /*padding*/ 1));
-//    model.add_layer(new BatchNorm2d("bn2"));
+//        new Conv2d<dtype>("conv2", /*out_channels*/ 128, /*kernel*/ 3, /*stride*/ 2, /*padding*/
+//        1));
+//    model.add_layer(new BatchNorm2d<dtype>("bn2"));
 //    model.add_layer(
-//        new Conv2d("conv3", /*out_channels*/ 512, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0));
-//    model.add_layer(new BatchNorm2d("bn3"));
-//    model.add_layer(new Activation("relu", CUDNN_ACTIVATION_RELU));
+//        new Conv2d<dtype>("conv3", /*out_channels*/ 512, /*kernel*/ 1, /*stride*/ 1, /*padding*/
+//        0));
+//    model.add_layer(new BatchNorm2d<dtype>("bn3"));
+//    model.add_layer(new Activation<dtype>("relu", CUDNN_ACTIVATION_RELU));
 //
 //    // downsample
 //    model.add_layer(
-//        new Conv2d("0", /*out_channels*/ 512, /*kernel*/ 1, /*stride*/ 2, /*padding*/ 0));
-//    model.add_layer(new BatchNorm2d("1"));
+//        new Conv2d<dtype>("0", /*out_channels*/ 512, /*kernel*/ 1, /*stride*/ 2, /*padding*/ 0));
+//    model.add_layer(new BatchNorm2d<dtype>("1"));
 //
 //    // bottleneck 2
 //    model.add_layer(
-//        new Conv2d("conv1", /*out_channels*/ 128, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0));
-//    model.add_layer(new BatchNorm2d("bn1"));
+//        new Conv2d<dtype>("conv1", /*out_channels*/ 128, /*kernel*/ 1, /*stride*/ 1, /*padding*/
+//        0));
+//    model.add_layer(new BatchNorm2d<dtype>("bn1"));
 //    model.add_layer(
-//        new Conv2d("conv2", /*out_channels*/ 128, /*kernel*/ 3, /*stride*/ 1, /*padding*/ 1));
-//    model.add_layer(new BatchNorm2d("bn2"));
+//        new Conv2d<dtype>("conv2", /*out_channels*/ 128, /*kernel*/ 3, /*stride*/ 1, /*padding*/
+//        1));
+//    model.add_layer(new BatchNorm2d<dtype>("bn2"));
 //    model.add_layer(
-//        new Conv2d("conv3", /*out_channels*/ 512, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0));
-//    model.add_layer(new BatchNorm2d("bn3"));
-//    model.add_layer(new Activation("relu", CUDNN_ACTIVATION_RELU));
+//        new Conv2d<dtype>("conv3", /*out_channels*/ 512, /*kernel*/ 1, /*stride*/ 1, /*padding*/
+//        0));
+//    model.add_layer(new BatchNorm2d<dtype>("bn3"));
+//    model.add_layer(new Activation<dtype>("relu", CUDNN_ACTIVATION_RELU));
 //
 //    // bottleneck 3
 //    model.add_layer(
-//        new Conv2d("conv1", /*out_channels*/ 128, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0));
-//    model.add_layer(new BatchNorm2d("bn1"));
+//        new Conv2d<dtype>("conv1", /*out_channels*/ 128, /*kernel*/ 1, /*stride*/ 1, /*padding*/
+//        0));
+//    model.add_layer(new BatchNorm2d<dtype>("bn1"));
 //    model.add_layer(
-//        new Conv2d("conv2", /*out_channels*/ 128, /*kernel*/ 3, /*stride*/ 1, /*padding*/ 1));
-//    model.add_layer(new BatchNorm2d("bn2"));
+//        new Conv2d<dtype>("conv2", /*out_channels*/ 128, /*kernel*/ 3, /*stride*/ 1, /*padding*/
+//        1));
+//    model.add_layer(new BatchNorm2d<dtype>("bn2"));
 //    model.add_layer(
-//        new Conv2d("conv3", /*out_channels*/ 512, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0));
-//    model.add_layer(new BatchNorm2d("bn3"));
-//    model.add_layer(new Activation("relu", CUDNN_ACTIVATION_RELU));
+//        new Conv2d<dtype>("conv3", /*out_channels*/ 512, /*kernel*/ 1, /*stride*/ 1, /*padding*/
+//        0));
+//    model.add_layer(new BatchNorm2d<dtype>("bn3"));
+//    model.add_layer(new Activation<dtype>("relu", CUDNN_ACTIVATION_RELU));
 //
 //    // bottleneck 4
 //    model.add_layer(
-//        new Conv2d("conv1", /*out_channels*/ 128, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0));
-//    model.add_layer(new BatchNorm2d("bn1"));
+//        new Conv2d<dtype>("conv1", /*out_channels*/ 128, /*kernel*/ 1, /*stride*/ 1, /*padding*/
+//        0));
+//    model.add_layer(new BatchNorm2d<dtype>("bn1"));
 //    model.add_layer(
-//        new Conv2d("conv2", /*out_channels*/ 128, /*kernel*/ 3, /*stride*/ 1, /*padding*/ 1));
-//    model.add_layer(new BatchNorm2d("bn2"));
+//        new Conv2d<dtype>("conv2", /*out_channels*/ 128, /*kernel*/ 3, /*stride*/ 1, /*padding*/
+//        1));
+//    model.add_layer(new BatchNorm2d<dtype>("bn2"));
 //    model.add_layer(
-//        new Conv2d("conv3", /*out_channels*/ 512, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0));
-//    model.add_layer(new BatchNorm2d("bn3"));
-//    model.add_layer(new Activation("relu", CUDNN_ACTIVATION_RELU));
+//        new Conv2d<dtype>("conv3", /*out_channels*/ 512, /*kernel*/ 1, /*stride*/ 1, /*padding*/
+//        0));
+//    model.add_layer(new BatchNorm2d<dtype>("bn3"));
+//    model.add_layer(new Activation<dtype>("relu", CUDNN_ACTIVATION_RELU));
 //
 //    // layer 3
 //    // bottleneck 1
 //    model.add_layer(
-//        new Conv2d("conv1", /*out_channels*/ 256, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0));
-//    model.add_layer(new BatchNorm2d("bn1"));
+//        new Conv2d<dtype>("conv1", /*out_channels*/ 256, /*kernel*/ 1, /*stride*/ 1, /*padding*/
+//        0));
+//    model.add_layer(new BatchNorm2d<dtype>("bn1"));
 //    model.add_layer(
-//        new Conv2d("conv2", /*out_channels*/ 256, /*kernel*/ 3, /*stride*/ 2, /*padding*/ 1));
-//    model.add_layer(new BatchNorm2d("bn2"));
-//    model.add_layer(new Conv2d(
+//        new Conv2d<dtype>("conv2", /*out_channels*/ 256, /*kernel*/ 3, /*stride*/ 2, /*padding*/
+//        1));
+//    model.add_layer(new BatchNorm2d<dtype>("bn2"));
+//    model.add_layer(new Conv2d<dtype>(
 //        "conv3",
 //        /*out_channels*/ 1024,
 //        /*kernel*/ 1,
 //        /*stride*/ 1, /*padding*/
 //        0));
-//    model.add_layer(new BatchNorm2d("bn3"));
-//    model.add_layer(new Activation("relu", CUDNN_ACTIVATION_RELU));
+//    model.add_layer(new BatchNorm2d<dtype>("bn3"));
+//    model.add_layer(new Activation<dtype>("relu", CUDNN_ACTIVATION_RELU));
 //
 //    // downsample
 //    model.add_layer(
-//        new Conv2d("0", /*out_channels*/ 1024, /*kernel*/ 1, /*stride*/ 2, /*padding*/ 0));
-//    model.add_layer(new BatchNorm2d("1"));
+//        new Conv2d<dtype>("0", /*out_channels*/ 1024, /*kernel*/ 1, /*stride*/ 2, /*padding*/ 0));
+//    model.add_layer(new BatchNorm2d<dtype>("1"));
 //
 //    // bottleneck 2
 //    model.add_layer(
-//        new Conv2d("conv1", /*out_channels*/ 256, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0));
-//    model.add_layer(new BatchNorm2d("bn1"));
+//        new Conv2d<dtype>("conv1", /*out_channels*/ 256, /*kernel*/ 1, /*stride*/ 1, /*padding*/
+//        0));
+//    model.add_layer(new BatchNorm2d<dtype>("bn1"));
 //    model.add_layer(
-//        new Conv2d("conv2", /*out_channels*/ 256, /*kernel*/ 3, /*stride*/ 1, /*padding*/ 1));
-//    model.add_layer(new BatchNorm2d("bn2"));
-//    model.add_layer(new Conv2d(
+//        new Conv2d<dtype>("conv2", /*out_channels*/ 256, /*kernel*/ 3, /*stride*/ 1, /*padding*/
+//        1));
+//    model.add_layer(new BatchNorm2d<dtype>("bn2"));
+//    model.add_layer(new Conv2d<dtype>(
 //        "conv3",
 //        /*out_channels*/ 1024,
 //        /*kernel*/ 1,
 //        /*stride*/ 1, /*padding*/
 //        0));
-//    model.add_layer(new BatchNorm2d("bn3"));
-//    model.add_layer(new Activation("relu", CUDNN_ACTIVATION_RELU));
+//    model.add_layer(new BatchNorm2d<dtype>("bn3"));
+//    model.add_layer(new Activation<dtype>("relu", CUDNN_ACTIVATION_RELU));
 //
 //    // bottleneck 3
 //    model.add_layer(
-//        new Conv2d("conv1", /*out_channels*/ 256, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0));
-//    model.add_layer(new BatchNorm2d("bn1"));
+//        new Conv2d<dtype>("conv1", /*out_channels*/ 256, /*kernel*/ 1, /*stride*/ 1, /*padding*/
+//        0));
+//    model.add_layer(new BatchNorm2d<dtype>("bn1"));
 //    model.add_layer(
-//        new Conv2d("conv2", /*out_channels*/ 256, /*kernel*/ 3, /*stride*/ 1, /*padding*/ 1));
-//    model.add_layer(new BatchNorm2d("bn2"));
-//    model.add_layer(new Conv2d(
+//        new Conv2d<dtype>("conv2", /*out_channels*/ 256, /*kernel*/ 3, /*stride*/ 1, /*padding*/
+//        1));
+//    model.add_layer(new BatchNorm2d<dtype>("bn2"));
+//    model.add_layer(new Conv2d<dtype>(
 //        "conv3",
 //        /*out_channels*/ 1024,
 //        /*kernel*/ 1,
 //        /*stride*/ 1, /*padding*/
 //        0));
-//    model.add_layer(new BatchNorm2d("bn3"));
-//    model.add_layer(new Activation("relu", CUDNN_ACTIVATION_RELU));
+//    model.add_layer(new BatchNorm2d<dtype>("bn3"));
+//    model.add_layer(new Activation<dtype>("relu", CUDNN_ACTIVATION_RELU));
 //
 //    // bottleneck 4
 //    model.add_layer(
-//        new Conv2d("conv1", /*out_channels*/ 256, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0));
-//    model.add_layer(new BatchNorm2d("bn1"));
+//        new Conv2d<dtype>("conv1", /*out_channels*/ 256, /*kernel*/ 1, /*stride*/ 1, /*padding*/
+//        0));
+//    model.add_layer(new BatchNorm2d<dtype>("bn1"));
 //    model.add_layer(
-//        new Conv2d("conv2", /*out_channels*/ 256, /*kernel*/ 3, /*stride*/ 1, /*padding*/ 1));
-//    model.add_layer(new BatchNorm2d("bn2"));
-//    model.add_layer(new Conv2d(
+//        new Conv2d<dtype>("conv2", /*out_channels*/ 256, /*kernel*/ 3, /*stride*/ 1, /*padding*/
+//        1));
+//    model.add_layer(new BatchNorm2d<dtype>("bn2"));
+//    model.add_layer(new Conv2d<dtype>(
 //        "conv3",
 //        /*out_channels*/ 1024,
 //        /*kernel*/ 1,
 //        /*stride*/ 1, /*padding*/
 //        0));
-//    model.add_layer(new BatchNorm2d("bn3"));
-//    model.add_layer(new Activation("relu", CUDNN_ACTIVATION_RELU));
+//    model.add_layer(new BatchNorm2d<dtype>("bn3"));
+//    model.add_layer(new Activation<dtype>("relu", CUDNN_ACTIVATION_RELU));
 //
 //    // bottleneck 5
 //    model.add_layer(
-//        new Conv2d("conv1", /*out_channels*/ 256, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0));
-//    model.add_layer(new BatchNorm2d("bn1"));
+//        new Conv2d<dtype>("conv1", /*out_channels*/ 256, /*kernel*/ 1, /*stride*/ 1, /*padding*/
+//        0));
+//    model.add_layer(new BatchNorm2d<dtype>("bn1"));
 //    model.add_layer(
-//        new Conv2d("conv2", /*out_channels*/ 256, /*kernel*/ 3, /*stride*/ 1, /*padding*/ 1));
-//    model.add_layer(new BatchNorm2d("bn2"));
-//    model.add_layer(new Conv2d(
+//        new Conv2d<dtype>("conv2", /*out_channels*/ 256, /*kernel*/ 3, /*stride*/ 1, /*padding*/
+//        1));
+//    model.add_layer(new BatchNorm2d<dtype>("bn2"));
+//    model.add_layer(new Conv2d<dtype>(
 //        "conv3",
 //        /*out_channels*/ 1024,
 //        /*kernel*/ 1,
 //        /*stride*/ 1, /*padding*/
 //        0));
-//    model.add_layer(new BatchNorm2d("bn3"));
-//    model.add_layer(new Activation("relu", CUDNN_ACTIVATION_RELU));
+//    model.add_layer(new BatchNorm2d<dtype>("bn3"));
+//    model.add_layer(new Activation<dtype>("relu", CUDNN_ACTIVATION_RELU));
 //
 //    // layer 4
 //    // bottleneck 1
 //    model.add_layer(
-//        new Conv2d("conv1", /*out_channels*/ 512, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0));
-//    model.add_layer(new BatchNorm2d("bn1"));
+//        new Conv2d<dtype>("conv1", /*out_channels*/ 512, /*kernel*/ 1, /*stride*/ 1, /*padding*/
+//        0));
+//    model.add_layer(new BatchNorm2d<dtype>("bn1"));
 //    model.add_layer(
-//        new Conv2d("conv2", /*out_channels*/ 512, /*kernel*/ 3, /*stride*/ 2, /*padding*/ 1));
-//    model.add_layer(new BatchNorm2d("bn2"));
-//    model.add_layer(new Conv2d(
+//        new Conv2d<dtype>("conv2", /*out_channels*/ 512, /*kernel*/ 3, /*stride*/ 2, /*padding*/
+//        1));
+//    model.add_layer(new BatchNorm2d<dtype>("bn2"));
+//    model.add_layer(new Conv2d<dtype>(
 //        "conv3",
 //        /*out_channels*/ 2048,
 //        /*kernel*/ 1,
 //        /*stride*/ 1, /*padding*/
 //        0));
-//    model.add_layer(new BatchNorm2d("bn3"));
-//    model.add_layer(new Activation("relu", CUDNN_ACTIVATION_RELU));
+//    model.add_layer(new BatchNorm2d<dtype>("bn3"));
+//    model.add_layer(new Activation<dtype>("relu", CUDNN_ACTIVATION_RELU));
 //
 //    // downsample
 //    model.add_layer(
-//        new Conv2d("0", /*out_channels*/ 2048, /*kernel*/ 1, /*stride*/ 2, /*padding*/ 0));
-//    model.add_layer(new BatchNorm2d("1"));
+//        new Conv2d<dtype>("0", /*out_channels*/ 2048, /*kernel*/ 1, /*stride*/ 2, /*padding*/ 0));
+//    model.add_layer(new BatchNorm2d<dtype>("1"));
 //
 //    // bottleneck 2
 //    model.add_layer(
-//        new Conv2d("conv1", /*out_channels*/ 512, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0));
-//    model.add_layer(new BatchNorm2d("bn1"));
+//        new Conv2d<dtype>("conv1", /*out_channels*/ 512, /*kernel*/ 1, /*stride*/ 1, /*padding*/
+//        0));
+//    model.add_layer(new BatchNorm2d<dtype>("bn1"));
 //    model.add_layer(
-//        new Conv2d("conv2", /*out_channels*/ 512, /*kernel*/ 3, /*stride*/ 1, /*padding*/ 1));
-//    model.add_layer(new BatchNorm2d("bn2"));
-//    model.add_layer(new Conv2d(
+//        new Conv2d<dtype>("conv2", /*out_channels*/ 512, /*kernel*/ 3, /*stride*/ 1, /*padding*/
+//        1));
+//    model.add_layer(new BatchNorm2d<dtype>("bn2"));
+//    model.add_layer(new Conv2d<dtype>(
 //        "conv3",
 //        /*out_channels*/ 2048,
 //        /*kernel*/ 1,
 //        /*stride*/ 1, /*padding*/
 //        0));
-//    model.add_layer(new BatchNorm2d("bn3"));
-//    model.add_layer(new Activation("relu", CUDNN_ACTIVATION_RELU));
+//    model.add_layer(new BatchNorm2d<dtype>("bn3"));
+//    model.add_layer(new Activation<dtype>("relu", CUDNN_ACTIVATION_RELU));
 //
 //    // bottleneck 3
 //    model.add_layer(
-//        new Conv2d("conv1", /*out_channels*/ 512, /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0));
-//    model.add_layer(new BatchNorm2d("bn1"));
+//        new Conv2d<dtype>("conv1", /*out_channels*/ 512, /*kernel*/ 1, /*stride*/ 1, /*padding*/
+//        0));
+//    model.add_layer(new BatchNorm2d<dtype>("bn1"));
 //    model.add_layer(
-//        new Conv2d("conv2", /*out_channels*/ 512, /*kernel*/ 3, /*stride*/ 1, /*padding*/ 1));
-//    model.add_layer(new BatchNorm2d("bn2"));
-//    model.add_layer(new Conv2d(
+//        new Conv2d<dtype>("conv2", /*out_channels*/ 512, /*kernel*/ 3, /*stride*/ 1, /*padding*/
+//        1));
+//    model.add_layer(new BatchNorm2d<dtype>("bn2"));
+//    model.add_layer(new Conv2d<dtype>(
 //        "conv3",
 //        /*out_channels*/ 2048,
 //        /*kernel*/ 1,
 //        /*stride*/ 1, /*padding*/
 //        0));
-//    model.add_layer(new BatchNorm2d("bn3"));
-//    model.add_layer(new Activation("relu", CUDNN_ACTIVATION_RELU));
+//    model.add_layer(new BatchNorm2d<dtype>("bn3"));
+//    model.add_layer(new Activation<dtype>("relu", CUDNN_ACTIVATION_RELU));
 //
 //    model.add_layer(
-//        new Pooling("pool1", /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0, CUDNN_POOLING_MAX));
-//    model.add_layer(new Dense("dense1", 10));
-//    model.add_layer(new Softmax("softmax"));
+//        new Pooling<dtype>("pool1", /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0,
+//        CUDNN_POOLING_MAX));
+//    model.add_layer(new Dense<dtype>("dense1", 10));
+//    model.add_layer(new Softmax<dtype>("softmax"));
 //    return model;
 //}
