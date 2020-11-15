@@ -293,7 +293,7 @@ template <typename dtype> Tensor<dtype> *Conv2d<dtype>::backward(Tensor<dtype> *
         this->input_desc_,
         this->input_->get_device_ptr(),
         this->output_desc_,
-        this->grad_output_->get_device_ptr(),
+        this->grad_of_output_->get_device_ptr(),
         conv_desc_,
         conv_bwd_filter_algo_,
         device_workspace_,
@@ -317,7 +317,7 @@ template <typename dtype> Tensor<dtype> *Conv2d<dtype>::backward(Tensor<dtype> *
             workspace_size_,
             &this->cuda_->zero,
             this->input_desc_,
-            this->grad_input_->get_device_ptr()));
+            this->grad_of_input_->get_device_ptr()));
 
     if (DEBUG_CONV & 0x02) {
         std::cout << this->name_ << "[BACKWARD]" << std::endl;
@@ -325,7 +325,7 @@ template <typename dtype> Tensor<dtype> *Conv2d<dtype>::backward(Tensor<dtype> *
         this->grad_biases_->print(this->name_ + "gbias", true);
         this->grad_weights_->print(this->name_ + "gfilter", true);
         if (!this->gradient_stop_)
-            this->grad_input_->print(this->name_ + "gdata", true);
+            this->grad_of_input_->print(this->name_ + "gdata", true);
     }
 
     if (DEBUG_CONV & 0x04) {
@@ -333,7 +333,7 @@ template <typename dtype> Tensor<dtype> *Conv2d<dtype>::backward(Tensor<dtype> *
         this->grad_biases_->print(this->name_ + "::gbias", true);
     }
 
-    return this->grad_input_;
+    return this->grad_of_input_;
 }
 
 template class Conv2d<float>;

@@ -52,7 +52,7 @@ __global__ void softmax_loss_kernel(
     //            + c]);
     //    }
     for (int c = 0; c < num_outputs; c++)
-        loss += target[batch_idx * num_outputs + c] * log(predict[batch_idx * num_outputs + c]);
+        loss += target[batch_idx * num_outputs + c] * logf(predict[batch_idx * num_outputs + c]);
     workspace[batch_idx] = -loss;
 
     // then, we do reduction the result to calculate loss using 1 thread block

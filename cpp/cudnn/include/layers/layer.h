@@ -31,6 +31,7 @@ public:
     void train() { train_ = true; }
     void eval() { train_ = false; }
     void update_weights_biases(dtype learning_rate);
+    void zero_out();
 
 protected:
     virtual void fwd_initialize(Tensor<dtype> *input);
@@ -49,8 +50,8 @@ protected:
     // output memory
     Tensor<dtype> *input_ = nullptr;       /* x  */
     Tensor<dtype> *output_ = nullptr;      /* y  */
-    Tensor<dtype> *grad_input_ = nullptr;  /* dx */
-    Tensor<dtype> *grad_output_ = nullptr; /* dy */
+    Tensor<dtype> *grad_of_input_ = nullptr;  /* dx */
+    Tensor<dtype> *grad_of_output_ = nullptr; /* dy */
     int input_size_;
 
     // master weights & bias

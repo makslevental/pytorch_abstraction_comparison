@@ -153,6 +153,7 @@ template <typename dtype> void Network<dtype>::train() {
     for (auto layer : layers_) {
         layer->unfreeze();
         layer->train();
+        layer->zero_out();
     }
 }
 

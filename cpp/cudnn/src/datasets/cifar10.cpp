@@ -21,6 +21,7 @@ template <typename dtype> void CIFAR10<dtype>::load_data() {
 
     double p = 0.5; // probability
     std::bernoulli_distribution d(p);
+    auto horizontal_flip = d(rng);
 
     uint8_t ptr[1];
     auto num_pixels = this->channels_ * this->height_ * this->width_;
@@ -31,7 +32,6 @@ template <typename dtype> void CIFAR10<dtype>::load_data() {
         target_one_hot[static_cast<int>(ptr[0])] = 1.f;
         this->target_pool_.push_back(target_one_hot);
 
-        auto horizontal_flip = d(rng);
 
         file.read((char *)q, num_pixels / this->channels_);
         std::vector<dtype> red(q, &q[num_pixels]);
@@ -61,11 +61,12 @@ template <typename dtype> void CIFAR10<dtype>::load_data() {
 template <typename dtype> void CIFAR10<dtype>::load_target() {}
 template <typename dtype> void CIFAR10<dtype>::normalize_data() {
     for (auto &sample : this->data_pool_) {
+//        std::transform(sample.begin(), sample.end(), sample.begin(), [](auto &p) { return p * 3; });
         dtype *sample_data_ptr = sample.data();
         for (int j = 0; j < this->channels_ * this->height_ * this->width_; j++) {
             sample_data_ptr[j] /= 255.f;
-            sample_data_ptr[j] -= 0.5;
-            sample_data_ptr[j] /= 0.5;
+            sample_data_ptr[j] -= 0.4;
+            sample_data_ptr[j] /= 0.2;
         }
     }
 }

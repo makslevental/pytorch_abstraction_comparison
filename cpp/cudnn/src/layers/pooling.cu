@@ -78,9 +78,9 @@ template <typename dtype> Tensor<dtype> *Pooling<dtype>::backward(Tensor<dtype> 
         this->input_->get_device_ptr(),
         &this->cuda_->zero,
         this->input_desc_,
-        this->grad_input_->get_device_ptr()));
+        this->grad_of_input_->get_device_ptr()));
 
-    return this->grad_input_;
+    return this->grad_of_input_;
 }
 
 template class Pooling<float>;

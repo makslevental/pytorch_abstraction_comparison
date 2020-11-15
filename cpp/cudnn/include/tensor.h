@@ -9,6 +9,7 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <cstring>
 
 #include <cuda_runtime.h>
 #include <cudnn.h>
@@ -115,6 +116,11 @@ public:
             tensor_desc_ = nullptr;
             tensor_descriptor();
         }
+    }
+
+    void zero_out() {
+        std::memset(host_ptr_, 0, sizeof(dtype) * len());
+        checkCudaErrors(cudaMemset(device_ptr_, 0, sizeof(dtype) * len()));
     }
 
     void reset(std::array<int, 4> size) { reset(size[0], size[1], size[2], size[3]); }

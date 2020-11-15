@@ -169,7 +169,7 @@ template <typename dtype> Tensor<dtype> *Dense<dtype>::backward(Tensor<dtype> *g
             output_size_,
             this->batch_size_,
             &this->cuda_->one,
-            this->grad_output_->get_device_ptr(),
+            this->grad_of_output_->get_device_ptr(),
             output_size_,
             d_one_vec,
             1,
@@ -188,7 +188,7 @@ template <typename dtype> Tensor<dtype> *Dense<dtype>::backward(Tensor<dtype> *g
             &this->cuda_->one,
             this->input_->get_device_ptr(),
             this->input_size_,
-            this->grad_output_->get_device_ptr(),
+            this->grad_of_output_->get_device_ptr(),
             output_size_,
             &this->cuda_->zero,
             this->grad_weights_->get_device_ptr(),
@@ -201,7 +201,7 @@ template <typename dtype> Tensor<dtype> *Dense<dtype>::backward(Tensor<dtype> *g
             output_size_,
             this->batch_size_,
             &this->cuda_->one,
-            this->grad_output_->get_device_ptr(),
+            this->grad_of_output_->get_device_ptr(),
             output_size_,
             d_one_vec,
             1,
@@ -220,7 +220,7 @@ template <typename dtype> Tensor<dtype> *Dense<dtype>::backward(Tensor<dtype> *g
             &this->cuda_->one,
             this->input_->get_device_ptr(),
             this->input_size_,
-            this->grad_output_->get_device_ptr(),
+            this->grad_of_output_->get_device_ptr(),
             output_size_,
             &this->cuda_->zero,
             this->grad_weights_->get_device_ptr(),
@@ -240,10 +240,10 @@ template <typename dtype> Tensor<dtype> *Dense<dtype>::backward(Tensor<dtype> *g
                 &this->cuda_->one,
                 this->weights_->get_device_ptr(),
                 this->input_size_,
-                this->grad_output_->get_device_ptr(),
+                this->grad_of_output_->get_device_ptr(),
                 output_size_,
                 &this->cuda_->zero,
-                this->grad_input_->get_device_ptr(),
+                this->grad_of_input_->get_device_ptr(),
                 this->input_size_));
 
         } else if constexpr (std::is_same<dtype, double>{}) {
@@ -257,10 +257,10 @@ template <typename dtype> Tensor<dtype> *Dense<dtype>::backward(Tensor<dtype> *g
                 &this->cuda_->one,
                 this->weights_->get_device_ptr(),
                 this->input_size_,
-                this->grad_output_->get_device_ptr(),
+                this->grad_of_output_->get_device_ptr(),
                 output_size_,
                 &this->cuda_->zero,
-                this->grad_input_->get_device_ptr(),
+                this->grad_of_input_->get_device_ptr(),
                 this->input_size_));
         }
 
@@ -270,10 +270,10 @@ template <typename dtype> Tensor<dtype> *Dense<dtype>::backward(Tensor<dtype> *g
         this->grad_weights_->print(this->name_ + "::gfilter", true);
         this->grad_biases_->print(this->name_ + "::gbias", true);
         if (!this->gradient_stop_)
-            this->grad_input_->print(this->name_ + "::gdata", true);
+            this->grad_of_input_->print(this->name_ + "::gdata", true);
     }
 
-    return this->grad_input_;
+    return this->grad_of_input_;
 }
 template class Dense<float>;
 template class Dense<double>;

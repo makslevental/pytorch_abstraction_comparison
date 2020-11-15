@@ -14,27 +14,47 @@ template <typename dtype> int arg_max(int batch, int output_size, const dtype *a
 template <typename dtype> int find_one(int batch, int output_size, const dtype *arr);
 
 template <typename dtype> void train() {
-    int batch_size = 32;
+    int batch_size = 512;
 
     int epochs = 100;
     int monitoring_step = 20;
 
-    double learning_rate = 0.1f;
-    double lr_decay = 0.00005f;
+    double learning_rate = 0.001;
+    double lr_decay = 0.0000005f;
 
     bool load_pretrain = false;
     bool file_save = false;
 
     std::cout << "== MNIST training with CUDNN ==" << std::endl;
 
-    //    MNIST train_data_loader =
-    //        MNIST(train_dataset_fp, train_label_fp, true, batch_size, NUMBER_MNIST_CLASSES);
-    //    MNIST test_data_loader =
-    //        MNIST(test_dataset_fp, test_label_fp, false, batch_size, NUMBER_MNIST_CLASSES);
-    //    STL10 train_data_loader =
-    //        STL10(train_dataset_fp, train_label_fp, true, batch_size, NUMBER_STL10_CLASSES);
-    //    STL10 test_data_loader =
-    //        STL10(test_dataset_fp, test_label_fp, false, batch_size, NUMBER_STL10_CLASSES);
+    //    auto train_data_loader = MNIST<dtype>(
+    //        "/home/maksim/dev_projects/pytorch_abstraction_comparison/data/MNIST/raw/"
+    //        "train-images-idx3-ubyte",
+    //        "/home/maksim/dev_projects/pytorch_abstraction_comparison/data/MNIST/raw/"
+    //        "train-labels-idx1-ubyte",
+    //        true,
+    //        batch_size,
+    //        NUMBER_MNIST_CLASSES);
+    //    auto test_data_loader = MNIST<dtype>(
+    //        "/home/maksim/dev_projects/pytorch_abstraction_comparison/data/MNIST/raw/"
+    //        "t10k-images-idx3-ubyte",
+    //        "/home/maksim/dev_projects/pytorch_abstraction_comparison/data/MNIST/raw/"
+    //        "t10k-labels-idx1-ubyte",
+    //        false,
+    //        batch_size,
+    //        NUMBER_MNIST_CLASSES);
+    //    auto test_data_loader = STL10<dtype>(
+    //        "/home/maksim/dev_projects/pytorch_abstraction_comparison/data/stl_10_train_data.npy",
+    //        "/home/maksim/dev_projects/pytorch_abstraction_comparison/data/stl_10_train_labels.npy",
+    //        true,
+    //        batch_size,
+    //        NUMBER_STL10_CLASSES);
+    //    auto train_data_loader = STL10<dtype>(
+    //        "/home/maksim/dev_projects/pytorch_abstraction_comparison/data/stl_10_test_data.npy",
+    //        "/home/maksim/dev_projects/pytorch_abstraction_comparison/data/stl_10_test_labels.npy",
+    //        false,
+    //        batch_size,
+    //        NUMBER_STL10_CLASSES);
     auto train_data_loader = CIFAR10<dtype>(
         "/home/maksim/dev_projects/pytorch_abstraction_comparison/data/cifar-10-batches-bin/"
         "all_train_data.bin",
@@ -52,23 +72,20 @@ template <typename dtype> void train() {
 
     CrossEntropyLoss<dtype> criterion;
     CrossEntropyLoss<dtype> criterion1;
-    double loss, accuracy;
-    int tp_count;
-    int sample_count;
 
     auto model = make_resnet50<dtype>();
     model->cuda();
-    //    auto model = new Network<double>();
-    //    model->add_layer(new Conv2d<double>("conv1", 20, 5));
-    //    model->add_layer(new Activation<double>("relu1", CUDNN_ACTIVATION_RELU));
-    //    model->add_layer(new Pooling<double>("pool1", 2, 2, 0, CUDNN_POOLING_MAX));
-    //    model->add_layer(new Conv2d<double>("conv2", 50, 5));
-    //    model->add_layer(new Activation<double>("relu2", CUDNN_ACTIVATION_RELU));
-    //    model->add_layer(new Pooling<double>("pool2", 2, 2, 0, CUDNN_POOLING_MAX));
-    //    model->add_layer(new Dense<double>("dense1", 500));
-    //    model->add_layer(new Activation<double>("relu3", CUDNN_ACTIVATION_RELU));
-    //    model->add_layer(new Dense<double>("dense2", 10));
-    //    model->add_layer(new Softmax<double>("softmax"));
+    //    auto model = new Network<dtype>();
+    //    model->add_layer(new Conv2d<dtype>("conv1", 20, 5));
+    //    model->add_layer(new Activation<dtype>("relu1", CUDNN_ACTIVATION_RELU));
+    //    model->add_layer(new Pooling<dtype>("pool1", 2, 2, 0, CUDNN_POOLING_MAX));
+    //    model->add_layer(new Conv2d<dtype>("conv2", 50, 5));
+    //    model->add_layer(new Activation<dtype>("relu2", CUDNN_ACTIVATION_RELU));
+    //    model->add_layer(new Pooling<dtype>("pool2", 2, 2, 0, CUDNN_POOLING_MAX));
+    //    model->add_layer(new Dense<dtype>("dense1", 500));
+    //    model->add_layer(new Activation<dtype>("relu3", CUDNN_ACTIVATION_RELU));
+    //    model->add_layer(new Dense<dtype>("dense2", 10));
+    //    model->add_layer(new Softmax<dtype>("softmax"));
     //    model->cuda();
     checkCudaErrors(cudaDeviceSynchronize());
 
@@ -80,14 +97,16 @@ template <typename dtype> void train() {
     Tensor<dtype> *train_data, *train_target;
     Tensor<dtype> *test_data, *test_target;
     Tensor<dtype> *output;
+    double loss, accuracy, running_loss;
+    int tp_count, running_tp_count, sample_count;
 
     std::string nvtx_message;
     for (int epoch = 0; epoch < epochs; epoch++) {
         std::cout << "[TRAIN]" << std::endl;
         model->train();
-        tp_count = 0;
-        sample_count = 0;
-        loss = 0;
+        loss = accuracy = running_loss = 0;
+        tp_count = running_tp_count = sample_count = 0;
+        learning_rate = 0.1;
         train_data_loader.reset();
 
         for (int batch = 0; batch < train_data_loader.get_num_batches(); batch++) {
@@ -96,7 +115,6 @@ template <typename dtype> void train() {
             nvtxRangePushA(nvtx_message.c_str());
 
             std::tie(train_data, train_target) = train_data_loader.get_next_batch();
-            checkCudaErrors(cudaDeviceSynchronize());
             train_data->to(cuda);
             train_target->to(cuda);
 
@@ -106,10 +124,10 @@ template <typename dtype> void train() {
             sample_count += batch_size;
 
             model->backward(train_target);
+            //            learning_rate *= 1.f / (1.f + lr_decay * batch);
             model->update(learning_rate);
 
             nvtxRangePop();
-            checkCudaErrors(cudaDeviceSynchronize());
 
             if (batch % monitoring_step == 0) {
                 //                train_data->print("data", true, batch_size);
@@ -121,22 +139,23 @@ template <typename dtype> void train() {
                           << ", batch: " << std::right << std::setw(4) << batch
                           << ", avg loss: " << std::left << std::setw(8) << std::fixed
                           << std::setprecision(6) << loss / (float)sample_count
-                          << ", accuracy: " << accuracy << "%";
+                          << ", accuracy: " << accuracy << "%"
+                          << ", lr: " << learning_rate;
                 std::cout << std::endl;
+                running_loss += loss;
+                running_tp_count += tp_count;
                 tp_count = 0;
                 sample_count = 0;
                 loss = 0;
             }
         }
 
-        //        accuracy = 100.f * tp_count / sample_count;
-        //        std::cout << "avg loss: " << std::left << std::setw(8) << std::fixed <<
-        //        std::setprecision(6)
-        //                  << loss / (float)sample_count << ", accuracy: " << accuracy << "%";
-        //        std::cout << std::endl;
-        //        tp_count = 0;
-        //        sample_count = 0;
-        //        loss = 0;
+        std::cout << "train avg loss: " << std::left << std::setw(8) << std::fixed
+                  << std::setprecision(6) << running_loss / train_data_loader.len()
+                  << ", accuracy: " << 100.f * running_tp_count / train_data_loader.len() << "%";
+        std::cout << std::endl;
+        tp_count = 0;
+        loss = 0;
 
         if (file_save)
             model->write_file();
@@ -167,8 +186,8 @@ template <typename dtype> void train() {
             }
         }
 
-        accuracy = 100.f * tp_count / sample_count;
-        std::cout << "avg loss: " << std::setw(4) << loss / (float)sample_count
+        accuracy = 100.f * tp_count / test_data_loader.len();
+        std::cout << "eval avg loss: " << std::setw(4) << loss / (float)test_data_loader.len()
                   << ", accuracy: " << accuracy << "%" << std::endl;
         std::cout << std::endl;
     }

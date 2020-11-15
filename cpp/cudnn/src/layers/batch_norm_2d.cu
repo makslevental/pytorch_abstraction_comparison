@@ -88,8 +88,8 @@ template <typename dtype> Tensor<dtype> *BatchNorm2d<dtype>::backward(Tensor<dty
         /**dyData*/ grad_output->get_device_ptr(),
         /*dzDesc*/ nullptr,
         /**dzData*/ nullptr,
-        /*dxDesc*/ this->grad_input_->tensor_descriptor(),
-        /**dxData*/ this->grad_input_->get_device_ptr(),
+        /*dxDesc*/ this->grad_of_input_->tensor_descriptor(),
+        /**dxData*/ this->grad_of_input_->get_device_ptr(),
         /*dBnScaleBiasDesc*/ derived_bn_scale_bias_mean_var_desc_,
         /**bnScaleData*/ this->weights_->get_device_ptr(),
         /**bnBiasData*/ this->biases_->get_device_ptr(),
@@ -103,7 +103,7 @@ template <typename dtype> Tensor<dtype> *BatchNorm2d<dtype>::backward(Tensor<dty
         /*workSpaceSizeInBytes*/ workspace_size_,
         /**reserveSpace*/ device_reserve_space_,
         /*reserveSpaceSizeInBytes*/ reserve_size_));
-    return this->grad_input_;
+    return this->grad_of_input_;
 }
 
 template <typename dtype> void BatchNorm2d<dtype>::fwd_initialize(Tensor<dtype> *input) {

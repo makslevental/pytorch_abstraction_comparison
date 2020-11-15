@@ -24,9 +24,9 @@ template <typename dtype> Layer<dtype>::~Layer() {
         delete output_;
         output_ = nullptr;
     }
-    if (grad_input_ != nullptr) {
-        delete grad_input_;
-        grad_input_ = nullptr;
+    if (grad_of_input_ != nullptr) {
+        delete grad_of_input_;
+        grad_of_input_ = nullptr;
     }
 
     if (weights_ != nullptr) {
@@ -48,8 +48,6 @@ template <typename dtype> Layer<dtype>::~Layer() {
 }
 
 template <typename dtype> void Layer<dtype>::init_weight_bias(unsigned int seed) {
-    checkCudaErrors(cudaDeviceSynchronize());
-
     if (weights_ == nullptr || biases_ == nullptr)
         return;
     // Create random network
@@ -155,13 +153,13 @@ template <typename dtype> void Layer<dtype>::fwd_initialize(Tensor<dtype> *input
 }
 
 template <typename dtype> void Layer<dtype>::bwd_initialize(Tensor<dtype> *grad_output) {
-    if (grad_input_ == nullptr || batch_size_ != grad_output->get_batch_size()) {
-        grad_output_ = grad_output;
+    if (grad_of_input_ == nullptr || batch_size_ != grad_output->get_batch_size()) {
+        grad_of_output_ = grad_output;
 
-        if (grad_input_ == nullptr)
-            grad_input_ = new Tensor<dtype>(input_->shape());
+        if (grad_of_input_ == nullptr)
+            grad_of_input_ = new Tensor<dtype>(input_->shape());
         else
-            grad_input_->reset(input_->shape());
+            grad_of_input_->reset(input_->shape());
     }
 }
 
@@ -204,6 +202,28 @@ template <typename dtype> int Layer<dtype>::save_parameter() {
     std::cout << " done .." << std::endl;
 
     return 0;
+}
+
+template <typename dtype>
+void Layer<dtype>::zero_out() {
+    if (input_) {
+        input_->zero_out();
+    }
+    if (output_) {
+        output_->zero_out();
+    }
+    if (grad_of_input_) {
+        grad_of_input_->zero_out();
+    }
+    if (grad_of_output_) {
+        grad_of_output_->zero_out();
+    }
+    if (grad_biases_) {
+        grad_biases_->zero_out();
+    }
+    if (grad_weights_) {
+        grad_weights_->zero_out();
+    }
 }
 
 template class Layer<float>;
