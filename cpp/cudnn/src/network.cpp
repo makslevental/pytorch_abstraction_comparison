@@ -21,7 +21,7 @@ template <typename dtype> Network<dtype>::~Network() {
 template <typename dtype> void Network<dtype>::add_layer(Layer<dtype> *layer) {
     layers_.push_back(layer);
 
-    // tagging layer to stop gradient if it is the first layer
+    // tagging layer to stop_ gradient if it is the first layer
     if (layers_.size() == 1)
         layers_.at(0)->set_gradient_stop();
 }
@@ -72,7 +72,7 @@ template <typename dtype> void Network<dtype>::backward(Tensor<dtype> *target) {
                       << gradient->get_height() << ", " << gradient->get_width() << ")\t";
         }
 
-        // TODO: stop storing things and pass them instead
+        // TODO: stop_ storing things and pass them instead
         // TODO: figure out why the beginning of the epoch accuracy is low
         gradient = (*layer)->backward(gradient);
 
@@ -99,7 +99,7 @@ template <typename dtype> void Network<dtype>::update(double learning_rate) {
         return;
 
     if (DEBUG_UPDATE)
-        std::cout << "Start update.. lr = " << learning_rate << std::endl;
+        std::cout << "start update.. lr = " << learning_rate << std::endl;
 
     nvtxRangePushA("Update");
     for (auto layer : layers_) {

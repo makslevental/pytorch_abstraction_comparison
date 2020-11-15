@@ -37,7 +37,6 @@ include_directories("include")
 link_directories($ENV{CUDNN_PATH} $ENV{CUDNN_PATH}/lib $ENV{CUDNN_PATH}/lib64)
 
 file(GLOB_RECURSE cudnn_SRC CONFIGURE_DEPENDS "src/*.cpp" "src/*.cu")
-message("${cudnn_SRC}")
 cuda_add_executable(main_cudnn ${cudnn_SRC})
 
 cuda_add_cublas_to_target(main_cudnn)

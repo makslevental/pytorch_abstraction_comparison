@@ -75,7 +75,7 @@ protected:
     int load_parameter();
     int save_parameter();
 
-    // gradient stop tagging
+    // gradient stop_ tagging
     bool gradient_stop_ = false;
 
     template <typename ndtype> friend class Network;
