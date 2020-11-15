@@ -50,11 +50,8 @@ with torch.autograd.set_detect_anomaly(True):
         for i, data in enumerate(trainloader, 0):
             # get the inputs; data is a list of [inputs, labels]
             inputs, labels = data
-            print(inputs.dtype)
             inputs = inputs.to("cuda:2")
             labels = labels.to("cuda:2")
-            print(inputs.dtype)
-            exit()
             # zero the parameter gradients
             optimizer.zero_grad()
 
