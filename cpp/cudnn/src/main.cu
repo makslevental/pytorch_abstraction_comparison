@@ -7,6 +7,7 @@
 #include <cassert>
 #include <cmath>
 #include <cuda_profiler_api.h>
+#include <fstream>
 #include <iomanip>
 #include <nvtx3/nvToolsExt.h>
 
@@ -21,7 +22,8 @@ void train(
     int epochs,
     int batch_size,
     int monitoring_step,
-    double learning_rate) {
+    double learning_rate,
+    std::ofstream &output_file) {
 
     CrossEntropyLoss<dtype> criterion;
     CrossEntropyLoss<dtype> criterion1;
@@ -40,7 +42,6 @@ void train(
     //    model->add_layer(new Dense<dtype>("dense2", 10));
     //    model->add_layer(new Softmax<dtype>("softmax"));
     //    model->cuda();
-    checkCudaErrors(cudaDeviceSynchronize());
 
     std::string nvtx_message;
     auto gpu_timer = GpuTimer();
@@ -56,6 +57,7 @@ void train(
     double elapsed_time;
 
     for (int epoch = 0; epoch < epochs; epoch++) {
+        std::cout << "epoch: " << epoch << std::endl;
         model->train();
         total_time = loss = accuracy = running_loss = 0;
         elapsed_time = running_sample_count = tp_count = running_tp_count = sample_count = 0;
@@ -63,6 +65,7 @@ void train(
         train_data_loader->reset();
 
         for (int batch = 0; batch < train_data_loader->get_num_batches(); batch++) {
+            std::cout << "batch: " << batch << std::endl;
             nvtx_message = std::string(
                 "train epoch " + std::to_string(epoch) + " batch " + std::to_string(batch));
             nvtxRangePushA(nvtx_message.c_str());
@@ -91,13 +94,13 @@ void train(
 
             if (batch % monitoring_step == 0) {
                 accuracy = 100.f * tp_count / sample_count;
-                std::cout << "[TRAIN] epoch: " << std::right << std::setw(4) << epoch
-                          << ", batch: " << std::right << std::setw(4) << batch
-                          << ", avg loss: " << std::left << std::setw(8) << std::fixed
-                          << std::setprecision(6) << loss / (float)sample_count
-                          << ", accuracy: " << accuracy << "%"
-                          << ", avg sample time: " << elapsed_time / sample_count << "ms"
-                          << std::endl;
+                output_file << "[TRAIN] epoch: " << std::right << std::setw(4) << epoch
+                            << ", batch: " << std::right << std::setw(4) << batch
+                            << ", avg loss: " << std::left << std::setw(8) << std::fixed
+                            << std::setprecision(6) << loss / (float)sample_count
+                            << ", accuracy: " << accuracy << "%"
+                            << ", avg sample time: " << elapsed_time / sample_count << "ms"
+                            << std::endl;
                 total_time += elapsed_time;
                 running_loss += loss;
                 running_tp_count += tp_count;
@@ -106,11 +109,11 @@ void train(
             }
         }
 
-        std::cout << "[TRAIN] avg loss: " << std::left << std::setw(8) << std::fixed
-                  << std::setprecision(6) << running_loss / running_sample_count
-                  << ", accuracy: " << 100.f * running_tp_count / running_sample_count << "%"
-                  << ", avg sample time: " << total_time / running_sample_count << "ms"
-                  << std::endl;
+        output_file << "[TRAIN] avg loss: " << std::left << std::setw(8) << std::fixed
+                    << std::setprecision(6) << running_loss / running_sample_count
+                    << ", accuracy: " << 100.f * running_tp_count / running_sample_count << "%"
+                    << ", avg sample time: " << total_time / running_sample_count << "ms"
+                    << std::endl;
 
         model->eval();
         test_data_loader->reset();
@@ -142,10 +145,9 @@ void train(
         }
 
         accuracy = 100.f * tp_count / sample_count;
-        std::cout << "[EVAL] avg loss: " << std::setw(4) << loss / sample_count
-                  << ", accuracy: " << accuracy << "%"
-                  << ", avg sample time: " << total_time / sample_count << "ms" << std::endl;
-        //        std::cout << std::endl;
+        output_file << "[EVAL] avg loss: " << std::setw(4) << loss / sample_count
+                    << ", accuracy: " << accuracy << "%"
+                    << ", avg sample time: " << total_time / sample_count << "ms" << std::endl;
     }
 
     cudaProfilerStop();
@@ -168,9 +170,9 @@ int main(int argc, char *argv[]) {
     //    CLI11_PARSE(app, argc, argv);
 
     /* configure the network */
-    int batch_size = 512;
+    int batch_size = 128;
 
-    int epochs = 100;
+    int epochs = 1;
     int monitoring_step = 20;
 
     double learning_rate = 0.001;
@@ -179,7 +181,10 @@ int main(int argc, char *argv[]) {
     Dataset<float> *train_data_loader;
     Dataset<float> *test_data_loader;
 
-    std::cout << argv[1] << std::endl;
+    std::stringstream ss;
+    ss << "run_" << argv[1] << "_" << argv[2] << ".csv";
+    std::ofstream output_file(ss.str());
+
     if (strcmp(argv[1], "mnist") == 0) {
         std::cout << "== MNIST training with CUDNN ==" << std::endl;
         train_data_loader = new MNIST<float>(
@@ -232,7 +237,13 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
     train<float>(
-        train_data_loader, test_data_loader, epochs, batch_size, monitoring_step, learning_rate);
+        train_data_loader,
+        test_data_loader,
+        epochs,
+        batch_size,
+        monitoring_step,
+        learning_rate,
+        output_file);
 
     return 0;
 }
