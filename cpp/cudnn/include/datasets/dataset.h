@@ -30,8 +30,8 @@ protected:
     std::string dataset_fp_;
     std::string label_fp_;
 
-    std::vector<std::vector<double>> data_pool_;
-    std::vector<std::vector<double>> target_pool_;
+    std::vector<std::vector<dtype>> data_pool_;
+    std::vector<std::vector<dtype>> target_pool_;
     Tensor<dtype> *data_ = nullptr;
     Tensor<dtype> *target_ = nullptr;
 

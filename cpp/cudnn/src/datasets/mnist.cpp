@@ -30,13 +30,13 @@ template <typename dtype> void MNIST<dtype>::load_data() {
 
     auto *q = new uint8_t[this->channels_ * this->height_ * this->width_];
     for (int i = 0; i < num_data; i++) {
-        std::vector<double> image =
-            std::vector<double>(this->channels_ * this->height_ * this->width_);
-        double *image_ptr = image.data();
+        std::vector<dtype> image =
+            std::vector<dtype>(this->channels_ * this->height_ * this->width_);
+        dtype *image_ptr = image.data();
 
         file.read((char *)q, this->channels_ * this->height_ * this->width_);
         for (int j = 0; j < this->channels_ * this->height_ * this->width_; j++) {
-            image_ptr[j] = (double)q[j];
+            image_ptr[j] = (dtype)q[j];
         }
 
         this->data_pool_.push_back(image);
@@ -72,7 +72,7 @@ template <typename dtype> void MNIST<dtype>::load_target() {
     // prepare input buffer for label
     // read all labels and converts to one-hot encoding
     for (int i = 0; i < num_target; i++) {
-        std::vector<double> target_one_hot(this->num_classes_, 0.f);
+        std::vector<dtype> target_one_hot(this->num_classes_, 0.f);
         file.read((char *)ptr, 1);
         target_one_hot[static_cast<int>(ptr[0])] = 1.f;
         this->target_pool_.push_back(target_one_hot);
@@ -83,7 +83,7 @@ template <typename dtype> void MNIST<dtype>::load_target() {
 
 template <typename dtype> void MNIST<dtype>::normalize_data() {
     for (auto &sample : this->data_pool_) {
-        double *sample_data_ptr = sample.data();
+        dtype *sample_data_ptr = sample.data();
         for (int j = 0; j < this->channels_ * this->height_ * this->width_; j++) {
             sample_data_ptr[j] /= 255.f;
         }

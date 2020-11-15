@@ -16,18 +16,39 @@ template <typename dtype> void CIFAR10<dtype>::load_data() {
     }
     int file_size = std::filesystem::file_size(std::filesystem::path(this->dataset_fp_));
 
+    std::random_device rd{}; // use to seed the rng
+    std::mt19937 rng{rd()};  // rng
+
+    double p = 0.5; // probability
+    std::bernoulli_distribution d(p);
+
     uint8_t ptr[1];
     auto num_pixels = this->channels_ * this->height_ * this->width_;
     auto *q = new uint8_t[num_pixels];
     for (int i = 0; i < file_size / (num_pixels + 1); i++) {
-        std::vector<double> target_one_hot(this->num_classes_, 0.f);
+        std::vector<dtype> target_one_hot(this->num_classes_, 0.f);
         file.read((char *)ptr, 1);
         target_one_hot[static_cast<int>(ptr[0])] = 1.f;
         this->target_pool_.push_back(target_one_hot);
 
-        file.read((char *)q, num_pixels);
-        std::vector<double> image(q, &q[num_pixels]);
-        this->data_pool_.push_back(image);
+        auto horizontal_flip = d(rng);
+
+        file.read((char *)q, num_pixels / this->channels_);
+        std::vector<dtype> red(q, &q[num_pixels]);
+        file.read((char *)q, num_pixels / this->channels_);
+        std::vector<dtype> blue(q, &q[num_pixels]);
+        file.read((char *)q, num_pixels / this->channels_);
+        std::vector<dtype> green(q, &q[num_pixels]);
+
+        if (horizontal_flip) {
+            std::reverse(red.begin(), red.end());
+            std::reverse(blue.begin(), blue.end());
+            std::reverse(red.begin(), red.end());
+        }
+        // concat
+        red.insert(red.end(), blue.begin(), blue.end());
+        red.insert(red.end(), green.begin(), green.end());
+        this->data_pool_.push_back(red);
     }
 
     delete[] q;
@@ -40,7 +61,7 @@ template <typename dtype> void CIFAR10<dtype>::load_data() {
 template <typename dtype> void CIFAR10<dtype>::load_target() {}
 template <typename dtype> void CIFAR10<dtype>::normalize_data() {
     for (auto &sample : this->data_pool_) {
-        double *sample_data_ptr = sample.data();
+        dtype *sample_data_ptr = sample.data();
         for (int j = 0; j < this->channels_ * this->height_ * this->width_; j++) {
             sample_data_ptr[j] /= 255.f;
             sample_data_ptr[j] -= 0.5;
