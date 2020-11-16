@@ -4,16 +4,12 @@
 #include <iostream>
 #include <nvtx3/nvToolsExt.h>
 
-template <typename dtype> Network<dtype>::Network() {
-    // do nothing
-}
+template <typename dtype> Network<dtype>::Network() {}
 
 template <typename dtype> Network<dtype>::~Network() {
-    // destroy network
     for (auto layer : layers_)
         delete layer;
 
-    // terminate CUDA context
     if (cuda_ != nullptr)
         delete cuda_;
 }
@@ -21,7 +17,6 @@ template <typename dtype> Network<dtype>::~Network() {
 template <typename dtype> void Network<dtype>::add_layer(Layer<dtype> *layer) {
     layers_.push_back(layer);
 
-    // tagging layer to stop_ gradient if it is the first layer
     if (layers_.size() == 1)
         layers_.at(0)->set_gradient_stop();
 }
@@ -62,10 +57,7 @@ template <typename dtype> void Network<dtype>::backward(Tensor<dtype> *target) {
         return;
 
     nvtxRangePushA("Backward");
-    // back propagation.. update weights internally.....
     for (auto layer = layers_.rbegin(); layer != layers_.rend(); layer++) {
-        // getting back propagation status with gradient size
-
         if (DEBUG_BACKWARD) {
             std::cout << "[[Backward]][[ " << std::setw(7) << (*layer)->get_name() << " ]]\t("
                       << gradient->get_batch_size() << ", " << gradient->get_channels() << ", "
@@ -87,7 +79,6 @@ template <typename dtype> void Network<dtype>::backward(Tensor<dtype> *target) {
 
         if (DEBUG_BACKWARD > 1) {
             gradient->print((*layer)->get_name() + "::dx", true);
-            //    getchar();
         }
     }
     nvtxRangePop();
@@ -103,7 +94,6 @@ template <typename dtype> void Network<dtype>::update(double learning_rate) {
 
     nvtxRangePushA("Update");
     for (auto layer : layers_) {
-        // if no parameters, then pass
         if (layer->weights_ == nullptr || layer->grad_weights_ == nullptr ||
             layer->biases_ == nullptr || layer->grad_biases_ == nullptr)
             continue;
@@ -145,11 +135,9 @@ template <typename dtype> void Network<dtype>::cuda() {
     }
 }
 
-//
 template <typename dtype> void Network<dtype>::train() {
     phase_ = training;
 
-    // unfreeze all layers
     for (auto layer : layers_) {
         layer->unfreeze();
         layer->train();

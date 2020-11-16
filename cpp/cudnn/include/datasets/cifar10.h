@@ -30,6 +30,7 @@ public:
     CIFAR10_DEBUG(
         const string &datasetFp, const string &labelFp, bool shuffle, int batchSize, int numClasses)
         : CIFAR10<dtype>(datasetFp, labelFp, shuffle, batchSize, numClasses) {}
+
     std::tuple<Tensor<dtype> *, Tensor<dtype> *> get_next_batch() override {
         Tensor<dtype> *train_data, *train_target;
         std::tie(train_data, train_target) = Dataset<dtype>::get_next_batch();

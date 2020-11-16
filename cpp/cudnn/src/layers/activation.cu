@@ -36,7 +36,8 @@ template <typename dtype> Tensor<dtype> *Activation<dtype>::forward(Tensor<dtype
 
     return this->output_;
 }
-template <typename dtype> Tensor<dtype> *Activation<dtype>::backward(Tensor<dtype> *grad_of_output) {
+template <typename dtype>
+Tensor<dtype> *Activation<dtype>::backward(Tensor<dtype> *grad_of_output) {
     this->bwd_initialize(grad_of_output);
     checkCudnnErrors(cudnnActivationBackward(
         this->cuda_->cudnn(),

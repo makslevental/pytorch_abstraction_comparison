@@ -6,10 +6,10 @@
 #define _TENSOR_H_
 
 #include <array>
+#include <cstring>
 #include <fstream>
 #include <iostream>
 #include <string>
-#include <cstring>
 
 #include <cuda_runtime.h>
 #include <cudnn.h>

@@ -48,8 +48,8 @@ protected:
     cudnnTensorDescriptor_t bias_desc_ = nullptr;
 
     // output memory
-    Tensor<dtype> *input_ = nullptr;       /* x  */
-    Tensor<dtype> *output_ = nullptr;      /* y  */
+    Tensor<dtype> *input_ = nullptr;          /* x  */
+    Tensor<dtype> *output_ = nullptr;         /* y  */
     Tensor<dtype> *grad_of_input_ = nullptr;  /* dx */
     Tensor<dtype> *grad_of_output_ = nullptr; /* dy */
     int input_size_;

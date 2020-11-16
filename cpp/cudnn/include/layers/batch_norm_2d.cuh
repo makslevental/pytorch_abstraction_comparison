@@ -7,8 +7,7 @@
 
 #include "layer.h"
 
-template <typename dtype>
-class BatchNorm2d : public Layer<dtype> {
+template <typename dtype> class BatchNorm2d : public Layer<dtype> {
 public:
     explicit BatchNorm2d(
         std::string name,
@@ -47,4 +46,4 @@ private:
 
 #endif // PROJECTNAME_BATCH_NORM_2D_CUH
 
-//TODO: fused ops
+// TODO: fused ops

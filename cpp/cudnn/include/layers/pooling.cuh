@@ -7,8 +7,7 @@
 
 #include "layer.h"
 
-template <typename dtype>
-class Pooling : public Layer<dtype> {
+template <typename dtype> class Pooling : public Layer<dtype> {
 public:
     Pooling(std::string name, int kernel_size, int padding, int stride, cudnnPoolingMode_t mode);
     ~Pooling() override;

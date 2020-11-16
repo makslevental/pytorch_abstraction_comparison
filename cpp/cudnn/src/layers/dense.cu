@@ -20,8 +20,7 @@ template <typename dtype> Dense<dtype>::~Dense<dtype>() {
     }
 }
 
-template <typename dtype>
-__global__ void init_one_vec(dtype *d_one_vec, size_t length) {
+template <typename dtype> __global__ void init_one_vec(dtype *d_one_vec, size_t length) {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
 
     if (i >= length)

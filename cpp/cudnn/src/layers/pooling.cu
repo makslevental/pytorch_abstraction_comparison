@@ -4,7 +4,8 @@
 
 #include <layers/pooling.cuh>
 
-template <typename dtype> Pooling<dtype>::Pooling(
+template <typename dtype>
+Pooling<dtype>::Pooling(
     std::string name, int kernel_size, int stride, int padding, cudnnPoolingMode_t mode)
     : kernel_size_(kernel_size), padding_(padding), stride_(stride), mode_(mode) {
     this->name_ = std::move(name);

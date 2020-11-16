@@ -22,16 +22,18 @@ template <typename dtype> void CIFAR10<dtype>::load_data() {
     double p = 0.5; // probability
     std::bernoulli_distribution d(p);
     auto horizontal_flip = d(rng);
+    horizontal_flip = false;
 
     uint8_t ptr[1];
     auto num_pixels = this->channels_ * this->height_ * this->width_;
+    auto num_samples = file_size / (num_pixels + 1);
     auto *q = new uint8_t[num_pixels];
-    for (int i = 0; i < file_size / (num_pixels + 1); i++) {
+
+    for (int i = 0; i < num_samples; i++) {
         std::vector<dtype> target_one_hot(this->num_classes_, 0.f);
         file.read((char *)ptr, 1);
         target_one_hot[static_cast<int>(ptr[0])] = 1.f;
         this->target_pool_.push_back(target_one_hot);
-
 
         file.read((char *)q, num_pixels / this->channels_);
         std::vector<dtype> red(q, &q[num_pixels]);
@@ -61,7 +63,8 @@ template <typename dtype> void CIFAR10<dtype>::load_data() {
 template <typename dtype> void CIFAR10<dtype>::load_target() {}
 template <typename dtype> void CIFAR10<dtype>::normalize_data() {
     for (auto &sample : this->data_pool_) {
-//        std::transform(sample.begin(), sample.end(), sample.begin(), [](auto &p) { return p * 3; });
+        //        std::transform(sample.begin(), sample.end(), sample.begin(), [](auto &p) { return
+        //        p * 3; });
         dtype *sample_data_ptr = sample.data();
         for (int j = 0; j < this->channels_ * this->height_ * this->width_; j++) {
             sample_data_ptr[j] /= 255.f;

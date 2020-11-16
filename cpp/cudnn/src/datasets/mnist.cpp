@@ -69,7 +69,6 @@ template <typename dtype> void MNIST<dtype>::load_target() {
     file.read((char *)ptr, 4);
     int num_target = to_int(ptr);
 
-    // prepare input buffer for label
     // read all labels and converts to one-hot encoding
     for (int i = 0; i < num_target; i++) {
         std::vector<dtype> target_one_hot(this->num_classes_, 0.f);

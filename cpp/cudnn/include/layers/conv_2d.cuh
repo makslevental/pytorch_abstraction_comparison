@@ -11,8 +11,7 @@
 #include <cudnn.h>
 #include <curand.h>
 
-template <typename dtype>
-class Conv2d : public Layer<dtype> {
+template <typename dtype> class Conv2d : public Layer<dtype> {
 public:
     Conv2d(
         std::string name,

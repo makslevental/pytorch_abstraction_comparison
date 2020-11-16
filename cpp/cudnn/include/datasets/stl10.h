@@ -9,8 +9,7 @@
 
 #include "dataset.h"
 
-template <typename dtype>
-class STL10 : public Dataset<dtype> {
+template <typename dtype> class STL10 : public Dataset<dtype> {
 public:
     STL10(
         const string &dataset_fp,

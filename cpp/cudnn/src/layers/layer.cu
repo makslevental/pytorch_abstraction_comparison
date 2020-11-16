@@ -204,8 +204,7 @@ template <typename dtype> int Layer<dtype>::save_parameter() {
     return 0;
 }
 
-template <typename dtype>
-void Layer<dtype>::zero_out() {
+template <typename dtype> void Layer<dtype>::zero_out() {
     if (input_) {
         input_->zero_out();
     }

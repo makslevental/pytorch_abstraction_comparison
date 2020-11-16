@@ -7,8 +7,7 @@
 
 #include "layer.h"
 
-template <typename dtype>
-class Softmax : public Layer<dtype> {
+template <typename dtype> class Softmax : public Layer<dtype> {
 public:
     explicit Softmax(std::string name);
     ~Softmax() override = default;

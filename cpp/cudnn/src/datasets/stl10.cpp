@@ -42,7 +42,6 @@ template <typename dtype> void STL10<dtype>::load_target() {
     int n_targets = shape[0];
     assert(n_targets == this->data_pool_.size());
 
-    // prepare input buffer for label
     // read all labels and converts to one-hot encoding
     for (int i = 0; i < n_targets; i++) {
         std::vector<dtype> target_batch(this->num_classes_, 0.f);

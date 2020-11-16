@@ -230,19 +230,20 @@ public:
         this->add7 = new Addition<dtype>("add7");
         this->add8 = new Addition<dtype>("add8");
 
-        this->layers_ = {conv1,  conv2,  conv3,  conv4,  conv5,  conv6,  conv7,  conv8,  conv9,  conv10,
-                   conv11, conv12, conv13, conv14, conv15, conv16, conv17, conv18, conv19, conv20,
-                   conv21, conv22, conv23, conv24, conv25, conv26, conv27, conv28, conv29, conv30,
-                   conv31, conv32, conv33, conv34, conv35, conv36, conv37, conv38, conv39, conv40,
-                   conv41, conv42, conv43, conv44, conv45, conv46, conv47, conv48, conv49, conv50,
-                   bn1,    bn2,    bn3,    bn4,    bn5,    bn6,    bn7,    bn8,    bn9,    bn10,
-                   bn11,   bn12,   bn13,   bn14,   bn15,   bn16,   bn17,   bn18,   bn19,   bn20,
-                   bn21,   bn22,   bn23,   bn24,   bn25,   bn26,   bn27,   bn28,   bn29,   bn30,
-                   bn31,   bn32,   bn33,   bn34,   bn35,   bn36,   bn37,   bn38,   bn39,   bn40,
-                   bn41,   bn42,   bn43,   bn44,   bn45,   bn46,   bn47,   bn48,   bn49,   bn50,
-                   relu1,  relu2,  relu3,  relu4,  relu5,  relu6,  relu7,  relu8,  relu9,  relu10,
-                   relu11, relu12, relu13, relu14, relu15, relu16, pool1,  pool2,  dense1, softmax1,
-                   add1,   add2,   add3,   add4,   add5,   add6,   add7,   add8};
+        this->layers_ = {
+            conv1,  conv2,  conv3,  conv4,  conv5,  conv6,  conv7,  conv8,  conv9,  conv10,
+            conv11, conv12, conv13, conv14, conv15, conv16, conv17, conv18, conv19, conv20,
+            conv21, conv22, conv23, conv24, conv25, conv26, conv27, conv28, conv29, conv30,
+            conv31, conv32, conv33, conv34, conv35, conv36, conv37, conv38, conv39, conv40,
+            conv41, conv42, conv43, conv44, conv45, conv46, conv47, conv48, conv49, conv50,
+            bn1,    bn2,    bn3,    bn4,    bn5,    bn6,    bn7,    bn8,    bn9,    bn10,
+            bn11,   bn12,   bn13,   bn14,   bn15,   bn16,   bn17,   bn18,   bn19,   bn20,
+            bn21,   bn22,   bn23,   bn24,   bn25,   bn26,   bn27,   bn28,   bn29,   bn30,
+            bn31,   bn32,   bn33,   bn34,   bn35,   bn36,   bn37,   bn38,   bn39,   bn40,
+            bn41,   bn42,   bn43,   bn44,   bn45,   bn46,   bn47,   bn48,   bn49,   bn50,
+            relu1,  relu2,  relu3,  relu4,  relu5,  relu6,  relu7,  relu8,  relu9,  relu10,
+            relu11, relu12, relu13, relu14, relu15, relu16, pool1,  pool2,  dense1, softmax1,
+            add1,   add2,   add3,   add4,   add5,   add6,   add7,   add8};
     }
     Tensor<dtype> *forward(Tensor<dtype> *input) override {
         auto output = this->conv1->forward(input);

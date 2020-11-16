@@ -203,7 +203,12 @@ template <typename dtype> void BatchNorm2d<dtype>::set_workspace() {
     }
 
     checkCudnnErrors(cudnnGetBatchNormalizationTrainingExReserveSpaceSize(
-        this->cuda_->cudnn(), mode_, CUDNN_BATCHNORM_OPS_BN, nullptr, this->input_desc_, &reserve_size_));
+        this->cuda_->cudnn(),
+        mode_,
+        CUDNN_BATCHNORM_OPS_BN,
+        nullptr,
+        this->input_desc_,
+        &reserve_size_));
     //    PRINT("reserve_size_ " << reserve_size_)
     if (reserve_size_ > 0) {
         if (device_reserve_space_ != nullptr)

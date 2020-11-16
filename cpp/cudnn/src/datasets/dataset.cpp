@@ -10,7 +10,6 @@
 using namespace std;
 
 template <typename dtype> void Dataset<dtype>::create_shared_space() {
-    // create Tensors with batch size and sample size
     data_ = new Tensor<dtype>(batch_size_, channels_, height_, width_);
     target_ = new Tensor<dtype>(batch_size_, num_classes_);
 }
@@ -48,7 +47,6 @@ std::tuple<Tensor<dtype> *, Tensor<dtype> *> Dataset<dtype>::get_next_batch() {
     }
     //    std::cout << " internal step: " << current_batch_ << std::endl;
 
-    // index cliping
     assert(num_batches_ > -1);
     int data_idx = (current_batch_ * batch_size_) % (num_batches_ * batch_size_);
     int data_size = channels_ * width_ * height_;

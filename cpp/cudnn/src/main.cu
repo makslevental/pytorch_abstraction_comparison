@@ -58,7 +58,6 @@ void train(
     double elapsed_time;
 
     for (int epoch = 0; epoch < epochs; epoch++) {
-        std::cout << "epoch: " << epoch << std::endl;
         model->train();
         total_time = loss = accuracy = running_loss = 0;
         elapsed_time = running_sample_count = tp_count = running_tp_count = sample_count = 0;
@@ -69,8 +68,8 @@ void train(
             nvtx_message = std::string(
                 "train epoch " + std::to_string(epoch) + " batch " + std::to_string(batch));
             nvtxRangePushA(nvtx_message.c_str());
-
             nvtxRangePushA("batch load");
+
             std::tie(train_data, train_target) = train_data_loader->get_next_batch();
             nvtxRangePop();
 
@@ -124,8 +123,8 @@ void train(
             nvtx_message = std::string(
                 "eval epoch " + std::to_string(epoch) + " batch " + std::to_string(batch));
             nvtxRangePushA(nvtx_message.c_str());
-
             nvtxRangePushA("batch load");
+
             std::tie(test_data, test_target) = test_data_loader->get_next_batch();
             nvtxRangePop();
 
@@ -183,53 +182,47 @@ int main(int argc, char *argv[]) {
     Dataset<float> *test_data_loader;
 
     std::stringstream ss;
-    ss << "run_" << argv[1] << "_" << argv[2] << ".csv";
+    ss << "profiles/run_cudnn_" << argv[1] << "_" << argv[2] << ".csv";
     std::ofstream output_file(ss.str());
 
     if (strcmp(argv[1], "mnist") == 0) {
         std::cout << "== MNIST training with CUDNN ==" << std::endl;
         train_data_loader = new MNIST<float>(
-            "/home/maksim/dev_projects/pytorch_abstraction_comparison/data/MNIST/raw/"
-            "train-images-idx3-ubyte",
-            "/home/maksim/dev_projects/pytorch_abstraction_comparison/data/MNIST/raw/"
-            "train-labels-idx1-ubyte",
+            "../data/MNIST/raw/train-images-idx3-ubyte",
+            "../data/MNIST/raw/train-labels-idx1-ubyte",
             true,
             batch_size,
             NUMBER_MNIST_CLASSES);
         test_data_loader = new MNIST<float>(
-            "/home/maksim/dev_projects/pytorch_abstraction_comparison/data/MNIST/raw/"
-            "t10k-images-idx3-ubyte",
-            "/home/maksim/dev_projects/pytorch_abstraction_comparison/data/MNIST/raw/"
-            "t10k-labels-idx1-ubyte",
+            "../data/MNIST/raw/t10k-images-idx3-ubyte",
+            "../data/MNIST/raw/t10k-labels-idx1-ubyte",
             false,
             batch_size,
             NUMBER_MNIST_CLASSES);
     } else if (strcmp(argv[1], "stl10") == 0) {
         std::cout << "== STL10 training with CUDNN ==" << std::endl;
         train_data_loader = new STL10<float>(
-            "/home/maksim/dev_projects/pytorch_abstraction_comparison/data/stl_10_train_data.npy",
-            "/home/maksim/dev_projects/pytorch_abstraction_comparison/data/stl_10_train_labels.npy",
+            "../data/stl_10_train_data.npy",
+            "../data/stl_10_train_labels.npy",
             true,
             batch_size,
             NUMBER_STL10_CLASSES);
         test_data_loader = new STL10<float>(
-            "/home/maksim/dev_projects/pytorch_abstraction_comparison/data/stl_10_test_data.npy",
-            "/home/maksim/dev_projects/pytorch_abstraction_comparison/data/stl_10_test_labels.npy",
+            "../data/stl_10_test_data.npy",
+            "../data/stl_10_test_labels.npy",
             false,
             batch_size,
             NUMBER_STL10_CLASSES);
     } else if (strcmp(argv[1], "cifar10") == 0) {
         std::cout << "== CIFAR10 training with CUDNN ==" << std::endl;
         train_data_loader = new CIFAR10<float>(
-            "/home/maksim/dev_projects/pytorch_abstraction_comparison/data/cifar-10-batches-bin/"
-            "all_train_data.bin",
+            "../data/cifar-10-batches-bin/all_train_data.bin",
             "",
             true,
             batch_size,
             NUMBER_CIFAR10_CLASSES);
         test_data_loader = new CIFAR10<float>(
-            "/home/maksim/dev_projects/pytorch_abstraction_comparison/data/cifar-10-batches-bin/"
-            "test_batch.bin",
+            "../data/cifar-10-batches-bin/test_batch.bin",
             "",
             false,
             batch_size,

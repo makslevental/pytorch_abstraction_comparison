@@ -7,8 +7,7 @@
 
 #include "layer.h"
 
-template <typename dtype>
-class Dense : public Layer<dtype> {
+template <typename dtype> class Dense : public Layer<dtype> {
 public:
     Dense(std::string name, int out_size);
     ~Dense() override;

@@ -3,8 +3,7 @@
 
 #include "tensor.h"
 
-template <typename dtype>
-class CrossEntropyLoss {
+template <typename dtype> class CrossEntropyLoss {
 public:
     CrossEntropyLoss();
     ~CrossEntropyLoss();
@@ -12,7 +11,6 @@ public:
     dtype loss(Tensor<dtype> *predict, Tensor<dtype> *target);
 
 private:
-    // reduced loss
     dtype h_loss_ = 0.f;
     dtype *d_loss_ = nullptr;
 

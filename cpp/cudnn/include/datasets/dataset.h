@@ -10,15 +10,9 @@
 
 using namespace std;
 
-template <typename dtype>
-class Dataset {
+template <typename dtype> class Dataset {
 public:
-    Dataset(
-        string dataset_fp,
-        string label_fp,
-        bool shuffle,
-        int batch_size,
-        int num_classes);
+    Dataset(string dataset_fp, string label_fp, bool shuffle, int batch_size, int num_classes);
 
     virtual std::tuple<Tensor<dtype> *, Tensor<dtype> *> get_next_batch();
     [[nodiscard]] virtual int get_num_batches() const = 0;

@@ -7,8 +7,7 @@
 
 #include "layer.h"
 
-template <typename dtype>
-class Activation : public Layer<dtype> {
+template <typename dtype> class Activation : public Layer<dtype> {
 public:
     Activation(std::string name, cudnnActivationMode_t mode, double coef = 0.f);
     ~Activation() override;

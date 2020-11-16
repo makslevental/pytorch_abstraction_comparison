@@ -214,7 +214,8 @@ template <class Block> struct ResNet : Module {
             if (m.get()->name() == "torch::nn::Conv2dImpl") {
                 for (auto p : m.get()->named_parameters()) {
                     if (p.key() == "weight") {
-                        torch::nn::init::kaiming_normal_(p.value(), 0.0, torch::kFanOut, torch::kReLU);
+                        torch::nn::init::kaiming_normal_(
+                            p.value(), 0.0, torch::kFanOut, torch::kReLU);
                     }
                 }
             } else if (m.get()->name() == "torch::nn::BatchNorm2dImpl") {
@@ -272,7 +273,7 @@ private:
             this->base_width,
             previous_dilation));
         this->in_planes = planes * Block::expansion;
-        for (int64_t i = 0; i < blocks-1; i++) {
+        for (int64_t i = 0; i < blocks - 1; i++) {
             layers->push_back(Block(
                 this->in_planes,
                 planes,
