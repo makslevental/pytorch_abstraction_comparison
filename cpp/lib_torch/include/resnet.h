@@ -174,10 +174,11 @@ template <class Block> struct ResNet : Module {
     ResNet(
         int layers[],
         int64_t num_classes = 1000,
+        int64_t num_channels = 3,
         int64_t groups = 1,
         int64_t width_per_group = 64,
         std::vector<bool> replace_stride_with_dilation = {}) {
-        if (replace_stride_with_dilation.size() == 0)
+        if (replace_stride_with_dilation.empty())
             replace_stride_with_dilation = {false, false, false};
         if (replace_stride_with_dilation.size() != 3)
             throw std::runtime_error(
@@ -186,7 +187,8 @@ template <class Block> struct ResNet : Module {
         this->groups = groups;
         this->base_width = width_per_group;
 
-        this->conv1 = Conv2d(Conv2dOptions(3, this->in_planes, 7).stride(2).padding(3).bias(false));
+        this->conv1 = Conv2d(
+            Conv2dOptions(num_channels, this->in_planes, 7).stride(2).padding(3).bias(false));
         this->bn1 = BatchNorm2d(this->in_planes);
         this->relu = ReLU(ReLUOptions(true));
         this->maxpool = MaxPool2d(MaxPool2dOptions(3).stride(2).padding(1));
@@ -214,7 +216,8 @@ template <class Block> struct ResNet : Module {
             if (m.get()->name() == "torch::nn::Conv2dImpl") {
                 for (auto p : m.get()->named_parameters()) {
                     if (p.key() == "weight") {
-                        torch::nn::init::kaiming_normal_(p.value(), 0.0, torch::kFanOut, torch::kReLU);
+                        torch::nn::init::kaiming_normal_(
+                            p.value(), 0.0, torch::kFanOut, torch::kReLU);
                     }
                 }
             } else if (m.get()->name() == "torch::nn::BatchNorm2dImpl") {
@@ -272,7 +275,7 @@ private:
             this->base_width,
             previous_dilation));
         this->in_planes = planes * Block::expansion;
-        for (int64_t i = 0; i < blocks-1; i++) {
+        for (int64_t i = 0; i < blocks - 1; i++) {
             layers->push_back(Block(
                 this->in_planes,
                 planes,
@@ -289,39 +292,39 @@ private:
 TORCH_MODULE_IMPL(ResNetBasic, ResNet<BasicBlock>);
 TORCH_MODULE_IMPL(ResNetBottleNeck, ResNet<BottleNeck>);
 
-ResNetBasic resnet18(int num_classes = 1000) {
+ResNetBasic resnet18(int num_classes = 1000, int64_t num_channels = 3) {
     int layers[] = {2, 2, 2, 2};
-    ResNetBasic model(layers, num_classes);
+    ResNetBasic model(layers, num_classes, num_channels);
     return model;
 }
 
-ResNetBasic resnet34(int num_classes = 1000) {
+ResNetBasic resnet34(int num_classes = 1000, int64_t num_channels = 3) {
     int layers[] = {3, 4, 6, 3};
-    ResNetBasic model(layers, num_classes);
+    ResNetBasic model(layers, num_classes, num_channels);
     return model;
 }
 
-ResNet<BottleNeck> _resnet50(int num_classes = 1000) {
+ResNet<BottleNeck> _resnet50(int num_classes = 1000, int64_t num_channels = 3) {
     int layers[] = {3, 4, 6, 3};
-    ResNet<BottleNeck> model(layers, num_classes);
+    ResNet<BottleNeck> model(layers, num_classes, num_channels);
     return model;
 }
 
-ResNetBottleNeck resnet50(int num_classes = 1000) {
+ResNetBottleNeck resnet50(int num_classes = 1000, int64_t num_channels = 3) {
     int layers[] = {3, 4, 6, 3};
-    ResNetBottleNeck model(layers, num_classes);
+    ResNetBottleNeck model(layers, num_classes, num_channels);
     return model;
 }
 
-ResNetBottleNeck resnet101(int num_classes = 1000) {
+ResNetBottleNeck resnet101(int num_classes = 1000, int64_t num_channels = 3) {
     int layers[] = {3, 4, 23, 3};
-    ResNetBottleNeck model(layers, num_classes);
+    ResNetBottleNeck model(layers, num_classes, num_channels);
     return model;
 }
 
-ResNetBottleNeck resnet152(int num_classes = 1000) {
+ResNetBottleNeck resnet152(int num_classes = 1000, int64_t num_channels = 3) {
     int layers[] = {3, 8, 36, 3};
-    ResNetBottleNeck model(layers, num_classes);
+    ResNetBottleNeck model(layers, num_classes, num_channels);
     return model;
 }
 

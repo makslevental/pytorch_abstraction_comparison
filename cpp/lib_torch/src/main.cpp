@@ -177,15 +177,15 @@ int main(int argc, char *argv[]) {
     //        exit(EXIT_FAILURE);
     //    }
 
-    auto model = resnet50(NUMBER_CIFAR10_CLASSES);
-    model->initialize_weights();
-    model->to(device);
-
     std::stringstream ss;
     ss << "profiles/run_libtorch_" << argv[1] << "_" << argv[2] << ".csv";
     std::ofstream output_file(ss.str());
 
     if (strcmp(argv[1], "mnist") == 0) {
+        auto model = resnet50(10, 1);
+        model->initialize_weights();
+        model->to(device);
+
         std::cout << "== MNIST training with LibTorch ==" << std::endl;
 
         TestDataset<MNIST> train_dataset = MNIST("../data/MNIST/raw/", MNIST::Mode::kTrain)
@@ -205,7 +205,11 @@ int main(int argc, char *argv[]) {
             output_file);
 
     } else if (strcmp(argv[1], "cifar10") == 0) {
-        std::cout << "== STL10 training with LibTorch ==" << std::endl;
+        auto model = resnet50(10, 3);
+        model->initialize_weights();
+        model->to(device);
+
+        std::cout << "== CIFAR10 training with LibTorch ==" << std::endl;
 
         TestDataset<CIFAR10> train_dataset =
             CIFAR10("../data/cifar-10-batches-bin/all_train_data.bin")
@@ -225,6 +229,10 @@ int main(int argc, char *argv[]) {
             device,
             output_file);
     } else if (strcmp(argv[1], "stl10") == 0) {
+        auto model = resnet50(10, 3);
+        model->initialize_weights();
+        model->to(device);
+
         std::cout << "== STL10 training with LibTorch ==" << std::endl;
         TestDataset<STL10> train_dataset =
             STL10("../data/stl_10_train_data.npy", "../data/stl_10_train_labels.npy")
