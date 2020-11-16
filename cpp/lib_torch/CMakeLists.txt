@@ -15,7 +15,7 @@ find_package(Torch REQUIRED)
 find_package(OpenCV REQUIRED)
 
 include_directories(${OpenCV_INCLUDE_DIRS})
-include_directories("include")
+include_directories("include/")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
 file(GLOB_RECURSE libtorch_SRC CONFIGURE_DEPENDS src/*.cpp)

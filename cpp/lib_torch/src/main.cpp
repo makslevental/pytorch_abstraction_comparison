@@ -2,6 +2,7 @@
 #include "gputimer.h"
 #include "helper.h"
 #include "resnet.h"
+#include "stl10.h"
 #include "transform.h"
 
 #include <cuda_profiler_api.h>
@@ -9,6 +10,7 @@
 #include <iomanip>
 #include <iostream>
 #include <nvtx3/nvToolsExt.h>
+#include <torch/script.h>
 #include <torch/torch.h>
 #include <tuple>
 
@@ -165,6 +167,16 @@ int main(int argc, char *argv[]) {
     int monitoring_step = 20;
     const double learning_rate = 0.001;
 
+    //    torch::jit::script::Module torch_script_model;
+    //    try {
+    //        // Deserialize the ScriptModule from a file using torch::jit::load().
+    //        torch_script_model = torch::jit::load("torch_model.pth");
+    //        torch_script_model.to(at::kCUDA);
+    //    } catch (const c10::Error &e) {
+    //        std::cerr << "error loading the model\n";
+    //        exit(EXIT_FAILURE);
+    //    }
+
     auto model = resnet50(NUMBER_CIFAR10_CLASSES);
     model->initialize_weights();
     model->to(device);
@@ -174,7 +186,7 @@ int main(int argc, char *argv[]) {
     std::ofstream output_file(ss.str());
 
     if (strcmp(argv[1], "mnist") == 0) {
-        std::cout << "== MNIST training with CUDNN ==" << std::endl;
+        std::cout << "== MNIST training with LibTorch ==" << std::endl;
 
         TestDataset<MNIST> train_dataset = MNIST("../data/MNIST/raw/", MNIST::Mode::kTrain)
                                                .map(torch::data::transforms::Stack<>());
@@ -212,20 +224,26 @@ int main(int argc, char *argv[]) {
             num_epochs,
             device,
             output_file);
-        //    } else if (strcmp(argv[1], "cifar10") == 0) {
-        //        std::cout << "== CIFAR10 training with CUDNN ==" << std::endl;
-        //        train_data_loader = new CIFAR10<float>(
-        //            "../data/cifar-10-batches-bin/all_train_data.bin",
-        //            "",
-        //            true,
-        //            batch_size,
-        //            NUMBER_CIFAR10_CLASSES);
-        //        test_data_loader = new CIFAR10<float>(
-        //            "../data/cifar-10-batches-bin/test_batch.bin",
-        //            "",
-        //            false,
-        //            batch_size,
-        //            NUMBER_CIFAR10_CLASSES);
+    } else if (strcmp(argv[1], "stl10") == 0) {
+        std::cout << "== STL10 training with LibTorch ==" << std::endl;
+        TestDataset<STL10> train_dataset =
+            STL10("../data/stl_10_train_data.npy", "../data/stl_10_train_labels.npy")
+                .map(torch::data::transforms::Stack<>());
+        TestDataset<STL10> test_dataset =
+            STL10("../data/stl_10_test_data.npy", "../data/stl_10_test_labels.npy")
+                .map(torch::data::transforms::Stack<>());
+
+        train<STL10>(
+            model,
+            train_dataset,
+            test_dataset,
+            batch_size,
+            monitoring_step,
+            learning_rate,
+            num_epochs,
+            device,
+            output_file);
+
     } else {
         exit(EXIT_FAILURE);
     }
