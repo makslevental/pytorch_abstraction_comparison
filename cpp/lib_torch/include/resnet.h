@@ -25,12 +25,12 @@ Conv2d conv3x3(
                       .stride(stride)
                       .padding(dilation)
                       .groups(groups)
-                      .bias(false)
+                      .bias(true)
                       .dilation(dilation));
 }
 
 Conv2d conv1x1(int64_t in_planes, int64_t out_planes, int64_t stride = 1, int64_t kernel_size = 1) {
-    return Conv2d(Conv2dOptions(in_planes, out_planes, kernel_size).stride(stride).bias(false));
+    return Conv2d(Conv2dOptions(in_planes, out_planes, kernel_size).stride(stride).bias(true));
 }
 
 struct BasicBlock : Module {
@@ -188,7 +188,7 @@ template <class Block> struct ResNet : Module {
         this->base_width = width_per_group;
 
         this->conv1 = Conv2d(
-            Conv2dOptions(num_channels, this->in_planes, 7).stride(2).padding(3).bias(false));
+            Conv2dOptions(num_channels, this->in_planes, 7).stride(2).padding(3).bias(true));
         this->bn1 = BatchNorm2d(this->in_planes);
         this->relu = ReLU(ReLUOptions(true));
         this->maxpool = MaxPool2d(MaxPool2dOptions(3).stride(2).padding(1));
