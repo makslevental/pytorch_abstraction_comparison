@@ -10,6 +10,7 @@
 #include <iomanip>
 #include <iostream>
 #include <nvtx3/nvToolsExt.h>
+#include "nvml.h"
 #include <torch/script.h>
 #include <torch/torch.h>
 #include <tuple>
@@ -45,11 +46,12 @@ void train(
     auto test_loader = torch::data::make_data_loader<torch::data::samplers::SequentialSampler>(
         std::move(test_dataset), batch_size);
 
-    torch::optim::SGD optimizer(model->parameters(), learning_rate);
+    torch::optim::SGD optimizer(
+        model->parameters(), torch::optim::SGDOptions(learning_rate).momentum(0.9));
     std::cout << std::fixed << std::setprecision(4);
 
     std::string nvtx_message;
-    auto gpu_timer = GpuTimer();
+    auto gpu_timer = GPUTimer();
     cudaProfilerStart();
 
     double loss_val, accuracy, running_loss;
@@ -66,6 +68,7 @@ void train(
         batch_n = 0;
 
         for (auto &batch : *train_loader) {
+            optimizer.zero_grad();
             nvtx_message = std::string(
                 "train epoch " + std::to_string(epoch) + " batch " + std::to_string(batch_n));
             nvtxRangePushA(nvtx_message.c_str());
@@ -78,18 +81,17 @@ void train(
 
             auto output = model->forward(data);
             auto loss = torch::nn::functional::cross_entropy(output, target);
-            loss_val += loss.template item<double>();
-            auto prediction = output.argmax(1);
-            tp_count += prediction.eq(target).sum().template item<int64_t>();
-
-            optimizer.zero_grad();
             loss.backward();
             optimizer.step();
 
             nvtxRangePop();
 
-            sample_count += batch_size;
             gpu_timer.stop();
+
+            loss_val += loss.template item<double>();
+            sample_count += batch_size;
+            auto prediction = output.argmax(1);
+            tp_count += prediction.eq(target).sum().template item<int64_t>();
             elapsed_time += gpu_timer.elapsed();
 
             if (batch_n % monitoring_step == 0) {
@@ -141,17 +143,16 @@ void train(
                 nvtxRangePop();
 
                 auto loss = torch::nn::functional::cross_entropy(output, target);
-                loss_val += loss.template item<double>();
-
                 auto prediction = output.argmax(1);
+
+                loss_val += loss.template item<double>();
                 tp_count += prediction.eq(target).sum().template item<int64_t>();
                 sample_count += batch_size;
                 total_time += gpu_timer.elapsed();
             }
 
-            accuracy = 100.f * tp_count / sample_count;
             output_file << "[EVAL] avg loss: " << std::setw(4) << loss_val / sample_count
-                        << ", accuracy: " << accuracy << "%"
+                        << ", accuracy: " << 100.f * tp_count / sample_count << "%"
                         << ", avg sample time: " << total_time / sample_count << "ms" << std::endl;
         }
     }

@@ -45,7 +45,7 @@ void train(
     //    model->cuda();
 
     std::string nvtx_message;
-    auto gpu_timer = GpuTimer();
+    auto gpu_timer = GPUTimer();
 
     cudaProfilerStart();
 

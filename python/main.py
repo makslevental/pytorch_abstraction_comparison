@@ -1,84 +1,175 @@
+import os
+
+import py3nvml.py3nvml as nvml
 import torch
 import torch.optim as optim
 import torchvision
 import torchvision.transforms as transforms
 from torch import nn
 
+from cuda_profiling import GPUTimer, get_used_cuda_mem, get_utilization
 from resnet import ResNet50
 
-model = ResNet50()
-model = model.to("cuda:2")
+DEVICE = int(os.environ["DEVICE"])
+gpu_timer = GPUTimer(DEVICE)
 
-criterion = nn.CrossEntropyLoss()
-optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
+nvml.nvmlInit()
+nvml_handle = nvml.nvmlDeviceGetHandleByIndex(DEVICE)
 
-transform = transforms.Compose(
-    [transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))]
-)
 
-trainset = torchvision.datasets.CIFAR10(
-    root="../data", train=True, download=True, transform=transform
-)
-trainloader = torch.utils.data.DataLoader(
-    trainset, batch_size=32, shuffle=True, num_workers=1
-)
+def train(
+    model,
+    trainloader,
+    testloader,
+    optimizer,
+    criterion,
+    epochs,
+    batch_size,
+    monitoring_step,
+    output_file=None,
+):
+    for epoch in range(epochs):
+        model.train()
 
-testset = torchvision.datasets.CIFAR10(
-    root="../data", train=False, download=True, transform=transform
-)
-testloader = torch.utils.data.DataLoader(
-    testset, batch_size=32, shuffle=False, num_workers=1
-)
+        total_time = loss_val = running_loss = 0
+        elapsed_time = (
+            running_sample_count
+        ) = tp_count = running_tp_count = sample_count = 0
+        util_rate = 0
+        used_mem = 0
 
-classes = (
-    "plane",
-    "car",
-    "bird",
-    "cat",
-    "deer",
-    "dog",
-    "frog",
-    "horse",
-    "ship",
-    "truck",
-)
-with torch.autograd.set_detect_anomaly(True):
+        for batch_n, (inputs, labels) in enumerate(trainloader, 0):
+            gpu_timer.start()
 
-    for epoch in range(10):  # loop over the dataset multiple times
-
-        running_loss = 0.0
-        for i, data in enumerate(trainloader, 0):
-            # get the inputs; data is a list of [inputs, labels]
-            inputs, labels = data
-            inputs = inputs.to("cuda:2")
-            labels = labels.to("cuda:2")
-            # zero the parameter gradients
             optimizer.zero_grad()
 
-            # forward + backward + optimize
+            inputs = inputs.to(f"cuda:{DEVICE}")
+            labels = labels.to(f"cuda:{DEVICE}")
+
             outputs = model(inputs)
             loss = criterion(outputs, labels)
             loss.backward()
             optimizer.step()
 
-            # print statistics
-            running_loss += loss.item()
-            if i % 200 == 199:  # print every 2000 mini-batches
-                print("[%d, %5d] loss: %.3f" % (epoch + 1, i + 1, running_loss / 200))
-                running_loss = 0.0
+            gpu_timer.stop()
 
-print("Finished Training")
+            loss_val += loss.item()
+            predicted = outputs.argmax(axis=1)
+            tp_count += (predicted == labels).sum().item()
+            sample_count += batch_size
+            elapsed_time += gpu_timer.elapsed_time()
+            util_rate += get_utilization(nvml_handle)
+            used_mem += get_used_cuda_mem(DEVICE)
 
-# correct = 0
-# total = 0
-# with torch.no_grad():
-#     for data in testloader:
-#         images, labels = data
-#         outputs = model(images)
-#         _, predicted = torch.max(outputs.data, 1)
-#         total += labels.size(0)
-#         correct += (predicted == labels).sum().item()
-#
-# print(
-#     "Accuracy of the network on the 10000 test images: %d %%" % (100 * correct / total)
-# )
+            if batch_n % monitoring_step == 0:
+                print(f"batch: {batch_n}")
+                print(
+                    f"[TRAIN] epoch: {epoch}, "
+                    f"avg loss: {loss_val / float(sample_count):.6f}, "
+                    f"accuracy: {100.0 * float(tp_count) / sample_count:.6f}%, "
+                    f"avg sample time: {elapsed_time / sample_count:.6f}ms, "
+                    f"avg used mem: {used_mem / monitoring_step:.6f}mb, "
+                    f"avg util rate: {util_rate / monitoring_step:.6f}%",
+                    file=output_file,
+                    flush=True
+                )
+                total_time += elapsed_time
+                running_loss += loss_val
+                running_tp_count += tp_count
+                running_sample_count += sample_count
+                util_rate = (
+                    used_mem
+                ) = elapsed_time = tp_count = sample_count = loss_val = 0
+
+        print(
+            f"[TRAIN] "
+            f"avg loss: {running_loss / float(running_sample_count):.6f}, "
+            f"accuracy: {100.0 * float(running_tp_count) / running_sample_count:.6f}%, "
+            f"avg sample time: {total_time / running_sample_count:.6f}ms",
+            file=output_file,
+            flush=True
+        )
+
+        model.eval()
+        sample_count = tp_count = loss_val = 0
+
+        with torch.no_grad():
+            for inputs, labels in testloader:
+                gpu_timer.start()
+
+                inputs = inputs.to(f"cuda:{DEVICE}")
+                labels = labels.to(f"cuda:{DEVICE}")
+                outputs = model(inputs)
+
+                gpu_timer.stop()
+
+                loss = criterion(outputs, labels)
+                _, predicted = torch.max(outputs.data, 1)
+
+                loss_val += loss.item()
+                tp_count += (predicted == labels).sum().item()
+                sample_count += batch_size
+                elapsed_time += gpu_timer.elapsed_time()
+
+            print(
+                f"[EVAL] epoch: {epoch}, "
+                f"avg loss: {loss_val / float(sample_count):.6f}, "
+                f"accuracy: {100.0 * float(tp_count) / sample_count:.6f}%, "
+                f"avg sample time: {elapsed_time / sample_count:.6f}ms",
+                file=output_file,
+                flush=True
+            )
+
+
+def main():
+    epochs = 100
+    batch_size = 128
+    monitoring_step = 20
+
+    transform = transforms.Compose(
+        [
+            transforms.ToTensor(),
+            # transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        ]
+    )
+
+    trainset = torchvision.datasets.CIFAR10(
+        root="../data", train=True, download=True, transform=transform
+    )
+    testset = torchvision.datasets.CIFAR10(
+        root="../data", train=False, download=True, transform=transform
+    )
+
+    # trainset = torchvision.datasets.MNIST(
+    #     root="../data", train=True, download=True, transform=transform
+    # )
+    # testset = torchvision.datasets.MNIST(
+    #     root="../data", train=False, download=True, transform=transform
+    # )
+
+    trainloader = torch.utils.data.DataLoader(
+        trainset, batch_size=batch_size, shuffle=True, num_workers=1
+    )
+    testloader = torch.utils.data.DataLoader(
+        testset, batch_size=batch_size, shuffle=False, num_workers=1
+    )
+
+    model = ResNet50(in_channels=3, num_classes=10)
+    model = model.to(f"cuda:{DEVICE}")
+    criterion = nn.CrossEntropyLoss()
+    optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
+    train(
+        model,
+        trainloader,
+        testloader,
+        optimizer,
+        criterion,
+        epochs,
+        batch_size,
+        monitoring_step,
+        open("run_pytorch_cifar10.csv", "w")
+    )
+
+
+if __name__ == "__main__":
+    main()

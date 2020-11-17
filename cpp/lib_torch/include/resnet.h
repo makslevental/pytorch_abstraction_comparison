@@ -114,8 +114,8 @@ struct BottleNeck : Module {
         this->bn1 = BatchNorm2d(width);
         this->conv2 = conv3x3(width, width, stride, groups, dilation);
         this->bn2 = BatchNorm2d(width);
-        this->conv3 = conv1x1(width, planes * this->expansion);
-        this->bn3 = BatchNorm2d(planes * this->expansion);
+        this->conv3 = conv1x1(width, planes * BottleNeck::expansion);
+        this->bn3 = BatchNorm2d(planes * BottleNeck::expansion);
         this->relu = ReLU(ReLUOptions(true));
         this->downsample = downsample;
 

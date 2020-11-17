@@ -2,3 +2,5 @@ pip-tools
 torch
 torchvision
 numpy
+#cupy-cuda111
+py3nvml
