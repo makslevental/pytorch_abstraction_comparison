@@ -163,8 +163,12 @@ def transform_pascal(x):
 
 
 def main():
+    dataset_name, n = sys.argv[1], sys.argv[2]
+    print(f"running {dataset_name} {n}")
+
     epochs = 100
-    batch_size = 32
+    # lost .5 ms with smaller batch size for mnist
+    batch_size = 32 if dataset_name == "pascal" else 128
     monitoring_step = 20
 
     transform = [
@@ -172,8 +176,6 @@ def main():
         # transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
     ]
 
-    dataset_name, n = sys.argv[1], sys.argv[2]
-    print(f"running {dataset_name} {n}")
 
     if dataset_name == "cifar10":
         trainset = torchvision.datasets.CIFAR10(
