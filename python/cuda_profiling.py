@@ -47,7 +47,7 @@ def try_get_info(f, h, default="N/A"):
     return v
 
 
-def get_utilization(h):
+def get_gpu_utilization(h):
     util = try_get_info(nvml.nvmlDeviceGetUtilizationRates, h)
     gpu_util = util.gpu
     return gpu_util
@@ -61,4 +61,4 @@ if __name__ == "__main__":
     # print(g.elapsed_time())
     nvml.nvmlInit()
     h = nvml.nvmlDeviceGetHandleByIndex(0)
-    get_utilization(h)
+    get_gpu_utilization(h)

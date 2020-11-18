@@ -141,9 +141,16 @@ template <typename dtype> void Network<dtype>::train() {
     for (auto layer : layers_) {
         layer->unfreeze();
         layer->train();
-        layer->zero_out();
+        layer->zero_grad();
     }
 }
+
+template <typename dtype> void Network<dtype>::zero_grad() {
+    for (auto layer : layers_) {
+        layer->zero_grad();
+    }
+}
+
 
 template <typename dtype> void Network<dtype>::eval() {
     phase_ = inference;

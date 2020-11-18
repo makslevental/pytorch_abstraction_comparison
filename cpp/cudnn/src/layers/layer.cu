@@ -47,6 +47,7 @@ template <typename dtype> Layer<dtype>::~Layer() {
     }
 }
 
+// wtf this is necessary here but not in libtorch nor pytorch
 template <typename dtype> void Layer<dtype>::init_weight_bias(unsigned int seed) {
     if (weights_ == nullptr || biases_ == nullptr)
         return;
@@ -204,7 +205,7 @@ template <typename dtype> int Layer<dtype>::save_parameter() {
     return 0;
 }
 
-template <typename dtype> void Layer<dtype>::zero_out() {
+template <typename dtype> void Layer<dtype>::zero_grad() {
     if (input_) {
         input_->zero_out();
     }

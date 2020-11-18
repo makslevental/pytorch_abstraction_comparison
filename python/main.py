@@ -1,4 +1,5 @@
 import os
+import sys
 
 import py3nvml.py3nvml as nvml
 import torch
@@ -7,10 +8,11 @@ import torchvision
 import torchvision.transforms as transforms
 from torch import nn
 
-from cuda_profiling import GPUTimer, get_used_cuda_mem, get_utilization
+from cuda_profiling import GPUTimer, get_used_cuda_mem, get_gpu_utilization
 from resnet import ResNet50
 
 DEVICE = int(os.environ["DEVICE"])
+print(f"device {DEVICE}")
 gpu_timer = GPUTimer(DEVICE)
 
 nvml.nvmlInit()
@@ -35,8 +37,7 @@ def train(
         elapsed_time = (
             running_sample_count
         ) = tp_count = running_tp_count = sample_count = 0
-        util_rate = 0
-        used_mem = 0
+        running_used_mem = used_mem = 0
 
         for batch_n, (inputs, labels) in enumerate(trainloader, 0):
             gpu_timer.start()
@@ -58,7 +59,6 @@ def train(
             tp_count += (predicted == labels).sum().item()
             sample_count += batch_size
             elapsed_time += gpu_timer.elapsed_time()
-            util_rate += get_utilization(nvml_handle)
             used_mem += get_used_cuda_mem(DEVICE)
 
             if batch_n % monitoring_step == 0:
@@ -69,15 +69,16 @@ def train(
                     f"accuracy: {100.0 * float(tp_count) / sample_count:.6f}%, "
                     f"avg sample time: {elapsed_time / sample_count:.6f}ms, "
                     f"avg used mem: {used_mem / monitoring_step:.6f}mb, "
-                    f"avg util rate: {util_rate / monitoring_step:.6f}%",
+                    f"avg util rate: {get_gpu_utilization(nvml_handle)}%",
                     file=output_file,
-                    flush=True
+                    flush=True,
                 )
                 total_time += elapsed_time
                 running_loss += loss_val
                 running_tp_count += tp_count
                 running_sample_count += sample_count
-                util_rate = (
+                running_used_mem += used_mem
+                gpu_util = (
                     used_mem
                 ) = elapsed_time = tp_count = sample_count = loss_val = 0
 
@@ -85,13 +86,16 @@ def train(
             f"[TRAIN] "
             f"avg loss: {running_loss / float(running_sample_count):.6f}, "
             f"accuracy: {100.0 * float(running_tp_count) / running_sample_count:.6f}%, "
-            f"avg sample time: {total_time / running_sample_count:.6f}ms",
+            f"avg sample time: {total_time / running_sample_count:.6f}ms"
+            f"avg used mem: {running_used_mem / (running_sample_count / monitoring_step)}mb"
+            f"avg gpu util: {get_gpu_utilization(nvml_handle)}%",
             file=output_file,
-            flush=True
+            flush=True,
         )
 
         model.eval()
         sample_count = tp_count = loss_val = 0
+        used_mem = 0
 
         with torch.no_grad():
             for inputs, labels in testloader:
@@ -100,25 +104,27 @@ def train(
                 inputs = inputs.to(f"cuda:{DEVICE}")
                 labels = labels.to(f"cuda:{DEVICE}")
                 outputs = model(inputs)
-
-                gpu_timer.stop()
-
                 loss = criterion(outputs, labels)
                 _, predicted = torch.max(outputs.data, 1)
+
+                gpu_timer.stop()
 
                 loss_val += loss.item()
                 tp_count += (predicted == labels).sum().item()
                 sample_count += batch_size
                 elapsed_time += gpu_timer.elapsed_time()
+                used_mem += get_used_cuda_mem(DEVICE)
 
-            print(
-                f"[EVAL] epoch: {epoch}, "
-                f"avg loss: {loss_val / float(sample_count):.6f}, "
-                f"accuracy: {100.0 * float(tp_count) / sample_count:.6f}%, "
-                f"avg sample time: {elapsed_time / sample_count:.6f}ms",
-                file=output_file,
-                flush=True
-            )
+        print(
+            f"[EVAL] "
+            f"avg loss: {loss_val / float(sample_count):.6f}, "
+            f"accuracy: {100.0 * float(tp_count) / sample_count:.6f}%, "
+            f"avg sample time: {elapsed_time / sample_count:.6f}ms"
+            f"avg used mem: {used_mem / (sample_count / monitoring_step)}mb"
+            f"avg gpu util: {get_gpu_utilization(nvml_handle)}%",
+            file=output_file,
+            flush=True,
+        )
 
 
 def main():
@@ -133,19 +139,27 @@ def main():
         ]
     )
 
-    trainset = torchvision.datasets.CIFAR10(
-        root="../data", train=True, download=True, transform=transform
-    )
-    testset = torchvision.datasets.CIFAR10(
-        root="../data", train=False, download=True, transform=transform
-    )
+    dataset_name, n = sys.argv[1], sys.argv[2]
+    print(f"running {dataset_name} {n}")
 
-    # trainset = torchvision.datasets.MNIST(
-    #     root="../data", train=True, download=True, transform=transform
-    # )
-    # testset = torchvision.datasets.MNIST(
-    #     root="../data", train=False, download=True, transform=transform
-    # )
+    if dataset_name == "cifar10":
+        trainset = torchvision.datasets.CIFAR10(
+            root="../data", train=True, download=True, transform=transform
+        )
+        testset = torchvision.datasets.CIFAR10(
+            root="../data", train=False, download=True, transform=transform
+        )
+        in_channels = 3
+    elif dataset_name == "mnist":
+        trainset = torchvision.datasets.MNIST(
+            root="../data", train=True, download=True, transform=transform
+        )
+        testset = torchvision.datasets.MNIST(
+            root="../data", train=False, download=True, transform=transform
+        )
+        in_channels = 1
+    else:
+        raise Exception("unsupported dataset")
 
     trainloader = torch.utils.data.DataLoader(
         trainset, batch_size=batch_size, shuffle=True, num_workers=1
@@ -154,7 +168,7 @@ def main():
         testset, batch_size=batch_size, shuffle=False, num_workers=1
     )
 
-    model = ResNet50(in_channels=3, num_classes=10)
+    model = ResNet50(in_channels=in_channels, num_classes=10)
     model = model.to(f"cuda:{DEVICE}")
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
@@ -167,7 +181,7 @@ def main():
         epochs,
         batch_size,
         monitoring_step,
-        open("run_pytorch_cifar10.csv", "w")
+        open(f"profiles/run_pytorch_{dataset_name}_{n}.csv", "w"),
     )
 
 

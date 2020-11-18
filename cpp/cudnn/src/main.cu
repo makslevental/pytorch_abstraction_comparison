@@ -1,6 +1,6 @@
 //#include "CLI11.hpp"
+#include "cuda_profiling.h"
 #include "datasets/datasets.h"
-#include "gputimer.h"
 #include "helper.h"
 #include "network.h"
 #include "resnet.cuh"
@@ -47,7 +47,7 @@ void train(
     std::string nvtx_message;
     auto gpu_timer = GPUTimer();
 
-    cudaProfilerStart();
+    //    cudaProfilerStart();
 
     Tensor<dtype> *train_data, *train_target;
     Tensor<dtype> *test_data, *test_target;
@@ -56,56 +56,61 @@ void train(
     int tp_count, running_tp_count, running_sample_count, sample_count;
     double total_time;
     double elapsed_time;
+    double used_mem = 0, running_used_mem = 0;
 
     for (int epoch = 0; epoch < epochs; epoch++) {
         model->train();
         total_time = loss = accuracy = running_loss = 0;
-        elapsed_time = running_sample_count = tp_count = running_tp_count = sample_count = 0;
+        running_used_mem = used_mem = elapsed_time = running_sample_count = tp_count =
+            running_tp_count = sample_count = 0;
         learning_rate = 0.1;
         train_data_loader->reset();
 
         for (int batch = 0; batch < train_data_loader->get_num_batches(); batch++) {
-            nvtx_message = std::string(
-                "train epoch " + std::to_string(epoch) + " batch " + std::to_string(batch));
-            nvtxRangePushA(nvtx_message.c_str());
-            nvtxRangePushA("batch load");
-
+            //            nvtx_message = std::string(
+            //                "train epoch " + std::to_string(epoch) + " batch " +
+            //                std::to_string(batch));
+            //            nvtxRangePushA(nvtx_message.c_str());
+            //            nvtxRangePushA("batch load");
             std::tie(train_data, train_target) = train_data_loader->get_next_batch();
-            nvtxRangePop();
-
             gpu_timer.start();
+            //            model->zero_grad();
+
+            //            nvtxRangePop();
 
             train_data->to(cuda);
             train_target->to(cuda);
             output = model->forward(train_data);
+            loss += criterion.loss(output, train_target);
             model->backward(train_target);
             //            learning_rate *= 1.f / (1.f + lr_decay * batch);
             model->update(learning_rate);
 
             gpu_timer.stop();
 
-            nvtxRangePop();
+            //            nvtxRangePop();
 
-            loss += criterion.loss(output, train_target);
-            tp_count += get_tp_count<dtype>(output, train_target);
             sample_count += batch_size;
+            tp_count += get_tp_count<dtype>(output, train_target);
             elapsed_time += gpu_timer.elapsed();
+            used_mem += get_used_cuda_mem();
 
             if (batch % monitoring_step == 0) {
                 std::cout << "batch: " << batch << std::endl;
                 accuracy = 100.f * tp_count / sample_count;
-                output_file << "[TRAIN] epoch: " << std::right << std::setw(4) << epoch
-                            << ", batch: " << std::right << std::setw(4) << batch
-                            << ", avg loss: " << std::left << std::setw(8) << std::fixed
-                            << std::setprecision(6) << loss / (float)sample_count
-                            << ", accuracy: " << accuracy << "%"
+                output_file << "[TRAIN] epoch: " << epoch << ", batch: " << batch << std::fixed
+                            << std::setprecision(10) << ", avg loss: " << std::left
+                            << loss / (float)sample_count << ", accuracy: " << accuracy << "%"
                             << ", avg sample time: " << elapsed_time / sample_count << "ms"
-                            << ", used mem: " << get_used_cuda_mem() << "mb" << std::endl;
+                            << std::defaultfloat << ", avg used mem: " << used_mem / monitoring_step
+                            << "mb"
+                            << ", avg gpu util: " << get_gpu_utilization() << "%" << std::endl;
                 total_time += elapsed_time;
                 running_loss += loss;
                 running_tp_count += tp_count;
                 running_sample_count += sample_count;
-                elapsed_time = tp_count = sample_count = loss = 0;
+                running_used_mem += used_mem;
+                used_mem = elapsed_time = tp_count = sample_count = loss = 0;
             }
         }
 
@@ -113,33 +118,31 @@ void train(
                     << std::setprecision(6) << running_loss / running_sample_count
                     << ", accuracy: " << 100.f * running_tp_count / running_sample_count << "%"
                     << ", avg sample time: " << total_time / running_sample_count << "ms"
-                    << std::endl;
+                    << std::defaultfloat << ", avg used mem: "
+                    << running_used_mem / (running_sample_count / monitoring_step) << "mb"
+                    << ", avg gpu util: " << get_gpu_utilization() << "%" << std::endl;
 
         model->eval();
         test_data_loader->reset();
         total_time = sample_count = tp_count = loss = 0;
+        used_mem = 0;
 
         for (int batch = 0; batch < test_data_loader->get_num_batches(); batch++) {
-            nvtx_message = std::string(
-                "eval epoch " + std::to_string(epoch) + " batch " + std::to_string(batch));
-            nvtxRangePushA(nvtx_message.c_str());
-            nvtxRangePushA("batch load");
-
+            //            nvtx_message = std::string(
+            //                "eval epoch " + std::to_string(epoch) + " batch " +
+            //                std::to_string(batch));
+            //            nvtxRangePushA(nvtx_message.c_str());
+            //            nvtxRangePushA("batch load");
             std::tie(test_data, test_target) = test_data_loader->get_next_batch();
-            nvtxRangePop();
 
             gpu_timer.start();
-
             test_data->to(cuda);
             test_target->to(cuda);
             output = model->forward(test_data);
-
-            gpu_timer.stop();
-
-            nvtxRangePop();
-
             loss += criterion1.loss(output, test_target);
             tp_count += get_tp_count<dtype>(output, test_target);
+
+            gpu_timer.stop();
             sample_count += batch_size;
             total_time += gpu_timer.elapsed();
         }
@@ -147,10 +150,13 @@ void train(
         accuracy = 100.f * tp_count / sample_count;
         output_file << "[EVAL] avg loss: " << std::setw(4) << loss / sample_count
                     << ", accuracy: " << accuracy << "%"
-                    << ", avg sample time: " << total_time / sample_count << "ms" << std::endl;
+                    << ", avg sample time: " << total_time / sample_count << "ms"
+                    << std::defaultfloat
+                    << ", avg used mem: " << used_mem / (sample_count / monitoring_step) << "mb"
+                    << ", avg gpu util: " << get_gpu_utilization() << "%" << std::endl;
     }
 
-    cudaProfilerStop();
+    //    cudaProfilerStop();
     std::cout << "Done." << std::endl;
 }
 

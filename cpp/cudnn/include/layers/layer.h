@@ -31,7 +31,7 @@ public:
     void train() { train_ = true; }
     void eval() { train_ = false; }
     void update_weights_biases(dtype learning_rate);
-    void zero_out();
+    void zero_grad();
 
 protected:
     virtual void fwd_initialize(Tensor<dtype> *input);

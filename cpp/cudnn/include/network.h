@@ -29,6 +29,7 @@ public:
     void cuda();
     void train();
     void eval();
+    void zero_grad();
 
     Tensor<dtype> *output_;
 

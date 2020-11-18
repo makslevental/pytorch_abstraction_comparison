@@ -62,7 +62,6 @@ template <typename dtype> void Dense<dtype>::fwd_initialize(Tensor<dtype> *input
                 exit(-1);
             }
         } else if (!this->freeze_) {
-            PRINT("input_size " << this->input_size_);
             this->init_weight_bias();
         }
     }

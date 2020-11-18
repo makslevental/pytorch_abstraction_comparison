@@ -1,16 +1,16 @@
 #include "cifar10.h"
-#include "gputimer.h"
+#include "cuda_profiling.h"
 #include "helper.h"
 #include "resnet.h"
 #include "stl10.h"
 #include "transform.h"
 
+#include "nvml.h"
 #include <cuda_profiler_api.h>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <nvtx3/nvToolsExt.h>
-#include "nvml.h"
 #include <torch/script.h>
 #include <torch/torch.h>
 #include <tuple>
@@ -58,6 +58,7 @@ void train(
     int tp_count, running_tp_count, running_sample_count, sample_count;
     double total_time;
     double elapsed_time;
+    double used_mem = 0, running_used_mem = 0;
     int batch_n = 0;
 
     for (size_t epoch = 0; epoch != num_epochs; ++epoch) {
@@ -65,16 +66,17 @@ void train(
 
         total_time = loss_val = accuracy = running_loss = 0;
         elapsed_time = running_sample_count = tp_count = running_tp_count = sample_count = 0;
-        batch_n = 0;
+        running_used_mem = used_mem = batch_n = 0;
 
         for (auto &batch : *train_loader) {
-            optimizer.zero_grad();
-            nvtx_message = std::string(
-                "train epoch " + std::to_string(epoch) + " batch " + std::to_string(batch_n));
-            nvtxRangePushA(nvtx_message.c_str());
-            nvtxRangePushA("batch load");
-
+            //            nvtx_message = std::string(
+            //                "train epoch " + std::to_string(epoch) + " batch " +
+            //                std::to_string(batch_n));
+            //            nvtxRangePushA(nvtx_message.c_str());
+            //            nvtxRangePushA("batch load");
             gpu_timer.start();
+
+            optimizer.zero_grad();
 
             auto data = batch.data.to(device);
             auto target = batch.target.to(device);
@@ -84,7 +86,7 @@ void train(
             loss.backward();
             optimizer.step();
 
-            nvtxRangePop();
+            //            nvtxRangePop();
 
             gpu_timer.stop();
 
@@ -93,6 +95,7 @@ void train(
             auto prediction = output.argmax(1);
             tp_count += prediction.eq(target).sum().template item<int64_t>();
             elapsed_time += gpu_timer.elapsed();
+            used_mem += get_used_cuda_mem();
 
             if (batch_n % monitoring_step == 0) {
                 std::cout << "batch: " << batch_n << std::endl;
@@ -103,12 +106,15 @@ void train(
                             << std::setprecision(6) << loss_val / (float)sample_count
                             << ", accuracy: " << accuracy << "%"
                             << ", avg sample time: " << elapsed_time / sample_count << "ms"
-                            << ", used mem: " << get_used_cuda_mem() << "mb" << std::endl;
+                            << std::defaultfloat
+                            << ", avg used mem: " << used_mem / monitoring_step << "mb"
+                            << ", avg gpu util: " << get_gpu_utilization() << "%" << std::endl;
                 total_time += elapsed_time;
                 running_loss += loss_val;
                 running_tp_count += tp_count;
                 running_sample_count += sample_count;
-                elapsed_time = tp_count = sample_count = loss_val = 0;
+                running_used_mem += used_mem;
+                used_mem = elapsed_time = tp_count = sample_count = loss_val = 0;
             }
             batch_n++;
         }
@@ -116,44 +122,47 @@ void train(
                     << std::setprecision(6) << running_loss / running_sample_count
                     << ", accuracy: " << 100.f * running_tp_count / running_sample_count << "%"
                     << ", avg sample time: " << total_time / running_sample_count << "ms"
-                    << std::endl;
+                    << std::defaultfloat << ", avg used mem: "
+                    << running_used_mem / (running_sample_count / monitoring_step) << "mb"
+                    << ", avg gpu util: " << get_gpu_utilization() << "%" << std::endl;
 
         {
             model->eval();
             torch::NoGradGuard no_grad;
 
             total_time = sample_count = tp_count = loss_val = 0;
+            used_mem = 0;
 
             for (const auto &batch : *test_loader) {
-                nvtx_message = std::string(
-                    "eval epoch " + std::to_string(epoch) + " batch " + std::to_string(batch_n));
-                nvtxRangePushA(nvtx_message.c_str());
-                nvtxRangePushA("batch load");
+                //                nvtx_message = std::string(
+                //                    "eval epoch " + std::to_string(epoch) + " batch " +
+                //                    std::to_string(batch_n));
+                //                nvtxRangePushA(nvtx_message.c_str());
+                //                nvtxRangePushA("batch load");
 
                 gpu_timer.start();
 
                 auto data = batch.data.to(device);
                 auto target = batch.target.to(device);
-                nvtxRangePop();
-
                 auto output = model->forward(data);
+                auto loss = torch::nn::functional::cross_entropy(output, target);
+                auto prediction = output.argmax(1);
+                tp_count += prediction.eq(target).sum().template item<int64_t>();
 
                 gpu_timer.stop();
 
-                nvtxRangePop();
-
-                auto loss = torch::nn::functional::cross_entropy(output, target);
-                auto prediction = output.argmax(1);
-
                 loss_val += loss.template item<double>();
-                tp_count += prediction.eq(target).sum().template item<int64_t>();
                 sample_count += batch_size;
                 total_time += gpu_timer.elapsed();
+                used_mem += get_used_cuda_mem();
             }
 
             output_file << "[EVAL] avg loss: " << std::setw(4) << loss_val / sample_count
                         << ", accuracy: " << 100.f * tp_count / sample_count << "%"
-                        << ", avg sample time: " << total_time / sample_count << "ms" << std::endl;
+                        << ", avg sample time: " << total_time / sample_count << "ms"
+                        << std::defaultfloat
+                        << ", avg used mem: " << used_mem / (sample_count / monitoring_step) << "mb"
+                        << ", avg gpu util: " << get_gpu_utilization() << "%" << std::endl;
         }
     }
 }
@@ -184,7 +193,7 @@ int main(int argc, char *argv[]) {
 
     if (strcmp(argv[1], "mnist") == 0) {
         auto model = resnet50(10, 1);
-        model->initialize_weights();
+        //        model->initialize_weights();
         model->to(device);
 
         std::cout << "== MNIST training with LibTorch ==" << std::endl;
@@ -207,7 +216,7 @@ int main(int argc, char *argv[]) {
 
     } else if (strcmp(argv[1], "cifar10") == 0) {
         auto model = resnet50(10, 3);
-        model->initialize_weights();
+        //        model->initialize_weights();
         model->to(device);
 
         std::cout << "== CIFAR10 training with LibTorch ==" << std::endl;
@@ -231,7 +240,7 @@ int main(int argc, char *argv[]) {
             output_file);
     } else if (strcmp(argv[1], "stl10") == 0) {
         auto model = resnet50(10, 3);
-        model->initialize_weights();
+        //        model->initialize_weights();
         model->to(device);
 
         std::cout << "== STL10 training with LibTorch ==" << std::endl;

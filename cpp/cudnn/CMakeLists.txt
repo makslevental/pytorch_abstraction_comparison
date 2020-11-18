@@ -15,5 +15,5 @@ set_target_properties(main_cudnn PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 set_target_properties(main_cudnn PROPERTIES CUDA_RESOLVE_DEVICE_SYMBOLS ON)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-target_link_libraries(main_cudnn cudnn ${CMAKE_DL_LIBS})
+target_link_libraries(main_cudnn cudnn ${CMAKE_DL_LIBS} ${NVML_LIB})
 set_property(TARGET main_cudnn PROPERTY CXX_STANDARD 17)
