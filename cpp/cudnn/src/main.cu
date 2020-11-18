@@ -142,6 +142,7 @@ void train(
             output = model->forward(test_data);
             loss += criterion1.loss(output, test_target);
             tp_count += get_tp_count<dtype>(output, test_target);
+            used_mem += get_used_cuda_mem();
 
             gpu_timer.stop();
             sample_count += batch_size;
