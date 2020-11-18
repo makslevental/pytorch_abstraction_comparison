@@ -97,7 +97,7 @@ void train(
             elapsed_time += gpu_timer.elapsed();
             used_mem += get_used_cuda_mem();
 
-            if (batch_n % monitoring_step == 0) {
+            if ((batch_n + 1) % monitoring_step == 0) {
                 std::cout << "batch: " << batch_n << std::endl;
                 accuracy = 100.f * tp_count / sample_count;
                 output_file << "[TRAIN] epoch: " << std::right << std::setw(4) << epoch
@@ -106,8 +106,8 @@ void train(
                             << std::setprecision(6) << loss_val / (float)sample_count
                             << ", accuracy: " << accuracy << "%"
                             << ", avg sample time: " << elapsed_time / sample_count << "ms"
-                            << std::defaultfloat
-                            << ", avg used mem: " << used_mem / monitoring_step << "mb"
+                            << std::defaultfloat << ", avg used mem: " << used_mem / monitoring_step
+                            << "mb"
                             << ", avg gpu util: " << get_gpu_utilization() << "%" << std::endl;
                 total_time += elapsed_time;
                 running_loss += loss_val;
@@ -118,12 +118,13 @@ void train(
             }
             batch_n++;
         }
-        output_file << "[TRAIN] avg loss: " << std::left << std::setw(8) << std::fixed
+        output_file << "[TRAIN SUMMARY] avg loss: " << std::left << std::setw(8) << std::fixed
                     << std::setprecision(6) << running_loss / running_sample_count
                     << ", accuracy: " << 100.f * running_tp_count / running_sample_count << "%"
                     << ", avg sample time: " << total_time / running_sample_count << "ms"
-                    << std::defaultfloat << ", avg used mem: "
-                    << running_used_mem / (running_sample_count / monitoring_step) << "mb"
+                    << std::defaultfloat
+                    << ", avg used mem: " << running_used_mem / (running_sample_count / batch_size)
+                    << "mb"
                     << ", avg gpu util: " << get_gpu_utilization() << "%" << std::endl;
 
         {
@@ -161,7 +162,7 @@ void train(
                         << ", accuracy: " << 100.f * tp_count / sample_count << "%"
                         << ", avg sample time: " << total_time / sample_count << "ms"
                         << std::defaultfloat
-                        << ", avg used mem: " << used_mem / (sample_count / monitoring_step) << "mb"
+                        << ", avg used mem: " << used_mem / (sample_count / batch_size) << "mb"
                         << ", avg gpu util: " << get_gpu_utilization() << "%" << std::endl;
         }
     }

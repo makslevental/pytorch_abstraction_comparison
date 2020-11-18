@@ -20,20 +20,20 @@ nvml_handle = nvml.nvmlDeviceGetHandleByIndex(DEVICE)
 
 
 def train(
-    model,
-    trainloader,
-    testloader,
-    optimizer,
-    criterion,
-    epochs,
-    batch_size,
-    monitoring_step,
-    output_file=None,
+        model,
+        trainloader,
+        testloader,
+        optimizer,
+        criterion,
+        epochs,
+        batch_size,
+        monitoring_step,
+        output_file=None,
 ):
     for epoch in range(epochs):
         model.train()
 
-        total_time = loss_val = running_loss = 0
+        running_elapsed_time = loss_val = running_loss = 0
         elapsed_time = (
             running_sample_count
         ) = tp_count = running_tp_count = sample_count = 0
@@ -61,11 +61,11 @@ def train(
             elapsed_time += gpu_timer.elapsed_time()
             used_mem += get_used_cuda_mem(DEVICE)
 
-            if batch_n % monitoring_step == 0:
+            if (batch_n + 1) % monitoring_step == 0:
                 print(f"batch: {batch_n}")
                 print(
                     f"[TRAIN] epoch: {epoch}, "
-                    f"avg loss: {loss_val / float(sample_count):.6f}, "
+                    f"avg loss: {loss_val / float(sample_count):.10f}, "
                     f"accuracy: {100.0 * float(tp_count) / sample_count:.6f}%, "
                     f"avg sample time: {elapsed_time / sample_count:.6f}ms, "
                     f"avg used mem: {used_mem / monitoring_step:.6f}mb, "
@@ -73,21 +73,19 @@ def train(
                     file=output_file,
                     flush=True,
                 )
-                total_time += elapsed_time
+                running_elapsed_time += elapsed_time
                 running_loss += loss_val
                 running_tp_count += tp_count
                 running_sample_count += sample_count
                 running_used_mem += used_mem
-                gpu_util = (
-                    used_mem
-                ) = elapsed_time = tp_count = sample_count = loss_val = 0
+                used_mem = elapsed_time = tp_count = sample_count = loss_val = 0
 
         print(
-            f"[TRAIN] "
-            f"avg loss: {running_loss / float(running_sample_count):.6f}, "
+            f"[TRAIN SUMMARY] "
+            f"avg loss: {running_loss / float(running_sample_count):.10f}, "
             f"accuracy: {100.0 * float(running_tp_count) / running_sample_count:.6f}%, "
-            f"avg sample time: {total_time / running_sample_count:.6f}ms"
-            f"avg used mem: {running_used_mem / (running_sample_count / monitoring_step)}mb"
+            f"avg sample time: {running_elapsed_time / running_sample_count:.6f}ms, "
+            f"avg used mem: {running_used_mem / (running_sample_count / batch_size)}mb, "
             f"avg gpu util: {get_gpu_utilization(nvml_handle)}%",
             file=output_file,
             flush=True,
@@ -117,10 +115,10 @@ def train(
 
         print(
             f"[EVAL] "
-            f"avg loss: {loss_val / float(sample_count):.6f}, "
+            f"avg loss: {loss_val / float(sample_count):.10f}, "
             f"accuracy: {100.0 * float(tp_count) / sample_count:.6f}%, "
-            f"avg sample time: {elapsed_time / sample_count:.6f}ms"
-            f"avg used mem: {used_mem / (sample_count / monitoring_step)}mb"
+            f"avg sample time: {elapsed_time / sample_count:.6f}ms, "
+            f"avg used mem: {used_mem / (sample_count / batch_size)}mb, "
             f"avg gpu util: {get_gpu_utilization(nvml_handle)}%",
             file=output_file,
             flush=True,

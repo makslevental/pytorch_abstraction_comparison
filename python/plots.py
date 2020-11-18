@@ -2,9 +2,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-cudnn = pd.read_csv("run_cudnn_cifar10_save.csv")
-libtorch = pd.read_csv("run_libtorch_cifar10_save.csv")
-pytorch = pd.read_csv("run_pytorch_cifar10_save.csv")
+cudnn = pd.read_csv("profiles/run_cudnn_cifar10_0.csv")
+libtorch = pd.read_csv("profiles/run_libtorch_cifar10_0.csv")
+pytorch = pd.read_csv("profiles/run_pytorch_cifar10_0.csv")
 
 
 def get_loss(df, word="TRAIN"):
