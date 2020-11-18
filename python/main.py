@@ -1,7 +1,6 @@
 import os
 import sys
 
-import numpy as np
 import py3nvml.py3nvml as nvml
 import torch
 import torch.optim as optim
@@ -168,42 +167,52 @@ def main():
     batch_size = 32
     monitoring_step = 20
 
-    transform = transforms.Compose(
-        [
-            transforms.Resize((300, 300)),
-            transforms.ToTensor(),
-            # transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-        ]
-    )
+    transform = [
+        transforms.ToTensor(),
+        # transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+    ]
 
     dataset_name, n = sys.argv[1], sys.argv[2]
     print(f"running {dataset_name} {n}")
 
     if dataset_name == "cifar10":
         trainset = torchvision.datasets.CIFAR10(
-            root="../data", train=True, download=True, transform=transform
+            root="../data",
+            train=True,
+            download=True,
+            transform=transforms.Compose(transform),
         )
         testset = torchvision.datasets.CIFAR10(
-            root="../data", train=False, download=True, transform=transform
+            root="../data",
+            train=False,
+            download=True,
+            transform=transforms.Compose(transform),
         )
         in_channels = 3
         model = ResNet50(in_channels=in_channels, num_classes=10)
     elif dataset_name == "mnist":
         trainset = torchvision.datasets.MNIST(
-            root="../data", train=True, download=True, transform=transform
+            root="../data",
+            train=True,
+            download=True,
+            transform=transforms.Compose(transform),
         )
         testset = torchvision.datasets.MNIST(
-            root="../data", train=False, download=True, transform=transform
+            root="../data",
+            train=False,
+            download=True,
+            transform=transforms.Compose(transform),
         )
         in_channels = 1
         model = ResNet50(in_channels=in_channels, num_classes=10)
     elif dataset_name == "pascal":
+        transform.insert(0, transforms.Resize((300, 300)))
         trainset = torchvision.datasets.VOCDetection(
             root="../data/",
             year="2012",
             image_set="train",
             download=True,
-            transform=transform,
+            transform=transforms.Compose(transform),
             target_transform=transform_pascal,
         )
         testset = torchvision.datasets.VOCDetection(
@@ -211,7 +220,7 @@ def main():
             year="2012",
             image_set="val",
             download=True,
-            transform=transform,
+            transform=transforms.Compose(transform),
             target_transform=transform_pascal,
         )
         in_channels = 3
