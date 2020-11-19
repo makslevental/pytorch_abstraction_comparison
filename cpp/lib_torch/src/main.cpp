@@ -174,7 +174,7 @@ int main(int argc, char *argv[]) {
     torch::Device device(cuda_available ? torch::kCUDA : torch::kCPU);
     std::cout << (cuda_available ? "CUDA available. Training on GPU." : "Training on CPU.") << '\n';
 
-    int64_t batch_size = 16;
+    int64_t batch_size = strcmp(argv[1], "pascal") == 0 ? 32 : 128;
     const size_t num_epochs = 100;
     int monitoring_step = 20;
     const double learning_rate = 0.001;
@@ -265,7 +265,6 @@ int main(int argc, char *argv[]) {
             output_file);
 
     } else if (strcmp(argv[1], "pascal") == 0) {
-        batch_size = 32;
         auto model = resnet50(NUMBER_PASCAL_CLASSES, 3);
         //        model->initialize_weights();
         model->to(device);

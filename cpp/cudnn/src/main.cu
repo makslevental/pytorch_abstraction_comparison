@@ -179,7 +179,7 @@ int main(int argc, char *argv[]) {
     //    CLI11_PARSE(app, argc, argv);
 
     /* configure the network */
-    int batch_size = 16;
+    int64_t batch_size = strcmp(argv[1], "pascal") == 0 ? 32 : 128;
     int num_classes;
     int epochs = 100;
     int monitoring_step = 20;
@@ -241,7 +241,6 @@ int main(int argc, char *argv[]) {
             NUMBER_CIFAR10_CLASSES);
     } else if (strcmp(argv[1], "pascal") == 0) {
         num_classes = NUMBER_PASCAL_CLASSES;
-        batch_size = 32;
         std::cout << "== PASCAL training with CUDNN ==" << std::endl;
         train_data_loader = new PASCAL<float>(
             "../data/VOCdevkit/VOC2012", Mode::kTrain, true, batch_size, NUMBER_PASCAL_CLASSES);
