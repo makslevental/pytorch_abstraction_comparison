@@ -9,6 +9,7 @@ import torchvision.transforms as transforms
 from torch import nn
 
 from cuda_profiling import GPUTimer, get_used_cuda_mem, get_gpu_utilization
+from pascal import VOCDetection
 from resnet import ResNet50
 
 DEVICE = int(os.environ["DEVICE"])
@@ -176,7 +177,6 @@ def main():
         # transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
     ]
 
-
     if dataset_name == "cifar10":
         trainset = torchvision.datasets.CIFAR10(
             root="../data",
@@ -209,7 +209,7 @@ def main():
         model = ResNet50(in_channels=in_channels, num_classes=10)
     elif dataset_name == "pascal":
         transform.insert(0, transforms.Resize((300, 300)))
-        trainset = torchvision.datasets.VOCDetection(
+        trainset = VOCDetection(
             root="../data/",
             year="2012",
             image_set="train",
@@ -217,7 +217,8 @@ def main():
             transform=transforms.Compose(transform),
             target_transform=transform_pascal,
         )
-        testset = torchvision.datasets.VOCDetection(
+        print("len trainset", len(trainset))
+        testset = VOCDetection(
             root="../data/",
             year="2012",
             image_set="val",
@@ -225,6 +226,7 @@ def main():
             transform=transforms.Compose(transform),
             target_transform=transform_pascal,
         )
+        print("len testset", len(testset))
         in_channels = 3
         model = ResNet50(in_channels=in_channels, num_classes=20)
     else:
