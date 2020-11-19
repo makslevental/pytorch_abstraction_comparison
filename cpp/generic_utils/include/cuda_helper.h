@@ -10,8 +10,8 @@
 #include <cuda_runtime.h>
 #include <curand.h>
 #include <fstream>
-#include <iostream>
 #include <prettyprint.h>
+#include <iostream>
 #include <sstream>
 #include <utility>
 

@@ -1,7 +1,6 @@
-//#include "CLI11.hpp"
+#include "cuda_helper.h"
 #include "cuda_profiling.h"
 #include "datasets/datasets.h"
-#include "helper.h"
 #include "network.h"
 #include "resnet.cuh"
 
@@ -235,6 +234,13 @@ int main(int argc, char *argv[]) {
             false,
             batch_size,
             NUMBER_CIFAR10_CLASSES);
+    } else if (strcmp(argv[1], "pascal") == 0) {
+        batch_size = 32;
+        std::cout << "== PASCAL training with CUDNN ==" << std::endl;
+        train_data_loader = new PASCAL<float>(
+            "../data/VOCdevkit/VOC2012", Mode::kTrain, true, batch_size, NUMBER_PASCAL_CLASSES);
+        test_data_loader = new PASCAL<float>(
+            "../data/VOCdevkit/VOC2012", Mode::kVal, false, batch_size, NUMBER_PASCAL_CLASSES);
     } else {
         exit(EXIT_FAILURE);
     }

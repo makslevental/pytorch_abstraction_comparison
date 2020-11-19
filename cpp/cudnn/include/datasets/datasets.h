@@ -9,5 +9,6 @@
 #include "dataset.h"
 #include "mnist.h"
 #include "stl10.h"
+#include "pascal.h"
 
 #endif // PROJECTNAME_DATASETS_H

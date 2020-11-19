@@ -7,13 +7,12 @@ project(cudnn_nets)
 
 include_directories("include")
 file(GLOB_RECURSE cudnn_SRC CONFIGURE_DEPENDS "src/*.cpp" "src/*.cu")
-cuda_add_executable(main_cudnn ${cudnn_SRC})
-
+cuda_add_executable(main_cudnn ${cudnn_SRC}  ${generic_utils_SRC})
 cuda_add_cublas_to_target(main_cudnn)
 
 set_target_properties(main_cudnn PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 set_target_properties(main_cudnn PROPERTIES CUDA_RESOLVE_DEVICE_SYMBOLS ON)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-target_link_libraries(main_cudnn cudnn ${CMAKE_DL_LIBS} ${NVML_LIB})
+target_link_libraries(main_cudnn cudnn ${CMAKE_DL_LIBS} ${NVML_LIB} ${OpenCV_LIBS})
 set_property(TARGET main_cudnn PROPERTY CXX_STANDARD 17)

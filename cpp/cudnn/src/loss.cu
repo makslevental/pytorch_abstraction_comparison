@@ -1,4 +1,4 @@
-#include <helper.h>
+#include <cuda_helper.h>
 #include <loss.h>
 
 #include <cassert>

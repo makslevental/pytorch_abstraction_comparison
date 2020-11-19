@@ -6,7 +6,7 @@
 
 #include <cudnn.h>
 
-#include "helper.h"
+#include <cuda_helper.h>
 #include "layers/layer.h"
 #include "loss.h"
 

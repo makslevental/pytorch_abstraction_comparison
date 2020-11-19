@@ -13,7 +13,7 @@
 
 #include <cuda_runtime.h>
 #include <cudnn.h>
-#include <helper.h>
+#include <cuda_helper.h>
 
 #include <prettyprint.h>
 

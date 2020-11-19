@@ -5,7 +5,7 @@
 #ifndef PYTORCH_ABSTRACTION_CUDA_PROFILING_H
 #define PYTORCH_ABSTRACTION_CUDA_PROFILING_H
 
-#include "helper.h"
+#include "cuda_helper.h"
 #include "nvml.h"
 #include <cuda_runtime.h>
 

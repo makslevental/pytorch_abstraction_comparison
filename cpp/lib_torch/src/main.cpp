@@ -1,11 +1,12 @@
 #include "cifar10.h"
+#include "cuda_helper.h"
 #include "cuda_profiling.h"
-#include "helper.h"
+#include "nvml.h"
+#include "pascal.h"
 #include "resnet.h"
 #include "stl10.h"
 #include "transform.h"
 
-#include "nvml.h"
 #include <cuda_profiler_api.h>
 #include <fstream>
 #include <iomanip>
@@ -173,7 +174,7 @@ int main(int argc, char *argv[]) {
     torch::Device device(cuda_available ? torch::kCUDA : torch::kCPU);
     std::cout << (cuda_available ? "CUDA available. Training on GPU." : "Training on CPU.") << '\n';
 
-    const int64_t batch_size = 128;
+    int64_t batch_size = 128;
     const size_t num_epochs = 100;
     int monitoring_step = 20;
     const double learning_rate = 0.001;
@@ -216,7 +217,7 @@ int main(int argc, char *argv[]) {
             output_file);
 
     } else if (strcmp(argv[1], "cifar10") == 0) {
-        auto model = resnet50(10, 3);
+        auto model = resnet50(NUMBER_CIFAR10_CLASSES, 3);
         //        model->initialize_weights();
         model->to(device);
 
@@ -240,7 +241,7 @@ int main(int argc, char *argv[]) {
             device,
             output_file);
     } else if (strcmp(argv[1], "stl10") == 0) {
-        auto model = resnet50(10, 3);
+        auto model = resnet50(NUMBER_STL10_CLASSES, 3);
         //        model->initialize_weights();
         model->to(device);
 
@@ -263,6 +264,34 @@ int main(int argc, char *argv[]) {
             device,
             output_file);
 
+    } else if (strcmp(argv[1], "pascal") == 0) {
+        batch_size = 32;
+        auto model = resnet50(NUMBER_PASCAL_CLASSES, 3);
+        //        model->initialize_weights();
+        model->to(device);
+
+        std::cout << "== PASCAL training with LibTorch ==" << std::endl;
+        TestDataset<PASCAL> train_dataset =
+            PASCAL(
+                "/home/maksim/dev_projects/pytorch_abstraction_comparison/data/VOCdevkit/VOC2012",
+                PASCAL::kTrain)
+                .map(torch::data::transforms::Stack<>());
+        TestDataset<PASCAL> test_dataset =
+            PASCAL(
+                "/home/maksim/dev_projects/pytorch_abstraction_comparison/data/VOCdevkit/VOC2012",
+                PASCAL::kVal)
+                .map(torch::data::transforms::Stack<>());
+
+        train<PASCAL>(
+            model,
+            train_dataset,
+            test_dataset,
+            batch_size,
+            monitoring_step,
+            learning_rate,
+            num_epochs,
+            device,
+            output_file);
     } else {
         exit(EXIT_FAILURE);
     }

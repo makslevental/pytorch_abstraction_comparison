@@ -16,6 +16,12 @@ set(CMAKE_VERBOSE_MAKEFILE OFF)
 # Save libs and executables in the same place
 set(EXECUTABLE_OUTPUT_PATH "${CMAKE_BINARY_DIR}/bin" CACHE PATH "Output directory for applications")
 
+
+set(OpenCV_DIR "../../opencv/build")
+find_package(OpenCV REQUIRED)
+include_directories(${OpenCV_INCLUDE_DIRS})
+
+
 set(CUDNN_LIBRARY_PATH "/usr/lib/x86_64-linux-gnu/libcudnn.so")
 set(CUDA_cublas_LIBRARY "/usr/lib/x86_64-linux-gnu/libcublas.so")
 set(CUDA_cublas_device_LIBRARY "/usr/lib/x86_64-linux-gnu/libcublas.so")
@@ -52,6 +58,8 @@ set(CUDA_PROPAGATE_HOST_FLAGS OFF)
 include_directories($ENV{CUDNN_PATH} $ENV{CUDNN_PATH}/include)
 link_directories($ENV{CUDNN_PATH} $ENV{CUDNN_PATH}/lib $ENV{CUDNN_PATH}/lib64)
 
-include_directories("generic_utils")
+include_directories("generic_utils/include")
+file(GLOB_RECURSE generic_utils_SRC CONFIGURE_DEPENDS "generic_utils/*.cpp")
+
 add_subdirectory(cudnn)
 add_subdirectory(lib_torch)

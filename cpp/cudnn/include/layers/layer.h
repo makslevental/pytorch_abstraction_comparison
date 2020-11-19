@@ -6,9 +6,9 @@
 #include <cublas_v2.h>
 #include <cudnn.h>
 
-#include "helper.h"
 #include "loss.h"
 #include "tensor.h"
+#include <cuda_helper.h>
 
 template <typename dtype> class Layer {
 public:
