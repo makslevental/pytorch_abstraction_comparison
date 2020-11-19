@@ -169,7 +169,7 @@ def main():
 
     epochs = 100
     # lost .5 ms with smaller batch size for mnist
-    batch_size = 32 if dataset_name == "pascal" else 128
+    batch_size = 16 if dataset_name == "pascal" else 128
     monitoring_step = 20
 
     transform = [
@@ -208,7 +208,7 @@ def main():
         in_channels = 1
         model = ResNet50(in_channels=in_channels, num_classes=10)
     elif dataset_name == "pascal":
-        transform.insert(0, transforms.Resize((300, 300)))
+        transform.insert(0, transforms.Resize((200, 200)))
         trainset = VOCDetection(
             root="../data/",
             year="2012",

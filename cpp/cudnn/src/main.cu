@@ -11,14 +11,16 @@
 #include <iomanip>
 #include <nvtx3/nvToolsExt.h>
 
-template <typename dtype> int get_tp_count(Tensor<dtype> *output, Tensor<dtype> *target);
-template <typename dtype> int arg_max(int batch, int output_size, const dtype *arr);
-template <typename dtype> int find_one(int batch, int output_size, const dtype *arr);
+template <typename dtype> int get_tp_count(Tensor<dtype> *output, Tensor<dtype> *target, int num_classes);
+template <typename dtype>
+int arg_max(int batch, int output_size, int num_classes, const dtype *arr);
+template <typename dtype> int find_one(int batch, int output_size, int num_classes, const dtype *arr);
 
 template <typename dtype>
 void train(
     Dataset<dtype> *train_data_loader,
     Dataset<dtype> *test_data_loader,
+    int num_classes,
     int epochs,
     int batch_size,
     int monitoring_step,
@@ -28,7 +30,7 @@ void train(
     CrossEntropyLoss<dtype> criterion;
     CrossEntropyLoss<dtype> criterion1;
 
-    auto model = make_resnet50<dtype>();
+    auto model = make_resnet50<dtype>(num_classes);
     model->cuda();
     //    auto model = new Network<dtype>();
     //    model->add_layer(new Conv2d<dtype>("conv1", 20, 5));
@@ -90,7 +92,7 @@ void train(
             //            nvtxRangePop();
 
             sample_count += batch_size;
-            tp_count += get_tp_count<dtype>(output, train_target);
+            tp_count += get_tp_count<dtype>(output, train_target, num_classes);
             elapsed_time += gpu_timer.elapsed();
             used_mem += get_used_cuda_mem();
 
@@ -140,7 +142,7 @@ void train(
             test_target->to(cuda);
             output = model->forward(test_data);
             loss += criterion1.loss(output, test_target);
-            tp_count += get_tp_count<dtype>(output, test_target);
+            tp_count += get_tp_count<dtype>(output, test_target, num_classes);
             used_mem += get_used_cuda_mem();
 
             gpu_timer.stop();
@@ -177,8 +179,8 @@ int main(int argc, char *argv[]) {
     //    CLI11_PARSE(app, argc, argv);
 
     /* configure the network */
-    int batch_size = 128;
-
+    int batch_size = 16;
+    int num_classes;
     int epochs = 100;
     int monitoring_step = 20;
 
@@ -193,6 +195,7 @@ int main(int argc, char *argv[]) {
     std::ofstream output_file(ss.str());
 
     if (strcmp(argv[1], "mnist") == 0) {
+        num_classes = NUMBER_MNIST_CLASSES;
         std::cout << "== MNIST training with CUDNN ==" << std::endl;
         train_data_loader = new MNIST<float>(
             "../data/MNIST/raw/train-images-idx3-ubyte",
@@ -207,6 +210,7 @@ int main(int argc, char *argv[]) {
             batch_size,
             NUMBER_MNIST_CLASSES);
     } else if (strcmp(argv[1], "stl10") == 0) {
+        num_classes = NUMBER_STL10_CLASSES;
         std::cout << "== STL10 training with CUDNN ==" << std::endl;
         train_data_loader = new STL10<float>(
             "../data/stl_10_train_data.npy",
@@ -221,6 +225,7 @@ int main(int argc, char *argv[]) {
             batch_size,
             NUMBER_STL10_CLASSES);
     } else if (strcmp(argv[1], "cifar10") == 0) {
+        num_classes = NUMBER_CIFAR10_CLASSES;
         std::cout << "== CIFAR10 training with CUDNN ==" << std::endl;
         train_data_loader = new CIFAR10<float>(
             "../data/cifar-10-batches-bin/all_train_data.bin",
@@ -235,6 +240,7 @@ int main(int argc, char *argv[]) {
             batch_size,
             NUMBER_CIFAR10_CLASSES);
     } else if (strcmp(argv[1], "pascal") == 0) {
+        num_classes = NUMBER_PASCAL_CLASSES;
         batch_size = 32;
         std::cout << "== PASCAL training with CUDNN ==" << std::endl;
         train_data_loader = new PASCAL<float>(
@@ -247,6 +253,7 @@ int main(int argc, char *argv[]) {
     train<float>(
         train_data_loader,
         test_data_loader,
+        num_classes,
         epochs,
         batch_size,
         monitoring_step,
@@ -256,7 +263,8 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
-template <typename dtype> int get_tp_count(Tensor<dtype> *output, Tensor<dtype> *target) {
+template <typename dtype>
+int get_tp_count(Tensor<dtype> *output, Tensor<dtype> *target, int num_classes) {
     int batch_size = output->get_batch_size();
     int output_size = output->size();
 
@@ -273,8 +281,8 @@ template <typename dtype> int get_tp_count(Tensor<dtype> *output, Tensor<dtype> 
 
     // idx_output = idx_target = 0;
     for (int b = 0; b < batch_size; b++) {
-        idx_output = arg_max<dtype>(b, output_size, h_output);
-        idx_target = find_one<dtype>(b, output_size, h_target);
+        idx_output = arg_max<dtype>(b, output_size, num_classes, h_output);
+        idx_target = find_one<dtype>(b, output_size, num_classes, h_target);
         if (idx_output == idx_target)
             tp_count++;
     }
@@ -282,20 +290,23 @@ template <typename dtype> int get_tp_count(Tensor<dtype> *output, Tensor<dtype> 
     return tp_count;
 }
 
-template <typename dtype> int arg_max(int batch, int output_size, const dtype *arr) {
+template <typename dtype>
+int arg_max(int batch, int output_size, int num_classes, const dtype *arr) {
     int idx_output = 0;
-    for (int i = 1; i < NUMBER_MNIST_CLASSES; i++) {
+    for (int i = 1; i < num_classes; i++) {
         if (arr[batch * output_size + i] > arr[batch * output_size + idx_output])
             idx_output = i;
     }
     return idx_output;
 }
 
-template <typename dtype> int find_one(int batch, int output_size, const dtype *arr) {
-    for (int i = 0; i < 10; i++) {
+template <typename dtype> int find_one(int batch, int output_size, int num_classes, const dtype *arr) {
+    for (int i = 0; i < num_classes; i++) {
         if (abs(arr[batch * output_size + i] - 1) < 1e-10) {
             return i;
         }
     }
+    std::cout << "no one found";
+
     exit(EXIT_FAILURE);
 }

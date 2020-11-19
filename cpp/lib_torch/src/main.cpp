@@ -174,7 +174,7 @@ int main(int argc, char *argv[]) {
     torch::Device device(cuda_available ? torch::kCUDA : torch::kCPU);
     std::cout << (cuda_available ? "CUDA available. Training on GPU." : "Training on CPU.") << '\n';
 
-    int64_t batch_size = 128;
+    int64_t batch_size = 16;
     const size_t num_epochs = 100;
     int monitoring_step = 20;
     const double learning_rate = 0.001;

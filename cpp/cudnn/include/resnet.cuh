@@ -7,7 +7,7 @@
 
 template <typename dtype> class ResNet50 : public Network<dtype> {
 public:
-    ResNet50() {
+    ResNet50(int num_classes) {
         this->conv1 = new Conv2d<dtype>(
             "conv1", /*out_channels*/ 64, /*kernel*/ 7, /*stride*/ 2, /*padding*/ 3);
         this->conv1->set_gradient_stop();
@@ -222,7 +222,7 @@ public:
         this->relu16 = new Activation<dtype>("relu16", CUDNN_ACTIVATION_RELU);
         this->pool2 = new Pooling<dtype>(
             "pool2", /*kernel*/ 1, /*stride*/ 1, /*padding*/ 0, CUDNN_POOLING_MAX);
-        this->dense1 = new Dense<dtype>("dense1", 10);
+        this->dense1 = new Dense<dtype>("dense1", num_classes);
         this->softmax1 = new Softmax<dtype>("softmax1");
 
         this->add5 = new Addition<dtype>("add5");
@@ -762,7 +762,7 @@ private:
     Tensor<dtype> *orig_grad4 = nullptr;
 };
 
-template <typename dtype> Network<dtype> *make_resnet50() { return new ResNet50<dtype>(); }
+template <typename dtype> Network<dtype> *make_resnet50(int num_classes) { return new ResNet50<dtype>(num_classes); }
 //
 // Network make_resnet50() {
 //    Network model;
