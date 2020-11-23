@@ -25,25 +25,25 @@ void train(
     int batch_size,
     int monitoring_step,
     double learning_rate,
-    std::ofstream &output_file) {
+    std::ostream &output_file) {
 
     CrossEntropyLoss<dtype> criterion;
     CrossEntropyLoss<dtype> criterion1;
 
-    auto model = make_resnet50<dtype>(num_classes);
+//    auto model = make_resnet50<dtype>(num_classes);
+//    model->cuda();
+    auto model = new Network<dtype>();
+    model->add_layer(new Conv2d<dtype>("conv1", 20, 5));
+    model->add_layer(new Activation<dtype>("relu1", CUDNN_ACTIVATION_RELU));
+    model->add_layer(new Pooling<dtype>("pool1", 2, 2, 0, CUDNN_POOLING_MAX));
+    model->add_layer(new Conv2d<dtype>("conv2", 50, 5));
+    model->add_layer(new Activation<dtype>("relu2", CUDNN_ACTIVATION_RELU));
+    model->add_layer(new Pooling<dtype>("pool2", 2, 2, 0, CUDNN_POOLING_MAX));
+    model->add_layer(new Dense<dtype>("dense1", 500));
+    model->add_layer(new Activation<dtype>("relu3", CUDNN_ACTIVATION_RELU));
+    model->add_layer(new Dense<dtype>("dense2", num_classes));
+    model->add_layer(new Softmax<dtype>("softmax"));
     model->cuda();
-    //    auto model = new Network<dtype>();
-    //    model->add_layer(new Conv2d<dtype>("conv1", 20, 5));
-    //    model->add_layer(new Activation<dtype>("relu1", CUDNN_ACTIVATION_RELU));
-    //    model->add_layer(new Pooling<dtype>("pool1", 2, 2, 0, CUDNN_POOLING_MAX));
-    //    model->add_layer(new Conv2d<dtype>("conv2", 50, 5));
-    //    model->add_layer(new Activation<dtype>("relu2", CUDNN_ACTIVATION_RELU));
-    //    model->add_layer(new Pooling<dtype>("pool2", 2, 2, 0, CUDNN_POOLING_MAX));
-    //    model->add_layer(new Dense<dtype>("dense1", 500));
-    //    model->add_layer(new Activation<dtype>("relu3", CUDNN_ACTIVATION_RELU));
-    //    model->add_layer(new Dense<dtype>("dense2", 10));
-    //    model->add_layer(new Softmax<dtype>("softmax"));
-    //    model->cuda();
 
     std::string nvtx_message;
     auto gpu_timer = GPUTimer();
@@ -64,7 +64,6 @@ void train(
         total_time = loss = accuracy = running_loss = 0;
         running_used_mem = used_mem = elapsed_time = running_sample_count = tp_count =
             running_tp_count = sample_count = 0;
-        learning_rate = 0.1;
         train_data_loader->reset();
 
         for (int batch = 0; batch < train_data_loader->get_num_batches(); batch++) {
@@ -184,7 +183,7 @@ int main(int argc, char *argv[]) {
     int epochs = 100;
     int monitoring_step = 20;
 
-    double learning_rate = 0.001;
+    double learning_rate = 0.1;
     double lr_decay = 0.0000005f;
 
     Dataset<float> *train_data_loader;
@@ -257,7 +256,7 @@ int main(int argc, char *argv[]) {
         batch_size,
         monitoring_step,
         learning_rate,
-        output_file);
+        std::cout);
 
     return 0;
 }
