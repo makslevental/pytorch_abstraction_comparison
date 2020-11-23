@@ -192,6 +192,21 @@ def main():
         )
         in_channels = 3
         model = ResNet50(in_channels=in_channels, num_classes=10)
+    elif dataset_name == "stl10":
+        trainset = torchvision.datasets.STL10(
+            root="../data",
+            split="train",
+            download=True,
+            transform=transforms.Compose(transform),
+        )
+        testset = torchvision.datasets.STL10(
+            root="../data",
+            split="test",
+            download=True,
+            transform=transforms.Compose(transform),
+        )
+        in_channels = 3
+        model = ResNet50(in_channels=in_channels, num_classes=10)
     elif dataset_name == "mnist":
         trainset = torchvision.datasets.MNIST(
             root="../data",
