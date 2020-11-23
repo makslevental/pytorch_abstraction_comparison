@@ -21,19 +21,7 @@
 #define BLOCK_DIM_1D 512
 #define BLOCK_DIM 16
 
-/* DEBUG FLAGS */
-#define DEBUG_FORWARD 0
-#define DEBUG_BACKWARD 0
 
-#define DEBUG_CONV 0
-#define DEBUG_DENSE 0
-#define DEBUG_SOFTMAX 0
-#define DEBUG_UPDATE 0
-
-#define DEBUG_LOSS 0
-#define DEBUG_ACCURACY 0
-
-#define DEBUG_FIND_ALGO 0
 
 /* CUDA API error return checker */
 #ifndef checkCudaErrors

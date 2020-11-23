@@ -16,8 +16,9 @@
 PASCALGeneric::PASCALGeneric(const std::string &root_dir, Split split)
     : image_dir_(root_dir + "/" + "JPEGImages"), annotation_dir_(root_dir + "/" + "Annotations"),
       split_(split) {
-    height_ = 200;
-    width_ = 200;
+    height_ = std::stoi(std::getenv("RESOLUTION"));
+    width_ = std::stoi(std::getenv("RESOLUTION"));
+    printf("resolution %d", height_);
 
     std::vector<std::string> all_file_names{};
     for (auto &p : std::filesystem::directory_iterator(image_dir_)) {

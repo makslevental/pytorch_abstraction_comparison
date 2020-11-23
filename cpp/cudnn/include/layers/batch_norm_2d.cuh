@@ -15,7 +15,7 @@ public:
         double momentum = 0.1,
         bool affine = true,
         bool track_running_stats = true,
-        cudnnBatchNormMode_t mode = CUDNN_BATCHNORM_SPATIAL_PERSISTENT);
+        cudnnBatchNormMode_t mode = CUDNN_BATCHNORM_SPATIAL);
 
     Tensor<dtype> *forward(Tensor<dtype> *input) override;
     Tensor<dtype> *backward(Tensor<dtype> *grad_output) override;

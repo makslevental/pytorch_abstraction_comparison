@@ -25,25 +25,25 @@ void train(
     int batch_size,
     int monitoring_step,
     double learning_rate,
-    std::ofstream &output_file) {
+    std::ostream &output_file) {
 
-    CrossEntropyLoss<dtype> criterion;
-    CrossEntropyLoss<dtype> criterion1;
+    CrossEntropyLoss<dtype> criterion(batch_size, train_data_loader->get_image_size());
+    CrossEntropyLoss<dtype> criterion1(batch_size, test_data_loader->get_image_size());
 
-    auto model = make_resnet50<dtype>(num_classes);
+//    auto model = make_resnet50<dtype>(num_classes);
+//    model->cuda();
+    auto model = new Network<dtype>();
+    model->add_layer(new Conv2d<dtype>("conv1", 20, 5));
+    model->add_layer(new Activation<dtype>("relu1", CUDNN_ACTIVATION_RELU));
+    model->add_layer(new Pooling<dtype>("pool1", 2, 2, 0, CUDNN_POOLING_MAX));
+    model->add_layer(new Conv2d<dtype>("conv2", 50, 5));
+    model->add_layer(new Activation<dtype>("relu2", CUDNN_ACTIVATION_RELU));
+    model->add_layer(new Pooling<dtype>("pool2", 2, 2, 0, CUDNN_POOLING_MAX));
+    model->add_layer(new Dense<dtype>("dense1", 500));
+    model->add_layer(new Activation<dtype>("relu3", CUDNN_ACTIVATION_RELU));
+    model->add_layer(new Dense<dtype>("dense2", num_classes));
+    model->add_layer(new Softmax<dtype>("softmax"));
     model->cuda();
-    //    auto model = new Network<dtype>();
-    //    model->add_layer(new Conv2d<dtype>("conv1", 20, 5));
-    //    model->add_layer(new Activation<dtype>("relu1", CUDNN_ACTIVATION_RELU));
-    //    model->add_layer(new Pooling<dtype>("pool1", 2, 2, 0, CUDNN_POOLING_MAX));
-    //    model->add_layer(new Conv2d<dtype>("conv2", 50, 5));
-    //    model->add_layer(new Activation<dtype>("relu2", CUDNN_ACTIVATION_RELU));
-    //    model->add_layer(new Pooling<dtype>("pool2", 2, 2, 0, CUDNN_POOLING_MAX));
-    //    model->add_layer(new Dense<dtype>("dense1", 500));
-    //    model->add_layer(new Activation<dtype>("relu3", CUDNN_ACTIVATION_RELU));
-    //    model->add_layer(new Dense<dtype>("dense2", 10));
-    //    model->add_layer(new Softmax<dtype>("softmax"));
-    //    model->cuda();
 
     std::string nvtx_message;
     auto gpu_timer = GPUTimer();
@@ -64,7 +64,6 @@ void train(
         total_time = loss = accuracy = running_loss = 0;
         running_used_mem = used_mem = elapsed_time = running_sample_count = tp_count =
             running_tp_count = sample_count = 0;
-        learning_rate = 0.1;
         train_data_loader->reset();
 
         for (int batch = 0; batch < train_data_loader->get_num_batches(); batch++) {
@@ -84,7 +83,10 @@ void train(
             output = model->forward(train_data);
             loss += criterion.loss(output, train_target);
             model->backward(train_target);
-            //            learning_rate *= 1.f / (1.f + lr_decay * batch);
+            if (DEBUG_BACKWARD > 1){
+                std::cout << std::endl;
+                std::cout << std::endl;
+            }
             model->update(learning_rate);
 
             gpu_timer.stop();
@@ -115,6 +117,7 @@ void train(
             }
         }
 
+//        printf("num params %d\n", model->get_num_params());
         output_file << "[TRAIN SUMMARY] avg loss: " << std::left << std::setw(8) << std::fixed
                     << std::setprecision(6) << running_loss / running_sample_count
                     << ", accuracy: " << 100.f * running_tp_count / running_sample_count << "%"
@@ -179,21 +182,20 @@ int main(int argc, char *argv[]) {
     //    CLI11_PARSE(app, argc, argv);
 
     /* configure the network */
-    int64_t batch_size = strcmp(argv[1], "pascal") == 0 ? 32 : 128;
+    int64_t batch_size = std::stoi(std::getenv("BATCH_SIZE"));
     int num_classes;
-    int epochs = 100;
+    int epochs = std::stoi(std::getenv("EPOCHS"));
     int monitoring_step = 20;
 
-    double learning_rate = 0.001;
+    double learning_rate = 1.0/std::stoi(std::getenv("INV_LEARNING_RATE"));
     double lr_decay = 0.0000005f;
 
     Dataset<float> *train_data_loader;
     Dataset<float> *test_data_loader;
 
     std::stringstream ss;
-    ss << "profiles/run_cudnn_" << argv[1] << "_" << argv[2] << ".csv";
+    ss << "profiles/resolution/run_cudnn_" << argv[1] << "_" << argv[2] << "_" << argv[3] << ".csv";
     std::ofstream output_file(ss.str());
-
     if (strcmp(argv[1], "mnist") == 0) {
         num_classes = NUMBER_MNIST_CLASSES;
         std::cout << "== MNIST training with CUDNN ==" << std::endl;
@@ -210,6 +212,7 @@ int main(int argc, char *argv[]) {
             batch_size,
             NUMBER_MNIST_CLASSES);
     } else if (strcmp(argv[1], "stl10") == 0) {
+        learning_rate = 1;
         num_classes = NUMBER_STL10_CLASSES;
         std::cout << "== STL10 training with CUDNN ==" << std::endl;
         train_data_loader = new STL10<float>(
@@ -241,6 +244,7 @@ int main(int argc, char *argv[]) {
             NUMBER_CIFAR10_CLASSES);
     } else if (strcmp(argv[1], "pascal") == 0) {
         num_classes = NUMBER_PASCAL_CLASSES;
+        batch_size = 32;
         std::cout << "== PASCAL training with CUDNN ==" << std::endl;
         train_data_loader = new PASCAL<float>(
             "../data/VOCdevkit/VOC2012", Mode::kTrain, true, batch_size, NUMBER_PASCAL_CLASSES);
@@ -257,7 +261,7 @@ int main(int argc, char *argv[]) {
         batch_size,
         monitoring_step,
         learning_rate,
-        output_file);
+        std::cout);
 
     return 0;
 }

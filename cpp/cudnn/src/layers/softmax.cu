@@ -112,8 +112,6 @@ template <typename dtype> Tensor<dtype> *Softmax<dtype>::backward(Tensor<dtype> 
         this->grad_of_input_->print(this->name_ + "::dx", true, target->get_batch_size());
     }
 
-    return this->grad_of_input_;
-
     //    checkCudnnErrors(cudnnSoftmaxBackward(
     //        cuda_->cudnn(),
     //        CUDNN_SOFTMAX_ACCURATE,
@@ -126,6 +124,9 @@ template <typename dtype> Tensor<dtype> *Softmax<dtype>::backward(Tensor<dtype> 
     //        &cuda_->zero,
     //        grad_of_input_->tensor_descriptor(),
     //        grad_of_input_->get_device_ptr()));
+
+    return this->grad_of_input_;
+
 }
 
 template class Softmax<float>;

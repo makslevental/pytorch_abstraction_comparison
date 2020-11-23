@@ -1,6 +1,20 @@
 #ifndef _LAYER_H_
 #define _LAYER_H_
 
+
+/* DEBUG FLAGS */
+#define DEBUG_FORWARD 0
+#define DEBUG_BACKWARD 2
+
+#define DEBUG_CONV 0
+#define DEBUG_DENSE 0
+#define DEBUG_SOFTMAX 0
+#define DEBUG_UPDATE 0
+
+#define DEBUG_ACCURACY 0
+
+#define DEBUG_FIND_ALGO 0
+
 #include <string>
 
 #include <cublas_v2.h>
@@ -32,6 +46,7 @@ public:
     void eval() { train_ = false; }
     void update_weights_biases(dtype learning_rate);
     void zero_grad();
+    virtual int get_num_params();
 
 protected:
     virtual void fwd_initialize(Tensor<dtype> *input);

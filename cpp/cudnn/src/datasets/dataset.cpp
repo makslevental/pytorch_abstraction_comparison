@@ -74,6 +74,9 @@ template <typename dtype> void Dataset<dtype>::test_dataset() {
     train_target->print("train_data", true);
     reset();
 }
+template <typename dtype> int Dataset<dtype>::get_image_size() {
+    return channels_ * width_ * height_;
+}
 
 template class Dataset<float>;
 template class Dataset<double>;

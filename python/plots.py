@@ -11,14 +11,14 @@ from collections import defaultdict
 import glob
 
 impls = [
-    # "cudnn",
+    "cudnn",
     "libtorch",
     "pytorch",
 ]
 datasets = [
     "mnist",
     "cifar10",
-    # "stl10",
+    "stl10",
     "pascal",
 ]
 
@@ -131,18 +131,20 @@ if __name__ == "__main__":
     dfs = make_dfs()
     key = "avg loss"
     fig = ax = None
-    train = True
+    train = False
     for dataset in datasets:
         fig = ax = None
         for impl in impls:
             min, mean, max = get_min_mean_max(dfs, impl, dataset, train=train)
             fig, ax = plot(
-                min[key].values,
-                mean[key].values,
-                max[key].values,
+                min[key].values[5:],
+                mean[key].values[5:],
+                max[key].values[5:],
                 (fig, ax),
                 label=impl,
                 title=f"{'train' if train else 'eval'} {key} per epoch {dataset}",
+                ylabel="ms",
+                shift=0
             )
         plt.show()
     # print(min)

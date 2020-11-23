@@ -14,6 +14,7 @@ public:
 
     Tensor<dtype> *forward(Tensor<dtype> *input) override;
     Tensor<dtype> *backward(Tensor<dtype> *grad_input) override;
+    int get_num_params() override { return 0; }
 
 private:
     cudnnActivationDescriptor_t act_desc_;

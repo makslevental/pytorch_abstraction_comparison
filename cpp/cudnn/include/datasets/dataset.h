@@ -19,6 +19,7 @@ public:
     virtual int len();
     virtual void reset();
     void test_dataset();
+    int get_image_size();
 
 protected:
     std::string dataset_fp_;

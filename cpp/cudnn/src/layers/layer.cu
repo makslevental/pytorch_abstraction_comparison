@@ -69,7 +69,7 @@ template <typename dtype> void Layer<dtype>::init_weight_bias(unsigned int seed)
     weights_->to(DeviceType::cuda);
     biases_->to(DeviceType::cuda);
 
-    std::cout << ".. initialized " << name_ << " layer .." << std::endl;
+//    std::cout << ".. initialized " << name_ << " layer .." << std::endl;
 }
 
 template <typename dtype> void Layer<dtype>::update_weights_biases(dtype learning_rate) {
@@ -224,6 +224,10 @@ template <typename dtype> void Layer<dtype>::zero_grad() {
     if (grad_weights_) {
         grad_weights_->zero_out();
     }
+}
+
+template <typename dtype> int Layer<dtype>::get_num_params() {
+    return weights_->len() + biases_->len();
 }
 
 template class Layer<float>;

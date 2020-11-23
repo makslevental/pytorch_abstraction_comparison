@@ -11,9 +11,9 @@
 #include <iostream>
 #include <string>
 
+#include <cuda_helper.h>
 #include <cuda_runtime.h>
 #include <cudnn.h>
-#include <cuda_helper.h>
 
 #include <prettyprint.h>
 
@@ -62,7 +62,7 @@ public:
         width_ = t.width_;
         reset(shape());
         checkCudaErrors(cudaMalloc((void **)&device_ptr_, sizeof(dtype) * len()));
-        download(t);
+        clone(t);
     }
 
     ~Tensor() {
@@ -80,7 +80,7 @@ public:
         }
     }
 
-    void download(const Tensor<dtype> &t) {
+    void clone(const Tensor<dtype> &t) {
         checkCudaErrors(cudaMemcpy(
             get_device_ptr(), t.get_device_ptr(), sizeof(dtype) * len(), cudaMemcpyDeviceToDevice));
         checkCudaErrors(
@@ -180,8 +180,19 @@ public:
         }
     }
 
+    dtype get_magnitude_squared() {
+        dtype mag = 0;
+        to(host);
+        for (int n = 0; n < len(); n++) {
+            mag += host_ptr_[n]*host_ptr_[n];
+        }
+        return mag;
+
+    }
+
     void print(const std::string &name, bool view_param = false, int num_batch = 1) {
         // TODO: copy to host without overwriting
+        to(host);
         std::cout << "**" << name << "\t: (" << size() << ")\t";
         std::cout << ".n: " << batch_size_ << ", .c: " << channels_ << ", .h: " << height_
                   << ", .w: " << width_;
@@ -245,7 +256,7 @@ public:
             std::cout << "fail to write " << filename << std::endl;
             return -1;
         }
-        file.write((char *)this->to(host), sizeof(double) * this->len());
+        file.write((char *)this->to(host), sizeof(dtype) * this->len());
         file.close();
 
         return 0;

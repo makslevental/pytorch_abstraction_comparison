@@ -25,11 +25,13 @@ public:
 
     int load_pretrain();
     int write_file();
+    int get_num_params();
 
     void cuda();
     void train();
     void eval();
     void zero_grad();
+    void print_layers();
 
     Tensor<dtype> *output_;
 

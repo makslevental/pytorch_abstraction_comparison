@@ -11,8 +11,8 @@
 template <typename dtype> void STL10<dtype>::load_data() {
     vector<unsigned long> shape;
     bool fortran_order;
-    vector<uint8_t> data;
-    npy::LoadArrayFromNumpy(this->dataset_fp_, shape, fortran_order, data);
+    vector<uint8_t> data_buffer;
+    npy::LoadArrayFromNumpy(this->dataset_fp_, shape, fortran_order, data_buffer);
     // n x c x h x w
     assert(shape.size() == 4);
     int n_samples = shape[0];
@@ -23,7 +23,11 @@ template <typename dtype> void STL10<dtype>::load_data() {
 
     auto num_pixels = this->channels_ * this->height_ * this->width_;
     for (int i = 0; i < n_samples; i++) {
-        std::vector<dtype> image(&data[i * num_pixels], &data[(i + 1) * num_pixels]);
+        uint32_t start_index = i * num_pixels;
+        uint32_t image_start = start_index + 1;
+        uint32_t image_end = image_start + num_pixels;
+        std::vector<dtype> image(
+            data_buffer.begin() + image_start, data_buffer.begin() + image_end);
         this->data_pool_.push_back(image);
     }
 
@@ -33,29 +37,27 @@ template <typename dtype> void STL10<dtype>::load_data() {
 }
 
 template <typename dtype> void STL10<dtype>::load_target() {
-    vector<unsigned long> shape;
+    vector<unsigned long> label_shape;
     bool fortran_order;
-    vector<uint8_t> data;
+    vector<uint8_t> label_buffer;
 
-    npy::LoadArrayFromNumpy(this->label_fp_, shape, fortran_order, data);
-    assert(shape.size() == 1);
-    int n_targets = shape[0];
+    npy::LoadArrayFromNumpy(this->label_fp_, label_shape, fortran_order, label_buffer);
+    assert(label_shape.size() == 1);
+    int n_targets = label_shape[0];
     assert(n_targets == this->data_pool_.size());
 
     // read all labels and converts to one-hot encoding
     for (int i = 0; i < n_targets; i++) {
-        std::vector<dtype> target_batch(this->num_classes_, 0.f);
-        target_batch[static_cast<int>(data[i])] = 1.f;
-        this->target_pool_.push_back(target_batch);
+        std::vector<dtype> target(this->num_classes_, 0.f);
+        target[static_cast<int>(label_buffer[i])] = 1.f;
+        this->target_pool_.push_back(target);
     }
 }
 
 template <typename dtype> void STL10<dtype>::normalize_data() {
     for (auto &sample : this->data_pool_) {
-        dtype *sample_data_ptr = sample.data();
-        for (int j = 0; j < this->channels_ * this->height_ * this->width_; j++) {
-            sample_data_ptr[j] /= 255.f;
-        }
+        std::transform(
+            sample.begin(), sample.end(), sample.begin(), [](float i) { return i / 255.f; });
     }
 }
 

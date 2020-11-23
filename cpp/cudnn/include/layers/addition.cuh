@@ -14,6 +14,7 @@ public:
     Tensor<dtype> *add(Tensor<dtype> *A, Tensor<dtype> *B);
     Tensor<dtype> *forward(Tensor<dtype> *input) override;
     Tensor<dtype> *backward(Tensor<dtype> *grad_input) override;
+    int get_num_params() override { return 0; }
 
 protected:
     void fwd_initialize(Tensor<dtype> *input) override;
