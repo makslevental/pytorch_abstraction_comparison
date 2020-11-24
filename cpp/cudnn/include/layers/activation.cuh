@@ -9,7 +9,7 @@
 
 template <typename dtype> class Activation : public Layer<dtype> {
 public:
-    Activation(std::string name, cudnnActivationMode_t mode, double coef = 1.f);
+    Activation(std::string name, cudnnActivationMode_t mode, double coef = 0.f);
     ~Activation() override;
 
     Tensor<dtype> *forward(Tensor<dtype> *input) override;

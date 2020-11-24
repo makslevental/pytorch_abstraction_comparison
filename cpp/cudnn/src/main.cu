@@ -29,25 +29,23 @@ void train(
     double learning_rate,
     std::ostream &output_file) {
 
-    double lr;
-    double lr_decay = 0.00005f;
     CrossEntropyLoss<dtype> criterion;
     CrossEntropyLoss<dtype> criterion1;
 
-    auto model = make_resnet50<dtype>(num_classes);
+//    auto model = make_resnet50<dtype>(num_classes);
+//    model->cuda();
+    auto model = new Network<dtype>();
+    model->add_layer(new Conv2d<dtype>("conv1", 20, 5));
+    model->add_layer(new Activation<dtype>("relu1", CUDNN_ACTIVATION_RELU));
+    model->add_layer(new Pooling<dtype>("pool1", 2, 2, 0, CUDNN_POOLING_MAX));
+    model->add_layer(new Conv2d<dtype>("conv2", 50, 5));
+    model->add_layer(new Activation<dtype>("relu2", CUDNN_ACTIVATION_RELU));
+    model->add_layer(new Pooling<dtype>("pool2", 2, 2, 0, CUDNN_POOLING_MAX));
+    model->add_layer(new Dense<dtype>("dense1", 500));
+    model->add_layer(new Activation<dtype>("relu3", CUDNN_ACTIVATION_RELU));
+    model->add_layer(new Dense<dtype>("dense2", num_classes));
+    model->add_layer(new Softmax<dtype>("softmax"));
     model->cuda();
-    //    auto model = new Network<dtype>();
-    //    model->add_layer(new Conv2d<dtype>("conv1", 20, 5));
-    //    model->add_layer(new Activation<dtype>("relu1", CUDNN_ACTIVATION_RELU));
-    //    model->add_layer(new Pooling<dtype>("pool1", 2, 2, 0, CUDNN_POOLING_MAX));
-    //    model->add_layer(new Conv2d<dtype>("conv2", 50, 5));
-    //    model->add_layer(new Activation<dtype>("relu2", CUDNN_ACTIVATION_RELU));
-    //    model->add_layer(new Pooling<dtype>("pool2", 2, 2, 0, CUDNN_POOLING_MAX));
-    //    model->add_layer(new Dense<dtype>("dense1", 500));
-    //    model->add_layer(new Activation<dtype>("relu3", CUDNN_ACTIVATION_RELU));
-    //    model->add_layer(new Dense<dtype>("dense2", num_classes));
-    //    model->add_layer(new Softmax<dtype>("softmax"));
-    //    model->cuda();
 
     std::string nvtx_message;
     auto gpu_timer = GPUTimer();
@@ -68,8 +66,9 @@ void train(
         total_time = loss = accuracy = running_loss = 0;
         running_used_mem = used_mem = elapsed_time = running_sample_count = tp_count =
             running_tp_count = sample_count = 0;
+        learning_rate = 0.1;
         train_data_loader->reset();
-        lr = learning_rate;
+
         for (int batch = 0; batch < train_data_loader->get_num_batches(); batch++) {
             //            nvtx_message = std::string(
             //                "train epoch " + std::to_string(epoch) + " batch " +
@@ -87,13 +86,8 @@ void train(
             output = model->forward(train_data);
             loss += criterion.loss(output, train_target);
             model->backward(train_target);
-            if (DEBUG_BACKWARD) {
-                std::cout << std::endl;
-                std::cout << std::endl;
-            }
-
-            lr *= 1.f / (1.f + lr_decay * batch_size);
-            model->update(lr);
+            //            learning_rate *= 1.f / (1.f + lr_decay * batch);
+            model->update(learning_rate);
 
             gpu_timer.stop();
 

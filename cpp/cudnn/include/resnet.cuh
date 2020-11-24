@@ -7,7 +7,7 @@
 
 template <typename dtype> class ResNet50 : public Network<dtype> {
 public:
-    ResNet50(int num_classes) {
+    explicit ResNet50(int num_classes) {
         this->conv1 = new Conv2d<dtype>(
             "conv1", /*out_channels*/ 64, /*kernel*/ 7, /*stride*/ 2, /*padding*/ 3);
         this->conv1->set_gradient_stop();

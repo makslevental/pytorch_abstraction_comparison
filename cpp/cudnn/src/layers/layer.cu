@@ -57,8 +57,8 @@ template <typename dtype> void Layer<dtype>::init_weight_bias(unsigned int seed)
 
     // He uniform distribution
     // TODO: initialization Xi
-    double range = sqrt(2.f / input_size_); // He's initialization
-    std::normal_distribution<> dis(-range, range);
+    double range = sqrt(6.f / input_size_); // He's initialization
+    std::uniform_real_distribution<> dis(-range, range);
 
     for (int i = 0; i < weights_->len(); i++)
         weights_->get_host_ptr()[i] = static_cast<double>(dis(gen));
