@@ -38,7 +38,7 @@ void train(
     double learning_rate,
     size_t num_epochs,
     torch::Device device,
-    std::ofstream &output_file) {
+    std::ostream &output_file) {
 
     auto num_train_samples = train_dataset.size().value();
     auto num_test_samples = test_dataset.size().value();
@@ -174,10 +174,12 @@ int main(int argc, char *argv[]) {
     torch::Device device(cuda_available ? torch::kCUDA : torch::kCPU);
     std::cout << (cuda_available ? "CUDA available. Training on GPU." : "Training on CPU.") << '\n';
 
-    int64_t batch_size = strcmp(argv[1], "pascal") == 0 ? 32 : 128;
-    const size_t num_epochs = 100;
+    int64_t batch_size = std::stoi(std::getenv("BATCH_SIZE"));
+    int num_classes;
+    int num_epochs = std::stoi(std::getenv("EPOCHS"));
     int monitoring_step = 20;
-    const double learning_rate = 0.001;
+
+    double learning_rate = 1.0 / std::stoi(std::getenv("INV_LEARNING_RATE"));
 
     //    torch::jit::script::Module torch_script_model;
     //    try {
@@ -190,7 +192,7 @@ int main(int argc, char *argv[]) {
     //    }
 
     std::stringstream ss;
-    ss << "profiles/run_libtorch_" << argv[1] << "_" << argv[2] << ".csv";
+    ss << "profiles/resolution/run_libtorch_" << argv[1] << "_" << argv[2] << "_" << argv[3] << ".csv";
     std::ofstream output_file(ss.str());
 
     if (strcmp(argv[1], "mnist") == 0) {

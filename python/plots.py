@@ -11,14 +11,14 @@ from collections import defaultdict
 import glob
 
 impls = [
-    # "cudnn",
+    "cudnn",
     "libtorch",
     "pytorch",
 ]
 datasets = [
     "mnist",
     "cifar10",
-    # "stl10",
+    "stl10",
     "pascal",
 ]
 
@@ -129,9 +129,9 @@ def get_min_mean_max(dfs, impl, dataset, train=True):
 if __name__ == "__main__":
     # cleanup_profiles()
     dfs = make_dfs()
-    key = "avg loss"
+    key = "accuracy"
     fig = ax = None
-    train = True
+    train = False
     for dataset in datasets:
         fig = ax = None
         for impl in impls:

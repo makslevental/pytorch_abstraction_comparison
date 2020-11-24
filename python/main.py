@@ -164,12 +164,16 @@ def transform_pascal(x):
 
 
 def main():
-    dataset_name, n = sys.argv[1], sys.argv[2]
-    print(f"running {dataset_name} {n}")
-
-    epochs = 100
+    dataset_name, run_n, epochs, resolution = (
+        sys.argv[1],
+        sys.argv[2],
+        int(sys.argv[3]),
+        int(sys.argv[4]),
+    )
+    print(f"running {dataset_name} {run_n}")
+    print(epochs, resolution)
     # lost .5 ms with smaller batch size for mnist
-    batch_size = 16 if dataset_name == "pascal" else 128
+    batch_size = 1
     monitoring_step = 20
 
     transform = [
@@ -223,7 +227,8 @@ def main():
         in_channels = 1
         model = ResNet50(in_channels=in_channels, num_classes=10)
     elif dataset_name == "pascal":
-        transform.insert(0, transforms.Resize((200, 200)))
+        batch_size = 32
+        transform.insert(0, transforms.Resize((resolution, resolution)))
         trainset = VOCDetection(
             root="../data/",
             year="2012",
@@ -266,7 +271,7 @@ def main():
         epochs,
         batch_size,
         monitoring_step,
-        open(f"profiles/run_pytorch_{dataset_name}_{n}.csv", "w"),
+        open(f"profiles/resolution/run_pytorch_{dataset_name}_{run_n}_{resolution}.csv", "w"),
     )
 
 

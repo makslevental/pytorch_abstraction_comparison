@@ -55,6 +55,8 @@ template <typename dtype> void STL10<dtype>::normalize_data() {
         dtype *sample_data_ptr = sample.data();
         for (int j = 0; j < this->channels_ * this->height_ * this->width_; j++) {
             sample_data_ptr[j] /= 255.f;
+//            sample_data_ptr[j] -= 0.5;
+//            sample_data_ptr[j] /= 0.5;
         }
     }
 }

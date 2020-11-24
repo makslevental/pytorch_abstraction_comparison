@@ -10,6 +10,7 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <cmath>
 
 #include <cuda_runtime.h>
 #include <cudnn.h>
@@ -119,8 +120,13 @@ public:
     }
 
     void zero_out() {
-        std::memset(host_ptr_, 0, sizeof(dtype) * len());
-        checkCudaErrors(cudaMemset(device_ptr_, 0, sizeof(dtype) * len()));
+        std::memset(host_ptr_, 0.0, sizeof(dtype) * len());
+        checkCudaErrors(cudaMemset(device_ptr_, 0.0, sizeof(dtype) * len()));
+    }
+
+    void one_out() {
+        std::memset(host_ptr_, 1.0, sizeof(dtype) * len());
+        checkCudaErrors(cudaMemset(device_ptr_, 1.0, sizeof(dtype) * len()));
     }
 
     void reset(std::array<int, 4> size) { reset(size[0], size[1], size[2], size[3]); }
@@ -180,8 +186,27 @@ public:
         }
     }
 
+    dtype get_magnitude_squared() {
+        dtype mag = 0;
+        to(host);
+        for (int n = 0; n < len(); n++) {
+            mag += host_ptr_[n]*host_ptr_[n];
+        }
+        return mag;
+
+    }
+
+    void normalize() {
+        auto norm = get_magnitude_squared();
+        for (int n = 0; n < len(); n++) {
+            host_ptr_[n] /= norm;
+        }
+        to(cuda);
+    }
+
     void print(const std::string &name, bool view_param = false, int num_batch = 1) {
         // TODO: copy to host without overwriting
+        to(host);
         std::cout << "**" << name << "\t: (" << size() << ")\t";
         std::cout << ".n: " << batch_size_ << ", .c: " << channels_ << ", .h: " << height_
                   << ", .w: " << width_;

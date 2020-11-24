@@ -27,22 +27,19 @@ template <typename dtype> Tensor<dtype> *Network<dtype>::forward(Tensor<dtype> *
     nvtxRangePushA("Forward");
     for (auto layer : layers_) {
         if (DEBUG_FORWARD) {
-            std::cout << "[[Forward ]][[ ";
-            std::cout << std::setw(7) << layer->get_name() << " ]]\t(";
-            std::cout << output_->shape() << std::endl;
-            output_->print("input", true, output_->get_batch_size());
+            printf(
+                "%s input squared before: %.20f\n",
+                layer->get_name().c_str(),
+                output_->get_magnitude_squared());
         }
 
         output_ = layer->forward(output_);
 
         if (DEBUG_FORWARD) {
-            std::cout << "--> " << output_->shape() << std::endl;
-            checkCudaErrors(cudaDeviceSynchronize());
-        }
-        if (DEBUG_FORWARD > 1) {
-            output_->print("output", true, output_->get_batch_size());
-            if (phase_ == inference)
-                getchar();
+            printf(
+                "%s input squared before: %.20f\n",
+                layer->get_name().c_str(),
+                output_->get_magnitude_squared());
         }
     }
     nvtxRangePop();
@@ -59,26 +56,19 @@ template <typename dtype> void Network<dtype>::backward(Tensor<dtype> *target) {
     nvtxRangePushA("Backward");
     for (auto layer = layers_.rbegin(); layer != layers_.rend(); layer++) {
         if (DEBUG_BACKWARD) {
-            std::cout << "[[Backward]][[ " << std::setw(7) << (*layer)->get_name() << " ]]\t("
-                      << gradient->get_batch_size() << ", " << gradient->get_channels() << ", "
-                      << gradient->get_height() << ", " << gradient->get_width() << ")\t";
+            printf(
+                "%s grad squared before: %.20f\n",
+                (*layer)->get_name().c_str(),
+                gradient->get_magnitude_squared());
         }
 
-        // TODO: stop_ storing things and pass them instead
-        // TODO: figure out why the beginning of the epoch accuracy is low
         gradient = (*layer)->backward(gradient);
 
-        // TODO change debugging to flags
         if (DEBUG_BACKWARD) {
-            // and the gradient result
-            std::cout << "--> (" << gradient->get_batch_size() << ", " << gradient->get_channels()
-                      << ", " << gradient->get_height() << ", " << gradient->get_width() << ")"
-                      << std::endl;
-            checkCudaErrors(cudaDeviceSynchronize());
-        }
-
-        if (DEBUG_BACKWARD > 1) {
-            gradient->print((*layer)->get_name() + "::dx", true);
+            printf(
+                "%s grad squared after: %.20f\n",
+                (*layer)->get_name().c_str(),
+                gradient->get_magnitude_squared());
         }
     }
     nvtxRangePop();
@@ -130,7 +120,6 @@ template <typename dtype> void Network<dtype>::cuda() {
 
     std::cout << ".. model Configuration .." << std::endl;
     for (auto layer : layers_) {
-        std::cout << "CUDA: " << layer->get_name() << std::endl;
         layer->set_cuda_context(cuda_);
     }
 }

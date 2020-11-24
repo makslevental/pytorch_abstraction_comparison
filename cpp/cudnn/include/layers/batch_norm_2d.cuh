@@ -12,7 +12,7 @@ public:
     explicit BatchNorm2d(
         std::string name,
         double epsilon = 1e-5,
-        double momentum = 0.1,
+        double momentum = 1.0,
         bool affine = true,
         bool track_running_stats = true,
         cudnnBatchNormMode_t mode = CUDNN_BATCHNORM_SPATIAL_PERSISTENT);

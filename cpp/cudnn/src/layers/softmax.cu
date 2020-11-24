@@ -104,28 +104,29 @@ template <typename dtype> Tensor<dtype> *Softmax<dtype>::backward(Tensor<dtype> 
             this->grad_of_input_->get_device_ptr(),
             1));
     }
+//
+//    if (DEBUG_SOFTMAX > 1) {
+//        std::cout << this->name_ << "[BACKWARD]" << std::endl;
+//        this->output_->print(this->name_ + "::predict", true);
+//        target->print(this->name_ + "::y", true, target->get_batch_size());
+//        this->grad_of_input_->print(this->name_ + "::dx", true, target->get_batch_size());
+//    }
 
-    if (DEBUG_SOFTMAX > 1) {
-        std::cout << this->name_ << "[BACKWARD]" << std::endl;
-        this->output_->print(this->name_ + "::predict", true);
-        target->print(this->name_ + "::y", true, target->get_batch_size());
-        this->grad_of_input_->print(this->name_ + "::dx", true, target->get_batch_size());
-    }
+//    checkCudnnErrors(cudnnSoftmaxBackward(
+//        this->cuda_->cudnn(),
+//        CUDNN_SOFTMAX_ACCURATE,
+//        CUDNN_SOFTMAX_MODE_INSTANCE,
+//        &this->cuda_->one,
+//        this->output_desc_,
+//        this->output_->get_device_ptr(),
+//        target->tensor_descriptor(),
+//        target->get_device_ptr(),
+//        &this->cuda_->zero,
+//        this->grad_of_input_->tensor_descriptor(),
+//        this->grad_of_input_->get_device_ptr()));
 
     return this->grad_of_input_;
 
-    //    checkCudnnErrors(cudnnSoftmaxBackward(
-    //        cuda_->cudnn(),
-    //        CUDNN_SOFTMAX_ACCURATE,
-    //        CUDNN_SOFTMAX_MODE_CHANNEL,
-    //        &cuda_->one,
-    //        output_desc_,
-    //        output_->get_device_ptr(),
-    //        grad_of_output->tensor_descriptor(),
-    //        grad_of_output->get_device_ptr(),
-    //        &cuda_->zero,
-    //        grad_of_input_->tensor_descriptor(),
-    //        grad_of_input_->get_device_ptr()));
 }
 
 template class Softmax<float>;

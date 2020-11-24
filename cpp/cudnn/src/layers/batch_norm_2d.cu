@@ -103,6 +103,7 @@ template <typename dtype> Tensor<dtype> *BatchNorm2d<dtype>::backward(Tensor<dty
         /*workSpaceSizeInBytes*/ workspace_size_,
         /**reserveSpace*/ device_reserve_space_,
         /*reserveSpaceSizeInBytes*/ reserve_size_));
+
     return this->grad_of_input_;
 }
 
@@ -152,7 +153,7 @@ template <typename dtype> void BatchNorm2d<dtype>::fwd_initialize(Tensor<dtype> 
         // initialize weights
         if (this->load_pretrain_ && !this->freeze_) {
             if (this->load_parameter()) {
-                std::cout << "error occurred.." << std::endl;
+                std::cout << "error occurred loading params batch norm" << std::endl;
                 exit(-1);
             }
         } else if (!this->freeze_) {

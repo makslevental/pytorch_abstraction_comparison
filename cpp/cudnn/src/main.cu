@@ -11,10 +11,12 @@
 #include <iomanip>
 #include <nvtx3/nvToolsExt.h>
 
-template <typename dtype> int get_tp_count(Tensor<dtype> *output, Tensor<dtype> *target, int num_classes);
+template <typename dtype>
+int get_tp_count(Tensor<dtype> *output, Tensor<dtype> *target, int num_classes);
 template <typename dtype>
 int arg_max(int batch, int output_size, int num_classes, const dtype *arr);
-template <typename dtype> int find_one(int batch, int output_size, int num_classes, const dtype *arr);
+template <typename dtype>
+int find_one(int batch, int output_size, int num_classes, const dtype *arr);
 
 template <typename dtype>
 void train(
@@ -27,23 +29,25 @@ void train(
     double learning_rate,
     std::ostream &output_file) {
 
+    double lr;
+    double lr_decay = 0.00005f;
     CrossEntropyLoss<dtype> criterion;
     CrossEntropyLoss<dtype> criterion1;
 
-//    auto model = make_resnet50<dtype>(num_classes);
-//    model->cuda();
-    auto model = new Network<dtype>();
-    model->add_layer(new Conv2d<dtype>("conv1", 20, 5));
-    model->add_layer(new Activation<dtype>("relu1", CUDNN_ACTIVATION_RELU));
-    model->add_layer(new Pooling<dtype>("pool1", 2, 2, 0, CUDNN_POOLING_MAX));
-    model->add_layer(new Conv2d<dtype>("conv2", 50, 5));
-    model->add_layer(new Activation<dtype>("relu2", CUDNN_ACTIVATION_RELU));
-    model->add_layer(new Pooling<dtype>("pool2", 2, 2, 0, CUDNN_POOLING_MAX));
-    model->add_layer(new Dense<dtype>("dense1", 500));
-    model->add_layer(new Activation<dtype>("relu3", CUDNN_ACTIVATION_RELU));
-    model->add_layer(new Dense<dtype>("dense2", num_classes));
-    model->add_layer(new Softmax<dtype>("softmax"));
+    auto model = make_resnet50<dtype>(num_classes);
     model->cuda();
+    //    auto model = new Network<dtype>();
+    //    model->add_layer(new Conv2d<dtype>("conv1", 20, 5));
+    //    model->add_layer(new Activation<dtype>("relu1", CUDNN_ACTIVATION_RELU));
+    //    model->add_layer(new Pooling<dtype>("pool1", 2, 2, 0, CUDNN_POOLING_MAX));
+    //    model->add_layer(new Conv2d<dtype>("conv2", 50, 5));
+    //    model->add_layer(new Activation<dtype>("relu2", CUDNN_ACTIVATION_RELU));
+    //    model->add_layer(new Pooling<dtype>("pool2", 2, 2, 0, CUDNN_POOLING_MAX));
+    //    model->add_layer(new Dense<dtype>("dense1", 500));
+    //    model->add_layer(new Activation<dtype>("relu3", CUDNN_ACTIVATION_RELU));
+    //    model->add_layer(new Dense<dtype>("dense2", num_classes));
+    //    model->add_layer(new Softmax<dtype>("softmax"));
+    //    model->cuda();
 
     std::string nvtx_message;
     auto gpu_timer = GPUTimer();
@@ -65,7 +69,7 @@ void train(
         running_used_mem = used_mem = elapsed_time = running_sample_count = tp_count =
             running_tp_count = sample_count = 0;
         train_data_loader->reset();
-
+        lr = learning_rate;
         for (int batch = 0; batch < train_data_loader->get_num_batches(); batch++) {
             //            nvtx_message = std::string(
             //                "train epoch " + std::to_string(epoch) + " batch " +
@@ -83,8 +87,13 @@ void train(
             output = model->forward(train_data);
             loss += criterion.loss(output, train_target);
             model->backward(train_target);
-            //            learning_rate *= 1.f / (1.f + lr_decay * batch);
-            model->update(learning_rate);
+            if (DEBUG_BACKWARD) {
+                std::cout << std::endl;
+                std::cout << std::endl;
+            }
+
+            lr *= 1.f / (1.f + lr_decay * batch_size);
+            model->update(lr);
 
             gpu_timer.stop();
 
@@ -163,34 +172,19 @@ void train(
 }
 
 int main(int argc, char *argv[]) {
-    //    CLI::App app{"CUDNN Harness"};
-    //
-    //    std::string train_dataset_fp = "default";
-    //    std::string train_label_fp = "default";
-    //    app.add_option("--train_dataset_fp", train_dataset_fp, "dataset file path");
-    //    app.add_option("--train_label_fp", train_label_fp, "label file path");
-    //
-    //    std::string test_dataset_fp = "default";
-    //    std::string test_label_fp = "default";
-    //    app.add_option("--test_dataset_fp", test_dataset_fp, "dataset file path");
-    //    app.add_option("--test_label_fp", test_label_fp, "label file path");
-    //
-    //    CLI11_PARSE(app, argc, argv);
-
-    /* configure the network */
-    int64_t batch_size = strcmp(argv[1], "pascal") == 0 ? 32 : 128;
+    int64_t batch_size = std::stoi(std::getenv("BATCH_SIZE"));
     int num_classes;
-    int epochs = 100;
+    int epochs = std::stoi(std::getenv("EPOCHS"));
     int monitoring_step = 20;
 
-    double learning_rate = 0.1;
+    double learning_rate = 1.0 / std::stoi(std::getenv("INV_LEARNING_RATE"));
     double lr_decay = 0.0000005f;
 
     Dataset<float> *train_data_loader;
     Dataset<float> *test_data_loader;
 
     std::stringstream ss;
-    ss << "profiles/run_cudnn_" << argv[1] << "_" << argv[2] << ".csv";
+    ss << "profiles/resolution/run_cudnn_" << argv[1] << "_" << argv[2] << "_" << argv[3] << ".csv";
     std::ofstream output_file(ss.str());
 
     if (strcmp(argv[1], "mnist") == 0) {
@@ -212,14 +206,14 @@ int main(int argc, char *argv[]) {
         num_classes = NUMBER_STL10_CLASSES;
         std::cout << "== STL10 training with CUDNN ==" << std::endl;
         train_data_loader = new STL10<float>(
-            "../data/stl_10_train_data.npy",
-            "../data/stl_10_train_labels.npy",
+            "../data/stl_10_test_data.npy",
+            "../data/stl_10_test_labels.npy",
             true,
             batch_size,
             NUMBER_STL10_CLASSES);
         test_data_loader = new STL10<float>(
-            "../data/stl_10_test_data.npy",
-            "../data/stl_10_test_labels.npy",
+            "../data/stl_10_train_data.npy",
+            "../data/stl_10_train_labels.npy",
             false,
             batch_size,
             NUMBER_STL10_CLASSES);
@@ -298,13 +292,13 @@ int arg_max(int batch, int output_size, int num_classes, const dtype *arr) {
     return idx_output;
 }
 
-template <typename dtype> int find_one(int batch, int output_size, int num_classes, const dtype *arr) {
+template <typename dtype>
+int find_one(int batch, int output_size, int num_classes, const dtype *arr) {
     for (int i = 0; i < num_classes; i++) {
         if (abs(arr[batch * output_size + i] - 1) < 1e-10) {
             return i;
         }
     }
-    std::cout << "no one found";
-
+    std::cout << "no one found\n";
     exit(EXIT_FAILURE);
 }

@@ -14,12 +14,13 @@ Activation<dtype>::Activation(std::string name, cudnnActivationMode_t mode, doub
     act_mode_ = mode;
     act_coef_ = coef;
 
-    cudnnCreateActivationDescriptor(&act_desc_);
-    cudnnSetActivationDescriptor(act_desc_, act_mode_, CUDNN_PROPAGATE_NAN, act_coef_);
+    checkCudnnErrors(cudnnCreateActivationDescriptor(&act_desc_));
+    checkCudnnErrors(
+        cudnnSetActivationDescriptor(act_desc_, act_mode_, CUDNN_PROPAGATE_NAN, act_coef_));
 }
 
 template <typename dtype> Activation<dtype>::~Activation() {
-    cudnnDestroyActivationDescriptor(act_desc_);
+    checkCudnnErrors(cudnnDestroyActivationDescriptor(act_desc_));
 }
 template <typename dtype> Tensor<dtype> *Activation<dtype>::forward(Tensor<dtype> *input) {
     this->fwd_initialize(input);
