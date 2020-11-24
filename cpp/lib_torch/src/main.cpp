@@ -116,6 +116,7 @@ void train(
                 running_sample_count += sample_count;
                 running_used_mem += used_mem;
                 used_mem = elapsed_time = tp_count = sample_count = loss_val = 0;
+                output_file.flush();
             }
             batch_n++;
         }
@@ -127,6 +128,7 @@ void train(
                     << ", avg used mem: " << running_used_mem / (running_sample_count / batch_size)
                     << "mb"
                     << ", avg gpu util: " << get_gpu_utilization() << "%" << std::endl;
+        output_file.flush();
 
         {
             model->eval();
@@ -165,6 +167,7 @@ void train(
                         << std::defaultfloat
                         << ", avg used mem: " << used_mem / (sample_count / batch_size) << "mb"
                         << ", avg gpu util: " << get_gpu_utilization() << "%" << std::endl;
+            output_file.flush();
         }
     }
 }
@@ -191,8 +194,10 @@ int main(int argc, char *argv[]) {
     //        exit(EXIT_FAILURE);
     //    }
 
+    auto run = argv[1];
     std::stringstream ss;
-    ss << "profiles/resolution/run_libtorch_" << argv[1] << "_" << argv[2] << "_" << argv[3] << ".csv";
+    ss << "profiles/run_libtorch_" << run << "_" << batch_size << "_"
+       << std::getenv("RESOLUTION") << ".csv";
     std::ofstream output_file(ss.str());
 
     if (strcmp(argv[1], "mnist") == 0) {
@@ -272,16 +277,10 @@ int main(int argc, char *argv[]) {
         model->to(device);
 
         std::cout << "== PASCAL training with LibTorch ==" << std::endl;
-        TestDataset<PASCAL> train_dataset =
-            PASCAL(
-                "/home/maksim/dev_projects/pytorch_abstraction_comparison/data/VOCdevkit/VOC2012",
-                PASCAL::kTrain)
-                .map(torch::data::transforms::Stack<>());
-        TestDataset<PASCAL> test_dataset =
-            PASCAL(
-                "/home/maksim/dev_projects/pytorch_abstraction_comparison/data/VOCdevkit/VOC2012",
-                PASCAL::kVal)
-                .map(torch::data::transforms::Stack<>());
+        TestDataset<PASCAL> train_dataset = PASCAL("../data/VOCdevkit/VOC2012", PASCAL::kTrain)
+                                                .map(torch::data::transforms::Stack<>());
+        TestDataset<PASCAL> test_dataset = PASCAL("../data/VOCdevkit/VOC2012", PASCAL::kVal)
+                                               .map(torch::data::transforms::Stack<>());
 
         train<PASCAL>(
             model,

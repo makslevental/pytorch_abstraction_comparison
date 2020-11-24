@@ -32,20 +32,27 @@ void train(
     CrossEntropyLoss<dtype> criterion;
     CrossEntropyLoss<dtype> criterion1;
 
-//    auto model = make_resnet50<dtype>(num_classes);
-//    model->cuda();
-    auto model = new Network<dtype>();
-    model->add_layer(new Conv2d<dtype>("conv1", 20, 5));
-    model->add_layer(new Activation<dtype>("relu1", CUDNN_ACTIVATION_RELU));
-    model->add_layer(new Pooling<dtype>("pool1", 2, 2, 0, CUDNN_POOLING_MAX));
-    model->add_layer(new Conv2d<dtype>("conv2", 50, 5));
-    model->add_layer(new Activation<dtype>("relu2", CUDNN_ACTIVATION_RELU));
-    model->add_layer(new Pooling<dtype>("pool2", 2, 2, 0, CUDNN_POOLING_MAX));
-    model->add_layer(new Dense<dtype>("dense1", 500));
-    model->add_layer(new Activation<dtype>("relu3", CUDNN_ACTIVATION_RELU));
-    model->add_layer(new Dense<dtype>("dense2", num_classes));
-    model->add_layer(new Softmax<dtype>("softmax"));
-    model->cuda();
+    Network<dtype> *model;
+    if (strcmp(std::getenv("MODEL"), "small") == 0) {
+        model = new Network<dtype>();
+        model->add_layer(new Conv2d<dtype>("conv1", 20, 5));
+        model->add_layer(new Activation<dtype>("relu1", CUDNN_ACTIVATION_RELU));
+        model->add_layer(new Pooling<dtype>("pool1", 2, 2, 0, CUDNN_POOLING_MAX));
+        model->add_layer(new Conv2d<dtype>("conv2", 50, 5));
+        model->add_layer(new Activation<dtype>("relu2", CUDNN_ACTIVATION_RELU));
+        model->add_layer(new Pooling<dtype>("pool2", 2, 2, 0, CUDNN_POOLING_MAX));
+        model->add_layer(new Dense<dtype>("dense1", 500));
+        model->add_layer(new Activation<dtype>("relu3", CUDNN_ACTIVATION_RELU));
+        model->add_layer(new Dense<dtype>("dense2", num_classes));
+        model->add_layer(new Softmax<dtype>("softmax"));
+        model->cuda();
+    } else if (strcmp(std::getenv("MODEL"), "resnet") == 0) {
+        model = make_resnet50<dtype>(num_classes);
+        model->cuda();
+    } else {
+        std::cout << "no model";
+        exit(EXIT_FAILURE);
+    }
 
     std::string nvtx_message;
     auto gpu_timer = GPUTimer();
@@ -60,13 +67,15 @@ void train(
     double total_time;
     double elapsed_time;
     double used_mem = 0, running_used_mem = 0;
+    double lr;
+    double lr_decay = 0.0000005f;
 
     for (int epoch = 0; epoch < epochs; epoch++) {
         model->train();
         total_time = loss = accuracy = running_loss = 0;
         running_used_mem = used_mem = elapsed_time = running_sample_count = tp_count =
             running_tp_count = sample_count = 0;
-        learning_rate = 0.1;
+        lr = learning_rate;
         train_data_loader->reset();
 
         for (int batch = 0; batch < train_data_loader->get_num_batches(); batch++) {
@@ -86,8 +95,8 @@ void train(
             output = model->forward(train_data);
             loss += criterion.loss(output, train_target);
             model->backward(train_target);
-            //            learning_rate *= 1.f / (1.f + lr_decay * batch);
-            model->update(learning_rate);
+            //            lr *= 1.f / (1.f + lr_decay * batch);
+            model->update(lr);
 
             gpu_timer.stop();
 
@@ -114,6 +123,7 @@ void train(
                 running_sample_count += sample_count;
                 running_used_mem += used_mem;
                 used_mem = elapsed_time = tp_count = sample_count = loss = 0;
+                output_file.flush();
             }
         }
 
@@ -126,6 +136,7 @@ void train(
                     << "mb"
                     << ", avg gpu util: " << get_gpu_utilization() << "%" << std::endl;
 
+        output_file.flush();
         model->eval();
         test_data_loader->reset();
         total_time = sample_count = tp_count = loss = 0;
@@ -159,6 +170,7 @@ void train(
                     << std::defaultfloat
                     << ", avg used mem: " << used_mem / (sample_count / batch_size) << "mb"
                     << ", avg gpu util: " << get_gpu_utilization() << "%" << std::endl;
+        output_file.flush();
     }
 
     //    cudaProfilerStop();
@@ -178,7 +190,8 @@ int main(int argc, char *argv[]) {
     Dataset<float> *test_data_loader;
 
     std::stringstream ss;
-    ss << "profiles/resolution/run_cudnn_" << argv[1] << "_" << argv[2] << "_" << argv[3] << ".csv";
+    ss << "profiles/run_cudnn_" << argv[1] << "_" << batch_size << "_"
+       << std::getenv("RESOLUTION") << ".csv";
     std::ofstream output_file(ss.str());
 
     if (strcmp(argv[1], "mnist") == 0) {
@@ -244,7 +257,7 @@ int main(int argc, char *argv[]) {
         batch_size,
         monitoring_step,
         learning_rate,
-        std::cout);
+        output_file);
 
     return 0;
 }

@@ -57,11 +57,20 @@ template <typename dtype> void Layer<dtype>::init_weight_bias(unsigned int seed)
 
     // He uniform distribution
     // TODO: initialization Xi
-    double range = sqrt(6.f / input_size_); // He's initialization
-    std::uniform_real_distribution<> dis(-range, range);
-
-    for (int i = 0; i < weights_->len(); i++)
-        weights_->get_host_ptr()[i] = static_cast<double>(dis(gen));
+    if (strcmp(std::getenv("INITIAL"), "normal") == 0) {
+        double range = sqrt(2.f / input_size_); // He's initialization
+        std::normal_distribution<> dis(-range, range);
+        for (int i = 0; i < weights_->len(); i++)
+            weights_->get_host_ptr()[i] = static_cast<double>(dis(gen));
+    } else if (strcmp(std::getenv("INITIAL"), "uniform") == 0) {
+        double range = sqrt(6.f / input_size_); // He's initialization
+        std::uniform_real_distribution<> dis(-range, range);
+        for (int i = 0; i < weights_->len(); i++)
+            weights_->get_host_ptr()[i] = static_cast<double>(dis(gen));
+    } else {
+        std::cout << "no initialization";
+        exit(EXIT_FAILURE);
+    }
     for (int i = 0; i < biases_->len(); i++)
         biases_->get_host_ptr()[i] = 0.f;
 
