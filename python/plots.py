@@ -1,26 +1,59 @@
-from functools import reduce
-from pprint import pprint
-import seaborn.timeseries
-import re
-import numpy as np
-
-import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
-from collections import defaultdict
 import glob
+import re
+from collections import defaultdict
+from functools import reduce
 
-impls = [
-    "cudnn",
-    "libtorch",
-    "pytorch",
-]
-datasets = [
-    "mnist",
-    "cifar10",
-    "stl10",
-    "pascal",
-]
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+
+plt.style.use("ggplot")
+
+impls = ["cudnn", "libtorch", "pytorch"]
+datasets = ["mnist", "cifar10", "stl10", "pascal"]
+
+
+def cleanup_profiles_cudnn():
+    for impl in ["cudnn"]:
+        for dataset in datasets:
+            train_summaries = list(
+                reduce(
+                    lambda accum, fp: accum
+                                      + [
+                                          f"{fp[0]}," + f"{epoch}," + re.sub(r"[a-zA-Z%\[\]:\s]", "", l)
+                                          for (epoch, l) in enumerate(open(fp[1]).readlines())
+                                          if "SUMMARY" in l
+                                      ],
+                    enumerate(
+                        sorted(glob.glob(f"profiles/cudnn/run*{impl}_{dataset}_*.csv"))
+                    ),
+                    [],
+                )
+            )
+            eval_summaries = list(
+                reduce(
+                    lambda accum, fp: accum
+                                      + [
+                                          f"{fp[0]}," + f"{epoch}," + re.sub(r"[a-zA-Z%\[\]:\s]", "", l)
+                                          for (epoch, l) in enumerate(open(fp[1]).readlines())
+                                          if "EVAL" in l
+                                      ],
+                    enumerate(
+                        sorted(glob.glob(f"profiles/cudnn/run*{impl}_{dataset}_*.csv"))
+                    ),
+                    [],
+                )
+            )
+            with open(f"profiles/summaries/train_{impl}_{dataset}.csv", "w") as csv:
+                csv.write(
+                    "run, epoch, avg loss, accuracy, avg sample time, avg used mem, avg gpu util\n"
+                )
+                csv.write("\n".join(train_summaries))
+            with open(f"profiles/summaries/eval_{impl}_{dataset}.csv", "w") as csv:
+                csv.write(
+                    "run, epoch, avg loss, accuracy, avg sample time, avg used mem, avg gpu util\n"
+                )
+                csv.write("\n".join(eval_summaries))
 
 
 def cleanup_profiles():
@@ -29,11 +62,11 @@ def cleanup_profiles():
             train_summaries = list(
                 reduce(
                     lambda accum, fp: accum
-                    + [
-                        f"{fp[0]}," + f"{epoch}," + re.sub(r"[a-zA-Z%\[\]:\s]", "", l)
-                        for (epoch, l) in enumerate(open(fp[1]).readlines())
-                        if "SUMMARY" in l
-                    ],
+                                      + [
+                                          f"{fp[0]}," + f"{epoch}," + re.sub(r"[a-zA-Z%\[\]:\s]", "", l)
+                                          for (epoch, l) in enumerate(open(fp[1]).readlines())
+                                          if "SUMMARY" in l
+                                      ],
                     enumerate(
                         sorted(glob.glob(f"profiles/run*{impl}_{dataset}_*.csv"))
                     ),
@@ -43,11 +76,11 @@ def cleanup_profiles():
             eval_summaries = list(
                 reduce(
                     lambda accum, fp: accum
-                    + [
-                        f"{fp[0]}," + f"{epoch}," + re.sub(r"[a-zA-Z%\[\]:\s]", "", l)
-                        for (epoch, l) in enumerate(open(fp[1]).readlines())
-                        if "EVAL" in l
-                    ],
+                                      + [
+                                          f"{fp[0]}," + f"{epoch}," + re.sub(r"[a-zA-Z%\[\]:\s]", "", l)
+                                          for (epoch, l) in enumerate(open(fp[1]).readlines())
+                                          if "EVAL" in l
+                                      ],
                     enumerate(
                         sorted(glob.glob(f"profiles/run*{impl}_{dataset}_*.csv"))
                     ),
@@ -97,14 +130,14 @@ def make_dfs():
 
 
 def plot(
-    min,
-    mean,
-    max,
-    fig_ax=None,
-    label="cudnn",
-    title="Average train loss per epoch",
-    ylabel="loss",
-    shift=np.abs(np.random.normal(0, 1e-7, 100)),
+        min,
+        mean,
+        max,
+        fig_ax=None,
+        label="cudnn",
+        title="Average train loss per epoch",
+        ylabel="loss",
+        shift=np.abs(np.random.normal(0, 1e-7, 100)),
 ):
     fig, ax = fig_ax
     if fig is None or ax is None:
@@ -126,25 +159,36 @@ def get_min_mean_max(dfs, impl, dataset, train=True):
     return (grouped.min(), grouped.mean(), grouped.max())
 
 
-if __name__ == "__main__":
-    # cleanup_profiles()
+def plot_all():
     dfs = make_dfs()
-    key = "accuracy"
-    fig = ax = None
-    train = False
-    for dataset in datasets:
-        fig = ax = None
-        for impl in impls:
-            min, mean, max = get_min_mean_max(dfs, impl, dataset, train=train)
-            fig, ax = plot(
-                min[key].values,
-                mean[key].values,
-                max[key].values,
-                (fig, ax),
-                label=impl,
-                title=f"{'train' if train else 'eval'} {key} per epoch {dataset}",
-            )
-        plt.show()
-    # print(min)
-    # y = dfs["cudnn"]["cifar10"]["train"].loc[0]["avg loss"]
-    # plot()
+    for key in [
+        "accuracy",
+        "avg loss",
+        "avg sample time",
+        "avg used mem",
+        "avg gpu util",
+    ]:
+        for train in [True, False]:
+            fig = ax = None
+            for dataset in datasets:
+                fig = ax = None
+                for impl in impls:
+                    min, mean, max = get_min_mean_max(dfs, impl, dataset, train=train)
+                    fig, ax = plot(
+                        min[key].values,
+                        mean[key].values,
+                        max[key].values,
+                        (fig, ax),
+                        label=impl,
+                        title=f"{'train' if train else 'eval'} {key} per epoch {dataset}",
+                        ylabel=key,
+                    )
+                plt.show()
+                # tikzplotlib.clean_figure()
+                # tikzplotlib.save(f"tex/{'train' if train else 'eval'} {key} per epoch {dataset}.tex".replace(" ", "_"), standalone=True)
+
+
+if __name__ == "__main__":
+    pass
+    # cleanup_profiles()
+    # cleanup_profiles_cudnn()

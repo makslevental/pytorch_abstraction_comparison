@@ -4,3 +4,4 @@ torchvision
 numpy
 #cupy-cuda111
 py3nvml
+tikzplotlib
