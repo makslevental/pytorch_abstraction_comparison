@@ -8,11 +8,12 @@ from functools import reduce
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import tikzplotlib
 from mpl_toolkits.mplot3d import Axes3D, proj3d  # noqa: F401 unused import
 
 plt.style.use("ggplot")
 
-impls = ["cudnn", "libtorch", "pytorch", "torchscript"]
+impls = ["cudnn", "libtorch", "pytorch"]
 datasets = ["mnist", "cifar10", "stl10", "pascal"]
 
 
@@ -109,7 +110,7 @@ def cleanup_profiles():
 
 
 def cleanup_resolutions():
-    for impl in impls:
+    for impl in ["cudnn", "libtorch", "pytorch", "torchscript"]:
         for dataset in ["pascal"]:
             for batch_size in range(3, 9 + 1):
                 for resolution in range(3, 12 + 1):
@@ -208,26 +209,31 @@ def get_min_mean_max(dfs, impl, dataset, train=True):
 
 
 def plot_all(profile_dfs, resolution_dfs: dict):
-    # for key in ["accuracy", "avg loss"]:
-    #     for train in [True, False]:
-    #         for dataset in datasets:
-    #             fig = ax = None
-    #             for impl in impls:
-    #                 min, mean, max = get_min_mean_max(
-    #                     profile_dfs, impl, dataset, train=train
-    #                 )
-    #                 fig, ax = plot(
-    #                     min[key].values,
-    #                     mean[key].values,
-    #                     max[key].values,
-    #                     (fig, ax),
-    #                     label=impl,
-    #                     title=f"{'train' if train else 'eval'} {key} per epoch {dataset}",
-    #                     ylabel=key,
-    #                 )
-    #             plt.show()
-    #             # tstatsikzplotlib.clean_figure()
-    #             # tikzplotlib.save(f"tex/{'train' if train else 'eval'} {key} per epoch {dataset}.tex".replace(" ", "_"), standalone=True)
+    input_list = []
+    for key in ["accuracy", "avg loss"]:
+        for train in [True, False]:
+            for dataset in datasets:
+                fig = ax = None
+                for impl in impls:
+                    min, mean, max = get_min_mean_max(
+                        profile_dfs, impl, dataset, train=train
+                    )
+                    fig, ax = plot(
+                        min[key].values,
+                        mean[key].values,
+                        max[key].values,
+                        (fig, ax),
+                        label=impl,
+                        title=f"{'train' if train else 'eval'} {key} per epoch {dataset}",
+                        ylabel=key,
+                    )
+                # plt.show()
+                tikzplotlib.clean_figure()
+                tfp = f"tex/{'train' if train else 'eval'} {key} per epoch {dataset}.tex".replace(
+                    " ", "_"
+                )
+                input_list.append(tfp)
+                tikzplotlib.save(tfp, standalone=False)
 
     units = {
         "avg sample time": "time (ms)",
@@ -261,29 +267,43 @@ def plot_all(profile_dfs, resolution_dfs: dict):
                         open(f"tex/{impl}_{train}_{key}.csv".replace(" ", "_"), "w"),
                         delimiter=" ",
                     ).writerows(points)
-            with open("tex/scatter.tex") as f, open(
-                f"tex/{train}_{key}.tex".replace(" ", "_"), "w"
-            ) as g:
+            gfp = f"tex/{train}_{key}.tex".replace(" ", "_")
+            input_list.append(gfp)
+            with open("tex/scatter_tex") as f, open(gfp, "w") as g:
                 text = replace_all(
                     f.read(),
                     {
                         "{z_label}": units[key],
                         "{title}": f"{key} on {train}",
                         "{cudnn_csv}": f"./cudnn_{train}_{key}.csv".replace(" ", "_"),
-                        "{libtorch_csv}": f"./libtorch_{train}_{key}.csv".replace(" ", "_"),
-                        "{pytorch_csv}": f"./pytorch_{train}_{key}.csv".replace(" ", "_"),
+                        "{libtorch_csv}": f"./libtorch_{train}_{key}.csv".replace(
+                            " ", "_"
+                        ),
+                        "{pytorch_csv}": f"./pytorch_{train}_{key}.csv".replace(
+                            " ", "_"
+                        ),
                         "{torchscript_csv}": f"./torchscript_{train}_{key}.csv".replace(
                             " ", "_"
                         ),
                     },
                 )
                 g.write(text)
-
+    u = """
+    \\begin{{figure}}
+        {tikz}
+    \end{{figure}}
+    """
+    with open("tex/main_tex") as tf, open("tex/main.tex", "w") as uf:
+        text = tf.read()
+        uf.write(text.replace(
+            "{input_list}",
+            "\n".join([u.format(tikz=f"\input{{{i}}}".replace("tex/", "")) for i in input_list])
+        ))
 
 if __name__ == "__main__":
     # cleanup_profiles()
     # cleanup_profiles_cudnn()
-    # cleanup_resolutions()
-    # profile_dfs = make_dfs()
+    cleanup_resolutions()
+    profile_dfs = make_dfs()
     resolution_dfs = make_resolution_dfs()
-    plot_all(None, resolution_dfs)
+    plot_all(profile_dfs, resolution_dfs)
