@@ -56,8 +56,7 @@ void train(
 
     std::string nvtx_message;
     auto gpu_timer = GPUTimer();
-
-    //    cudaProfilerStart();
+    cudaProfilerStart();
 
     Tensor<dtype> *train_data, *train_target;
     Tensor<dtype> *test_data, *test_target;
@@ -79,19 +78,17 @@ void train(
         train_data_loader->reset();
 
         for (int batch = 0; batch < train_data_loader->get_num_batches(); batch++) {
-            //            nvtx_message = std::string(
-            //                "train epoch " + std::to_string(epoch) + " batch " +
-            //                std::to_string(batch));
-            //            nvtxRangePushA(nvtx_message.c_str());
-            //            nvtxRangePushA("batch load");
+            nvtx_message = std::string(
+                "train epoch " + std::to_string(epoch) + " batch " + std::to_string(batch));
+            nvtxRangePushA(nvtx_message.c_str());
+            nvtxRangePushA("batch load");
             std::tie(train_data, train_target) = train_data_loader->get_next_batch();
             gpu_timer.start();
-            //            model->zero_grad();
-
-            //            nvtxRangePop();
-
             train_data->to(cuda);
             train_target->to(cuda);
+
+            nvtxRangePop();
+
             output = model->forward(train_data);
             loss += criterion.loss(output, train_target);
             model->backward(train_target);
@@ -100,7 +97,7 @@ void train(
 
             gpu_timer.stop();
 
-            //            nvtxRangePop();
+            nvtxRangePop();
 
             sample_count += batch_size;
             tp_count += get_tp_count<dtype>(output, train_target, num_classes);
@@ -143,18 +140,21 @@ void train(
         used_mem = 0;
 
         for (int batch = 0; batch < test_data_loader->get_num_batches(); batch++) {
-            //            nvtx_message = std::string(
-            //                "eval epoch " + std::to_string(epoch) + " batch " +
-            //                std::to_string(batch));
-            //            nvtxRangePushA(nvtx_message.c_str());
-            //            nvtxRangePushA("batch load");
+            nvtx_message = std::string(
+                "eval epoch " + std::to_string(epoch) + " batch " + std::to_string(batch));
+            nvtxRangePushA(nvtx_message.c_str());
+            nvtxRangePushA("batch load");
             std::tie(test_data, test_target) = test_data_loader->get_next_batch();
 
             gpu_timer.start();
             test_data->to(cuda);
             test_target->to(cuda);
+
+            nvtxRangePop();
             output = model->forward(test_data);
             loss += criterion1.loss(output, test_target);
+
+            nvtxRangePop();
             tp_count += get_tp_count<dtype>(output, test_target, num_classes);
             used_mem += get_used_cuda_mem();
 
@@ -173,7 +173,7 @@ void train(
         output_file.flush();
     }
 
-    //    cudaProfilerStop();
+    cudaProfilerStop();
     std::cout << "Done." << std::endl;
 }
 
@@ -190,8 +190,8 @@ int main(int argc, char *argv[]) {
     Dataset<float> *test_data_loader;
 
     std::stringstream ss;
-    ss << "profiles/run_cudnn_" << argv[1] << "_" << batch_size << "_"
-       << std::getenv("RESOLUTION") << ".csv";
+    ss << "profiles/run_cudnn_" << argv[1] << "_" << batch_size << "_" << std::getenv("RESOLUTION")
+       << ".csv";
     std::ofstream output_file(ss.str());
 
     if (strcmp(argv[1], "mnist") == 0) {

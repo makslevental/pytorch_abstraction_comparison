@@ -13,8 +13,18 @@ set(TORCH_CXX_FLAGS "-D_GLIBCXX_USE_CXX11_ABI=0")
 
 include_directories("include")
 file(GLOB_RECURSE libtorch_SRC CONFIGURE_DEPENDS "src/*.cpp")
+file(GLOB_RECURSE torchscript_SRC CONFIGURE_DEPENDS "src/*.cpp")
+
+list(FILTER libtorch_SRC EXCLUDE REGEX ".*main_torchscript.cpp")
+list(FILTER torchscript_SRC EXCLUDE REGEX ".*main.cpp")
 
 set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS})
+
 add_executable(main_libtorch ${libtorch_SRC} ${generic_utils_SRC})
 target_link_libraries(main_libtorch ${TORCH_LIBRARIES} ${OpenCV_LIBS} ${CMAKE_DL_LIBS} ${NVML_LIB})
 set_property(TARGET main_libtorch PROPERTY CXX_STANDARD 17)
+
+add_executable(main_torchscript ${torchscript_SRC} ${generic_utils_SRC})
+target_link_libraries(main_torchscript ${TORCH_LIBRARIES} ${OpenCV_LIBS} ${CMAKE_DL_LIBS} ${NVML_LIB})
+set_property(TARGET main_torchscript PROPERTY CXX_STANDARD 17)
+

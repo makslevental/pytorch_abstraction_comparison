@@ -1,0 +1,115 @@
+\documentclass[border= 5mm]{standalone}
+\usepackage[utf8]{inputenc}
+\usepackage{pgfplots}
+\usepgfplotslibrary{patchplots,colormaps}
+\DeclareUnicodeCharacter{2212}{−}
+\usepgfplotslibrary{groupplots,dateplot}
+\usetikzlibrary{patterns,shapes.arrows}
+\pgfplotsset{compat=newest}
+
+\begin{document}
+    \begin{tikzpicture}[
+        axisbg/.style={
+            fill=#1!50,
+            nearly transparent
+        },
+        declare function={
+          ticklen=0.15;
+          xmax=5;
+          ymax=5;
+          zmax=5;
+        },
+    ]
+
+        \definecolor{cudnn}{rgb}{0.886274509803922,0.290196078431373,0.2}
+        \definecolor{libtorch}{rgb}{0.203921568627451,0.541176470588235,0.741176470588235}
+        \definecolor{pytorch}{rgb}{0.596078431372549,0.556862745098039,0.835294117647059}
+        \definecolor{torchscript}{rgb}{0.996078431372549,0.556862745098039,0.835294117647059}
+
+        \begin{axis}[%
+            axis background/.style={fill=white!89.8039215686275!black},
+            title={Average sample time on train},
+            grid=major,
+            width=12cm,height=12cm,
+            xlabel={$batch\ size$},
+            ylabel={$resolution$},
+            zlabel={$time$},
+            legend style={
+              at={(-0.2,0.14)},
+              anchor=north west,
+              draw=black,
+              fill=white,
+              legend cell align=left
+            },
+            label style={font=\scriptsize},
+            ticklabel style={font=\scriptsize},
+            view={80}{10},
+            xmode=log,
+            ymode=log,
+            log basis x={2},
+            log basis y={2},
+            zmode=log
+        ]
+            \addplot3 [
+                opacity=0.5,
+                patch,
+                patch table={cudnn_avg_sample_time_triangles.csv},
+                cudnn,
+                faceted color=black!50,
+                area legend,fill=cudnn
+            ]
+            shell {
+                echo "data=dlmread('cudnn_avg_sample_time.csv');
+                tri=delaunay(data(:,1), data(:,2));
+                dlmwrite('cudnn_avg_sample_time_triangles.csv',tri-1,' ');
+                disp(data)" | octave --silent
+            };\addlegendentry{cuDNN};
+
+            \addplot3 [
+                opacity=0.5,
+                patch,
+                patch table={libtorch_avg_sample_time_triangles.csv},
+                libtorch,
+                faceted color=black!50,
+                area legend,fill=libtorch
+            ]
+            shell {
+                echo "data=dlmread('libtorch_avg_sample_time.csv');
+                tri=delaunay(data(:,1), data(:,2));
+                dlmwrite('libtorch_avg_sample_time_triangles.csv',tri-1,' ');
+                disp(data)" | octave --silent
+            };\addlegendentry{LibTorch};
+
+            \addplot3 [
+                opacity=0.5,
+                patch,
+                patch table={pytorch_avg_sample_time_triangles.csv},
+                pytorch,
+                faceted color=black!50,
+                area legend,fill=pytorch
+            ]
+            shell {
+                echo "data=dlmread('pytorch_avg_sample_time.csv');
+                tri=delaunay(data(:,1), data(:,2));
+                dlmwrite('pytorch_avg_sample_time_triangles.csv',tri-1,' ');
+                disp(data)" | octave --silent
+            };\addlegendentry{PyTorch};
+
+            \addplot3 [
+                opacity=0.5,
+                patch,
+                patch table={torchscript_avg_sample_time_triangles.csv},
+                torchscript,
+                faceted color=black!50,
+                area legend,fill=torchscript
+            ]
+            shell {
+                echo "data=dlmread('torchscript_avg_sample_time.csv');
+                tri=delaunay(data(:,1), data(:,2));
+                dlmwrite('torchscript_avg_sample_time_triangles.csv',tri-1,' ');
+                disp(data)" | octave --silent
+            };\addlegendentry{TorchScript};
+
+        \end{axis}
+    \end{tikzpicture}
+\end{document}

@@ -1,4 +1,4 @@
-import time
+import ctypes
 
 import py3nvml.py3nvml as nvml
 from cupy.cuda.device import Device
@@ -8,7 +8,25 @@ from cupy.cuda.runtime import (
     eventSynchronize,
     eventElapsedTime,
     memGetInfo,
+
 )
+
+_cudart = ctypes.CDLL('libcudart.so')
+
+
+def cuda_profiler_start():
+    # As shown at http://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__PROFILER.html,
+    # the return value will unconditionally be 0. This check is just in case it changes in
+    # the future.
+    ret = _cudart.cudaProfilerStart()
+    if ret != 0:
+        raise Exception("cudaProfilerStart() returned %d" % ret)
+
+
+def cuda_profiler_stop():
+    ret = _cudart.cudaProfilerStop()
+    if ret != 0:
+        raise Exception("cudaProfilerStop() returned %d" % ret)
 
 
 class GPUTimer:

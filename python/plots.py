@@ -1,4 +1,6 @@
+import csv
 import glob
+import os
 import re
 from collections import defaultdict
 from functools import reduce
@@ -6,11 +8,18 @@ from functools import reduce
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from mpl_toolkits.mplot3d import Axes3D, proj3d  # noqa: F401 unused import
 
 plt.style.use("ggplot")
 
-impls = ["cudnn", "libtorch", "pytorch"]
+impls = ["cudnn", "libtorch", "pytorch", "torchscript"]
 datasets = ["mnist", "cifar10", "stl10", "pascal"]
+
+
+def replace_all(text, dic):
+    for i, j in dic.items():
+        text = text.replace(i, j)
+    return text
 
 
 def cleanup_profiles_cudnn():
@@ -19,11 +28,11 @@ def cleanup_profiles_cudnn():
             train_summaries = list(
                 reduce(
                     lambda accum, fp: accum
-                                      + [
-                                          f"{fp[0]}," + f"{epoch}," + re.sub(r"[a-zA-Z%\[\]:\s]", "", l)
-                                          for (epoch, l) in enumerate(open(fp[1]).readlines())
-                                          if "SUMMARY" in l
-                                      ],
+                    + [
+                        f"{fp[0]}," + f"{epoch}," + re.sub(r"[a-zA-Z%\[\]:\s]", "", l)
+                        for (epoch, l) in enumerate(open(fp[1]).readlines())
+                        if "SUMMARY" in l
+                    ],
                     enumerate(
                         sorted(glob.glob(f"profiles/cudnn/run*{impl}_{dataset}_*.csv"))
                     ),
@@ -33,11 +42,11 @@ def cleanup_profiles_cudnn():
             eval_summaries = list(
                 reduce(
                     lambda accum, fp: accum
-                                      + [
-                                          f"{fp[0]}," + f"{epoch}," + re.sub(r"[a-zA-Z%\[\]:\s]", "", l)
-                                          for (epoch, l) in enumerate(open(fp[1]).readlines())
-                                          if "EVAL" in l
-                                      ],
+                    + [
+                        f"{fp[0]}," + f"{epoch}," + re.sub(r"[a-zA-Z%\[\]:\s]", "", l)
+                        for (epoch, l) in enumerate(open(fp[1]).readlines())
+                        if "EVAL" in l
+                    ],
                     enumerate(
                         sorted(glob.glob(f"profiles/cudnn/run*{impl}_{dataset}_*.csv"))
                     ),
@@ -62,11 +71,11 @@ def cleanup_profiles():
             train_summaries = list(
                 reduce(
                     lambda accum, fp: accum
-                                      + [
-                                          f"{fp[0]}," + f"{epoch}," + re.sub(r"[a-zA-Z%\[\]:\s]", "", l)
-                                          for (epoch, l) in enumerate(open(fp[1]).readlines())
-                                          if "SUMMARY" in l
-                                      ],
+                    + [
+                        f"{fp[0]}," + f"{epoch}," + re.sub(r"[a-zA-Z%\[\]:\s]", "", l)
+                        for (epoch, l) in enumerate(open(fp[1]).readlines())
+                        if "SUMMARY" in l
+                    ],
                     enumerate(
                         sorted(glob.glob(f"profiles/run*{impl}_{dataset}_*.csv"))
                     ),
@@ -76,11 +85,11 @@ def cleanup_profiles():
             eval_summaries = list(
                 reduce(
                     lambda accum, fp: accum
-                                      + [
-                                          f"{fp[0]}," + f"{epoch}," + re.sub(r"[a-zA-Z%\[\]:\s]", "", l)
-                                          for (epoch, l) in enumerate(open(fp[1]).readlines())
-                                          if "EVAL" in l
-                                      ],
+                    + [
+                        f"{fp[0]}," + f"{epoch}," + re.sub(r"[a-zA-Z%\[\]:\s]", "", l)
+                        for (epoch, l) in enumerate(open(fp[1]).readlines())
+                        if "EVAL" in l
+                    ],
                     enumerate(
                         sorted(glob.glob(f"profiles/run*{impl}_{dataset}_*.csv"))
                     ),
@@ -97,6 +106,56 @@ def cleanup_profiles():
                     "run, epoch, avg loss, accuracy, avg sample time, avg used mem, avg gpu util\n"
                 )
                 csv.write("\n".join(eval_summaries))
+
+
+def cleanup_resolutions():
+    for impl in impls:
+        for dataset in ["pascal"]:
+            for batch_size in range(3, 9 + 1):
+                for resolution in range(3, 12 + 1):
+                    fp = f"profiles/resolution/run_{impl}_{dataset}_{2 ** batch_size}_{2 ** resolution}.csv"
+                    fp_clean_train = f"profiles/resolution/clean_train_run_{impl}_{dataset}_{2 ** batch_size}_{2 ** resolution}.csv"
+                    fp_clean_eval = f"profiles/resolution/clean_eval_run_{impl}_{dataset}_{2 ** batch_size}_{2 ** resolution}.csv"
+                    if os.path.exists(fp):
+                        with open(fp, "r") as src:
+                            lines = src.readlines()
+                            if len(lines) > 1:
+                                with open(fp_clean_train, "w") as dst1, open(
+                                    fp_clean_eval, "w"
+                                ) as dst2:
+                                    dst1.write(
+                                        "avg loss, accuracy, avg sample time, avg used mem, avg gpu util\n"
+                                    )
+                                    dst2.write(
+                                        "avg loss, accuracy, avg sample time, avg used mem, avg gpu util\n"
+                                    )
+                                    for l in lines:
+                                        ll = re.sub(r"[a-zA-Z%\[\]:\s]", "", l)
+                                        if "[TRAIN SUMMARY]" in l:
+                                            dst1.write(f"{ll}\n")
+                                        elif "[EVAL]" in l:
+                                            dst2.write(f"{ll}\n")
+
+
+def make_resolution_dfs():
+    runs = defaultdict(
+        lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: dict)))
+    )
+
+    for fp in sorted(glob.glob(f"profiles/resolution/*.csv")):
+        if len(open(fp).readlines()) > 1:
+            df = pd.read_csv(fp, " *, *", engine="python")
+            match = re.match(
+                r".*/clean_(?P<train>\w+)_run_(?P<impl>\w+)_pascal_(?P<batch_size>\w+)_(?P<resolution>\w+).csv",
+                fp,
+            )
+            if match:
+                m = match.groupdict()
+                runs[m["impl"]][m["train"]][int(m["batch_size"])][
+                    int(m["resolution"])
+                ] = df[["avg sample time", "avg used mem", "avg gpu util"]]
+
+    return runs
 
 
 def make_dfs():
@@ -118,26 +177,15 @@ def make_dfs():
     return runs
 
 
-# def _plot_range_band(*args, central_data=None, ci=None, data=None, **kwargs):
-#     upper = data.max(axis=0)
-#     lower = data.min(axis=0)
-#     #import pdb; pdb.set_trace()
-#     ci = np.asarray((lower, upper))
-#     kwargs.update({"central_data": central_data, "ci": ci, "data": data})
-#     seaborn.timeseries._plot_ci_band(*args, **kwargs)
-#
-# seaborn.timeseries._plot_range_band = _plot_range_band
-
-
 def plot(
-        min,
-        mean,
-        max,
-        fig_ax=None,
-        label="cudnn",
-        title="Average train loss per epoch",
-        ylabel="loss",
-        shift=np.abs(np.random.normal(0, 1e-7, 100)),
+    min,
+    mean,
+    max,
+    fig_ax=None,
+    label="cudnn",
+    title="Average train loss per epoch",
+    ylabel="loss",
+    shift=np.abs(np.random.normal(0, 1e-7, 100)),
 ):
     fig, ax = fig_ax
     if fig is None or ax is None:
@@ -159,36 +207,83 @@ def get_min_mean_max(dfs, impl, dataset, train=True):
     return (grouped.min(), grouped.mean(), grouped.max())
 
 
-def plot_all():
-    dfs = make_dfs()
-    for key in [
-        "accuracy",
-        "avg loss",
-        "avg sample time",
-        "avg used mem",
-        "avg gpu util",
-    ]:
-        for train in [True, False]:
-            fig = ax = None
-            for dataset in datasets:
-                fig = ax = None
-                for impl in impls:
-                    min, mean, max = get_min_mean_max(dfs, impl, dataset, train=train)
-                    fig, ax = plot(
-                        min[key].values,
-                        mean[key].values,
-                        max[key].values,
-                        (fig, ax),
-                        label=impl,
-                        title=f"{'train' if train else 'eval'} {key} per epoch {dataset}",
-                        ylabel=key,
-                    )
-                plt.show()
-                # tikzplotlib.clean_figure()
-                # tikzplotlib.save(f"tex/{'train' if train else 'eval'} {key} per epoch {dataset}.tex".replace(" ", "_"), standalone=True)
+def plot_all(profile_dfs, resolution_dfs: dict):
+    # for key in ["accuracy", "avg loss"]:
+    #     for train in [True, False]:
+    #         for dataset in datasets:
+    #             fig = ax = None
+    #             for impl in impls:
+    #                 min, mean, max = get_min_mean_max(
+    #                     profile_dfs, impl, dataset, train=train
+    #                 )
+    #                 fig, ax = plot(
+    #                     min[key].values,
+    #                     mean[key].values,
+    #                     max[key].values,
+    #                     (fig, ax),
+    #                     label=impl,
+    #                     title=f"{'train' if train else 'eval'} {key} per epoch {dataset}",
+    #                     ylabel=key,
+    #                 )
+    #             plt.show()
+    #             # tstatsikzplotlib.clean_figure()
+    #             # tikzplotlib.save(f"tex/{'train' if train else 'eval'} {key} per epoch {dataset}.tex".replace(" ", "_"), standalone=True)
+
+    units = {
+        "avg sample time": "time (ms)",
+        "avg used mem": "memory (mb)",
+        "avg gpu util": "util (\%)",
+    }
+    log = {"zmode=log, log origin=infty"}
+    batch_sizes = np.power(2, list(range(3, 9 + 1)))
+    resolutions = np.power(2, list(range(3, 12 + 1)))
+    for train in ["train", "eval"]:
+        for key in ["avg sample time", "avg used mem", "avg gpu util"]:
+            for impl in impls:
+                points = []
+                for i, batch_size in enumerate(batch_sizes):
+                    for j, resolution in enumerate(resolutions):
+                        if (
+                            batch_size in resolution_dfs[impl][train]
+                            and resolution in resolution_dfs[impl][train][batch_size]
+                        ):
+                            points.append(
+                                (
+                                    batch_size,
+                                    resolution,
+                                    resolution_dfs[impl][train][batch_size][resolution][
+                                        key
+                                    ].mean(),
+                                )
+                            )
+                if points:
+                    csv.writer(
+                        open(f"tex/{impl}_{train}_{key}.csv".replace(" ", "_"), "w"),
+                        delimiter=" ",
+                    ).writerows(points)
+            with open("tex/scatter.tex") as f, open(
+                f"tex/{train}_{key}.tex".replace(" ", "_"), "w"
+            ) as g:
+                text = replace_all(
+                    f.read(),
+                    {
+                        "{z_label}": units[key],
+                        "{title}": f"{key} on {train}",
+                        "{cudnn_csv}": f"./cudnn_{train}_{key}.csv".replace(" ", "_"),
+                        "{libtorch_csv}": f"./libtorch_{train}_{key}.csv".replace(" ", "_"),
+                        "{pytorch_csv}": f"./pytorch_{train}_{key}.csv".replace(" ", "_"),
+                        "{torchscript_csv}": f"./torchscript_{train}_{key}.csv".replace(
+                            " ", "_"
+                        ),
+                    },
+                )
+                g.write(text)
 
 
 if __name__ == "__main__":
-    pass
     # cleanup_profiles()
     # cleanup_profiles_cudnn()
+    # cleanup_resolutions()
+    # profile_dfs = make_dfs()
+    resolution_dfs = make_resolution_dfs()
+    plot_all(None, resolution_dfs)

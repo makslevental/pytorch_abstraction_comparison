@@ -70,24 +70,25 @@ void train(
         running_used_mem = used_mem = batch_n = 0;
 
         for (auto &batch : *train_loader) {
-            //            nvtx_message = std::string(
-            //                "train epoch " + std::to_string(epoch) + " batch " +
-            //                std::to_string(batch_n));
-            //            nvtxRangePushA(nvtx_message.c_str());
-            //            nvtxRangePushA("batch load");
+            nvtx_message = std::string(
+                "train epoch " + std::to_string(epoch) + " batch " + std::to_string(batch_n));
+            nvtxRangePushA(nvtx_message.c_str());
+            nvtxRangePushA("batch load");
             gpu_timer.start();
 
-            optimizer.zero_grad();
 
             auto data = batch.data.to(device);
             auto target = batch.target.to(device);
+            nvtxRangePop();
+
+            optimizer.zero_grad();
 
             auto output = model->forward(data);
             auto loss = torch::nn::functional::cross_entropy(output, target);
             loss.backward();
             optimizer.step();
 
-            //            nvtxRangePop();
+            nvtxRangePop();
 
             gpu_timer.stop();
 
@@ -138,20 +139,24 @@ void train(
             used_mem = 0;
 
             for (const auto &batch : *test_loader) {
-                //                nvtx_message = std::string(
-                //                    "eval epoch " + std::to_string(epoch) + " batch " +
-                //                    std::to_string(batch_n));
-                //                nvtxRangePushA(nvtx_message.c_str());
-                //                nvtxRangePushA("batch load");
+                nvtx_message = std::string(
+                    "eval epoch " + std::to_string(epoch) + " batch " +
+                    std::to_string(batch_n));
+                nvtxRangePushA(nvtx_message.c_str());
+                nvtxRangePushA("batch load");
 
                 gpu_timer.start();
 
                 auto data = batch.data.to(device);
                 auto target = batch.target.to(device);
+                nvtxRangePop();
+
                 auto output = model->forward(data);
                 auto loss = torch::nn::functional::cross_entropy(output, target);
                 auto prediction = output.argmax(1);
                 tp_count += prediction.eq(target).sum().template item<int64_t>();
+
+                nvtxRangePop();
 
                 gpu_timer.stop();
 
@@ -170,6 +175,8 @@ void train(
             output_file.flush();
         }
     }
+
+    cudaProfilerStop();
 }
 
 int main(int argc, char *argv[]) {
@@ -202,7 +209,7 @@ int main(int argc, char *argv[]) {
 
     if (strcmp(argv[1], "mnist") == 0) {
         auto model = resnet50(10, 1);
-        //        model->initialize_weights();
+//                model->initialize_weights();
         model->to(device);
 
         std::cout << "== MNIST training with LibTorch ==" << std::endl;
