@@ -229,7 +229,7 @@ def plot_all(profile_dfs, resolution_dfs: dict):
                     )
                 # plt.show()
                 tikzplotlib.clean_figure()
-                tfp = f"tex/{'train' if train else 'eval'} {key} per epoch {dataset}.tex".replace(
+                tfp = f"../tex/{'train' if train else 'eval'} {key} per epoch {dataset}.tex".replace(
                     " ", "_"
                 )
                 input_list.append(tfp)
@@ -264,12 +264,12 @@ def plot_all(profile_dfs, resolution_dfs: dict):
                             )
                 if points:
                     csv.writer(
-                        open(f"tex/{impl}_{train}_{key}.csv".replace(" ", "_"), "w"),
+                        open(f"../tex/{impl}_{train}_{key}.csv".replace(" ", "_"), "w"),
                         delimiter=" ",
                     ).writerows(points)
-            gfp = f"tex/{train}_{key}.tex".replace(" ", "_")
+            gfp = f"../tex/{train}_{key}.tex".replace(" ", "_")
             input_list.append(gfp)
-            with open("tex/scatter_tex") as f, open(gfp, "w") as g:
+            with open("../tex/scatter_tex") as f, open(gfp, "w") as g:
                 text = replace_all(
                     f.read(),
                     {
@@ -293,11 +293,11 @@ def plot_all(profile_dfs, resolution_dfs: dict):
         {tikz}
     \end{{figure}}
     """
-    with open("tex/main_tex") as tf, open("tex/main.tex", "w") as uf:
+    with open("../tex/all_plots_tex") as tf, open("../tex/all_plots.tex", "w") as uf:
         text = tf.read()
         uf.write(text.replace(
             "{input_list}",
-            "\n".join([u.format(tikz=f"\input{{{i}}}".replace("tex/", "")) for i in input_list])
+            "\n".join([u.format(tikz=f"\input{{{i}}}".replace("../tex/", "")) for i in input_list])
         ))
 
 if __name__ == "__main__":

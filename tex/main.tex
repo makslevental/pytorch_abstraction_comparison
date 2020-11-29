@@ -1,0 +1,100 @@
+\documentclass[sigconf]{acmart}
+
+\include{preamble}
+
+\begin{document}
+
+\title{When they go high we go low}
+
+\author{Maksim Levental}
+\authornote{Both authors contributed equally to this research.}
+\email{mlevental@uchicago.edu}
+\affiliation{%
+  \institution{University of Chicago}
+}
+\author{Elena Orlova}
+\email{eorlova@uchicago.edu}
+\affiliation{%
+  \institution{University of Chicago}
+}
+
+\renewcommand{\shortauthors}{Levental and Orlova}
+
+%%
+%% The abstract is a short summary of the work to be presented in the
+%% article.
+\begin{abstract}
+  High level abstractions for implementing, training, and testing Deep Learning (DL) models abound.
+  Such frameworks function primarily by abstracting away the implementation details of arbitrary neural architectures, thereby enabling researchers and engineers to focus on design.
+  In principle, such frameworks could be "zero-cost abstractions";
+  in practice, they incur enormous translation and indirection overheads.
+  We study at which points exactly in the engineering life-cycle of a DL model are the highest costs paid and whether they can be mitigated.
+  We train, test, and evaluate a representative DL model implemented using PyTorch, LibTorch, TorchScript, and cuDNN on representative datasets.
+\end{abstract}
+
+%\include{plots/teaser}
+
+%%
+%% This command processes the author and affiliation and title
+%% information and builds the first part of the formatted document.
+\maketitle
+
+\section{Introduction}\label{sec:introduction}
+
+In recent years, there has been a proliferation of Deep Learning (DL) frameworks\cite{paszke2019pytorch,abadi2016tensorflow,chen2015mxnet,cntk}.
+Many of these frameworks are implemented as domain-specific languages embedded in "high-level" languages\footnote{For the purposes of this article, we take "high-level" to mean memory managed and agnostic with respect to hardware specifics.} such as Python, Java, and C\#.
+By virtue of this design decision, the frameworks implicitly trade-off ease-of-use for performance; quoting the architects of PyTorch:
+\begin{displayquote}
+To be useful, PyTorch needs to deliver compelling performance, although not at the expense of simplicity and ease of use. Trading 10\% of speed for a significantly simpler to use model is acceptable; 100\% is not.
+\end{displayquote}
+In general, this is a reasonable trade-off, especially during the early phases of the DL engineering/research process (i.e. during the hypothesis generation and experimentation phases).
+Invariable though, taking for granted a research direction bears fruit, one needs to put into production the DL model.
+It is at that phase of the process that every percentage point of performance becomes critical.
+Alternatively, there are many areas of DL research where the community strives to incrementally improve performance\cite{abdelhamed2020ntire,hall2020probability,ILSVRC15}.
+In such areas, where the ultimate goal is to build the most performant model, it's natural to wonder whether \textit{any} trade-off that sacrifices performance is worthwhile.
+
+%the DL literature is rich in studies that investigate scaling DL models across various dimensions\cite{kaplan2020scaling,you2017large,you2020large}
+
+%%% The next two lines define the bibliography style to be used, and
+%%% the bibliography file.
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{main}
+%
+%%%
+%%% If your work has an appendix, this is the place to put it.
+%\appendix
+%
+%\section{Research Methods}
+%
+%\subsection{Part One}
+%
+%Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi
+%malesuada, quam in pulvinar varius, metus nunc fermentum urna, id
+%sollicitudin purus odio sit amet enim. Aliquam ullamcorper eu ipsum
+%vel mollis. Curabitur quis dictum nisl. Phasellus vel semper risus, et
+%lacinia dolor. Integer ultricies commodo sem nec semper.
+%
+%\subsection{Part Two}
+%
+%Etiam commodo feugiat nisl pulvinar pellentesque. Etiam auctor sodales
+%ligula, non varius nibh pulvinar semper. Suspendisse nec lectus non
+%ipsum convallis congue hendrerit vitae sapien. Donec at laoreet
+%eros. Vivamus non purus placerat, scelerisque diam eu, cursus
+%ante. Etiam aliquam tortor auctor efficitur mattis.
+%
+%\section{Online Resources}
+%
+%Nam id fermentum dui. Suspendisse sagittis tortor a nulla mollis, in
+%pulvinar ex pretium. Sed interdum orci quis metus euismod, et sagittis
+%enim maximus. Vestibulum gravida massa ut felis suscipit
+%congue. Quisque mattis elit a risus ultrices commodo venenatis eget
+%dui. Etiam sagittis eleifend elementum.
+%
+%Nam interdum magna at lectus dignissim, ac dignissim lorem
+%rhoncus. Maecenas eu arcu ac neque placerat aliquam. Nunc pulvinar
+%massa et mattis lacinia.
+
+\end{document}
+\endinput
+%%
+%% End of file `sample-sigconf.tex'.
