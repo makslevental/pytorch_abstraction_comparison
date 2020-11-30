@@ -1,4 +1,5 @@
 \documentclass[sigconf]{acmart}
+\usepackage{graphicx}
 
 \include{preamble}
 
@@ -32,7 +33,7 @@
   We train, test, and evaluate a representative DL model implemented using PyTorch, LibTorch, TorchScript, and cuDNN on representative datasets.
 \end{abstract}
 
-%\include{plots/teaser}
+\include{plots/teaser}
 
 %%
 %% This command processes the author and affiliation and title
@@ -45,7 +46,8 @@ In recent years, there has been a proliferation of Deep Learning (DL) frameworks
 Many of these frameworks are implemented as domain-specific languages embedded in "high-level" languages\footnote{For the purposes of this article, we take "high-level" to mean memory managed and agnostic with respect to hardware specifics.} such as Python, Java, and C\#.
 By virtue of this design decision, the frameworks implicitly trade-off ease-of-use for performance; quoting the architects of PyTorch:
 \begin{displayquote}
-To be useful, PyTorch needs to deliver compelling performance, although not at the expense of simplicity and ease of use. Trading 10\% of speed for a significantly simpler to use model is acceptable; 100\% is not.
+  To be useful, PyTorch needs to deliver compelling performance, although not at the expense of simplicity and ease of use.
+  Trading 10\% of speed for a significantly simpler to use model is acceptable; 100\% is not.
 \end{displayquote}
 In general, this is a reasonable trade-off, especially during the early phases of the DL engineering/research process (i.e. during the hypothesis generation and experimentation phases).
 Invariable though, taking for granted a research direction bears fruit, one needs to put into production the DL model.
@@ -55,44 +57,54 @@ In such areas, where the ultimate goal is to build the most performant model, it
 
 %the DL literature is rich in studies that investigate scaling DL models across various dimensions\cite{kaplan2020scaling,you2017large,you2020large}
 
+\section{Background}\label{sec:problem}
+
+\subsection{GPUs}\label{subsec:gpus}
+
+\subsection{Graph compilers}\label{subsec:graph-compilers}
+
+\subsubsection{Static}
+
+\subsubsection{Dynamic}
+
+\section{Methodology}\label{sec:context}
+
+\begin{figure}
+  \includegraphics[width=.7\linewidth]{plots/resnet50.png}\label{fig:figure5}
+\end{figure}
+
+We implement ResNet-50 at four levels of abstraction: PyTorch, TorchScript, LibTorch, and cuDNN.
+The reason for staying within the same ecosystem (PyTorch)is, in theory, we keep as many of the pieces of functionality orthogonal to our concerns as possible.
+We'll see that that reasoning doesn't quite bear out (see\ref{sec:discussion}).
+
+\subsection{Implementations}\label{subsec:implementations}
+
+\subsection{Profiling}\label{subsec:profiling}
+
+\section{Results}\label{sec:approach}
+
+\subsection{Training and evaluation}\label{subsec:training-and-evaluation}
+
+\subsection{Memory and utilization}\label{subsec:memory-and-utilization}
+
+\section{Discussion}\label{sec:results}
+
+% initialization in conv layers in pytorch/libtorch
+\section{Future work}\label{sec:discussion}
+\section{Speculation}\label{sec:speculation}
+
 %%% The next two lines define the bibliography style to be used, and
 %%% the bibliography file.
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{main}
-%
-%%%
-%%% If your work has an appendix, this is the place to put it.
-%\appendix
-%
-%\section{Research Methods}
-%
-%\subsection{Part One}
-%
-%Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi
-%malesuada, quam in pulvinar varius, metus nunc fermentum urna, id
-%sollicitudin purus odio sit amet enim. Aliquam ullamcorper eu ipsum
-%vel mollis. Curabitur quis dictum nisl. Phasellus vel semper risus, et
-%lacinia dolor. Integer ultricies commodo sem nec semper.
-%
-%\subsection{Part Two}
-%
-%Etiam commodo feugiat nisl pulvinar pellentesque. Etiam auctor sodales
-%ligula, non varius nibh pulvinar semper. Suspendisse nec lectus non
-%ipsum convallis congue hendrerit vitae sapien. Donec at laoreet
-%eros. Vivamus non purus placerat, scelerisque diam eu, cursus
-%ante. Etiam aliquam tortor auctor efficitur mattis.
-%
-%\section{Online Resources}
-%
-%Nam id fermentum dui. Suspendisse sagittis tortor a nulla mollis, in
-%pulvinar ex pretium. Sed interdum orci quis metus euismod, et sagittis
-%enim maximus. Vestibulum gravida massa ut felis suscipit
-%congue. Quisque mattis elit a risus ultrices commodo venenatis eget
-%dui. Etiam sagittis eleifend elementum.
-%
-%Nam interdum magna at lectus dignissim, ac dignissim lorem
-%rhoncus. Maecenas eu arcu ac neque placerat aliquam. Nunc pulvinar
-%massa et mattis lacinia.
+
+\appendix
+\appendixpage
+\addappheadtotoc
+
+\section{Appendix}\label{sec:appendix}
+
+\input{plots/3dplots.tex}
 
 \end{document}
 \endinput
