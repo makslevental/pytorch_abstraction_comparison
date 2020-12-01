@@ -23,6 +23,7 @@ private:
     int output_size_ = 0;
 
     dtype *d_one_vec = nullptr;
+    int input_num_features_;
 };
 
 #endif // PROJECTNAME_DENSE_CUH

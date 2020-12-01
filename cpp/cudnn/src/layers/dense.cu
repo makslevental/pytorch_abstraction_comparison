@@ -71,6 +71,7 @@ template <typename dtype> void Dense<dtype>::fwd_initialize(Tensor<dtype> *input
 
 template <typename dtype> Tensor<dtype> *Dense<dtype>::forward(Tensor<dtype> *input) {
     // output = weights^T * input (without biases)
+    this->input_num_features_ = input->get_channels();
     fwd_initialize(input);
     this->input_ = input;
     if constexpr (std::is_same<dtype, float>{}) {
@@ -277,8 +278,8 @@ template <typename dtype> Tensor<dtype> *Dense<dtype>::backward(Tensor<dtype> *g
 }
 
 template <typename dtype> std::tuple<int, int> Dense<dtype>::calculate_fan_in_and_fan_out() {
-    auto num_input_fmaps = this->input_->get_channels();
-    auto num_output_fmaps = this->output_->get_channels();
+    auto num_input_fmaps = input_num_features_;
+    auto num_output_fmaps = output_size_;
     auto receptive_field_size = 1;
     return std::make_tuple(
         num_input_fmaps * receptive_field_size, num_output_fmaps * receptive_field_size);

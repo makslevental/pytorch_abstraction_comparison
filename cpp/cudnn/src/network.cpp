@@ -140,7 +140,6 @@ template <typename dtype> void Network<dtype>::zero_grad() {
     }
 }
 
-
 template <typename dtype> void Network<dtype>::eval() {
     phase_ = inference;
 
@@ -150,7 +149,6 @@ template <typename dtype> void Network<dtype>::eval() {
         layer->eval();
     }
 }
-
 
 template <typename dtype> void Network<dtype>::print_all_params() {
     phase_ = inference;
@@ -170,7 +168,18 @@ template <typename dtype> void Network<dtype>::print_all_params() {
     }
 }
 
+template <typename dtype> void Network<dtype>::print_all_grads() {
+    phase_ = inference;
 
+    for (auto layer : layers_) {
+        if (layer->grad_of_output_) {
+            printf(
+                "%s grad squared: %.20f\n",
+                layer->get_name().c_str(),
+                layer->grad_of_output_->get_magnitude_squared());
+        }
+    }
+}
 
 template class Network<float>;
 

@@ -49,6 +49,9 @@ void train(
     } else if (strcmp(std::getenv("MODEL"), "resnet") == 0) {
         model = make_resnet50<dtype>(num_classes);
         model->cuda();
+    } else if (strcmp(std::getenv("MODEL"), "resnet_other") == 0) {
+        model = make_other_resnet50<dtype>(num_classes);
+        model->cuda();
     } else {
         std::cout << "no model";
         exit(EXIT_FAILURE);
@@ -67,7 +70,7 @@ void train(
     double elapsed_time;
     double used_mem = 0, running_used_mem = 0;
     double lr;
-    double lr_decay = 0.0000005f;
+    double lr_decay = 0.00005f;
 
     for (int epoch = 0; epoch < epochs; epoch++) {
         model->train();
@@ -92,7 +95,8 @@ void train(
             output = model->forward(train_data);
             loss += criterion.loss(output, train_target);
             model->backward(train_target);
-            //            lr *= 1.f / (1.f + lr_decay * batch);
+            lr *= 1.f / (1.f + lr_decay * batch);
+            printf("%f\n", lr);
             model->update(lr);
 
             gpu_timer.stop();

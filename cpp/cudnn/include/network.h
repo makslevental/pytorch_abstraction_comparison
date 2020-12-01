@@ -34,6 +34,7 @@ public:
 
     Tensor<dtype> *output_;
 
+    void print_all_grads();
 protected:
     std::vector<Layer<dtype> *> layers_;
     CudaContext<dtype> *cuda_ = nullptr;

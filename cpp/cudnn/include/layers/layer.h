@@ -34,6 +34,7 @@ public:
     void zero_grad();
     Tensor<dtype> *weights_ = nullptr;      /* w */
     Tensor<dtype> *biases_ = nullptr;       /* b */
+    Tensor<dtype> *grad_of_output_ = nullptr; /* dy */
 
 protected:
     virtual void fwd_initialize(Tensor<dtype> *input);
@@ -53,7 +54,6 @@ protected:
     Tensor<dtype> *input_ = nullptr;          /* x  */
     Tensor<dtype> *output_ = nullptr;         /* y  */
     Tensor<dtype> *grad_of_input_ = nullptr;  /* dx */
-    Tensor<dtype> *grad_of_output_ = nullptr; /* dy */
     int input_size_;
 
     // master weights & bias
