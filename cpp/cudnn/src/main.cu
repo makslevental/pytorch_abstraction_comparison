@@ -96,7 +96,6 @@ void train(
             loss += criterion.loss(output, train_target);
             model->backward(train_target);
             lr *= 1.f / (1.f + lr_decay * batch);
-            printf("%f\n", lr);
             model->update(lr);
 
             gpu_timer.stop();
@@ -263,7 +262,7 @@ int main(int argc, char *argv[]) {
         batch_size,
         monitoring_step,
         learning_rate,
-        std::cout);
+        output_file);
 
     return 0;
 }
