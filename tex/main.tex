@@ -68,11 +68,11 @@ Thus, our aim here is to investigate the costs of some of the abstractions emplo
 In particular we focus on the PyTorch framework and ecosystem (chosen for its popularity amongst academic researchers).
 To that end, we implement a popular and fairly representative%
 \footnote{In the sense that the functional units constituting the model are widely used in various other models.}
-DL model at four levels of abstraction: conventional Python/PyTorch, C++/LibTorch, C++/cuDNN, and C++/TorchScript.
+DL model at four levels of abstraction: conventional PyTorch, LibTorch, cuDNN, and TorchScript.
 We argue that in the forthcoming that these four implementations do in fact span considerable breadth in the abstraction spectrum.
 Furthermore we train, test, evaluate each of the implementations on four object detection datasets and tabulate performance and accuracy metrics.
 
-The rest of this article is organizing as follows: section\ref{sec:background} covers quickly reviews the germaine background material on graph compilers and GPUs, section\ref{sec:methodology} describes the implementations and our profiling methodology, section\ref{sec:results} presents our results and a comparative discussion thereof, section\ref{sec:discussion} discusses broad lessons learned, section\ref{sec:futurework} proposes future work, and section\ref{sec:speculation} speculates wildly about the future of DL systems more generally.
+The rest of this article is organizing as follows: section~\ref{sec:background} covers quickly reviews the germaine background material on graph compilers and GPUs, section~\ref{sec:methodology} describes the implementations and our profiling methodology, section~\ref{sec:results} presents our results and a comparative discussion thereof, section~\ref{sec:discussion} discusses broad lessons learned, section~\ref{sec:futurework} proposes future work, and section~\ref{sec:speculation} speculates wildly about the future of DL systems more generally.
 
 %the DL literature is rich in studies that investigate scaling DL models across various dimensions\cite{kaplan2020scaling,you2017large,you2020large}
 

@@ -182,6 +182,7 @@ def plot(
     min,
     mean,
     max,
+    times,
     fig_ax=None,
     label="cudnn",
     title="Average train loss per epoch",
@@ -191,14 +192,13 @@ def plot(
     fig, ax = fig_ax
     if fig is None or ax is None:
         fig, ax = plt.subplots()
-    x = range(len(mean))
-    ax.plot(x, mean + shift, "-", label=label)
+    ax.plot(times, mean + shift, "-", label=label)
     ax.legend()
     ax.set_title(title)
     ax.set_ylabel(ylabel)
     ax.set_xlabel("epoch")
     ax.set_yscale("log")
-    ax.fill_between(x, min + shift, max + shift, alpha=0.2)
+    ax.fill_between(times, min + shift, max + shift, alpha=0.2)
 
     return fig, ax
 
@@ -222,88 +222,89 @@ def plot_all(profile_dfs, resolution_dfs: dict):
                         min[key].values,
                         mean[key].values,
                         max[key].values,
+                        mean["avg sample time"].values.cumsum(),
                         (fig, ax),
                         label=impl,
                         title=f"{'train' if train else 'eval'} {key} per epoch {dataset}",
                         ylabel=key,
                     )
-                # plt.show()
-                tikzplotlib.clean_figure()
-                tfp = f"../tex/{'train' if train else 'eval'} {key} per epoch {dataset}.tex".replace(
-                    " ", "_"
-                )
-                input_list.append(tfp)
-                tikzplotlib.save(tfp, standalone=False)
+                plt.show()
+                # tikzplotlib.clean_figure()
+                # tfp = f"../tex/{'train' if train else 'eval'} {key} per epoch {dataset}.tex".replace(
+                #     " ", "_"
+                # )
+                # input_list.append(tfp)
+                # tikzplotlib.save(tfp, standalone=False)
 
-    units = {
-        "avg sample time": "time (ms)",
-        "avg used mem": "memory (mb)",
-        "avg gpu util": "util (\%)",
-    }
-    log = {"zmode=log, log origin=infty"}
-    batch_sizes = np.power(2, list(range(3, 9 + 1)))
-    resolutions = np.power(2, list(range(3, 12 + 1)))
-    for train in ["train", "eval"]:
-        for key in ["avg sample time", "avg used mem", "avg gpu util"]:
-            for impl in impls:
-                points = []
-                for i, batch_size in enumerate(batch_sizes):
-                    for j, resolution in enumerate(resolutions):
-                        if (
-                            batch_size in resolution_dfs[impl][train]
-                            and resolution in resolution_dfs[impl][train][batch_size]
-                        ):
-                            points.append(
-                                (
-                                    batch_size,
-                                    resolution,
-                                    resolution_dfs[impl][train][batch_size][resolution][
-                                        key
-                                    ].mean(),
-                                )
-                            )
-                if points:
-                    csv.writer(
-                        open(f"../tex/{impl}_{train}_{key}.csv".replace(" ", "_"), "w"),
-                        delimiter=" ",
-                    ).writerows(points)
-            gfp = f"../tex/{train}_{key}.tex".replace(" ", "_")
-            input_list.append(gfp)
-            with open("../tex/scatter_tex") as f, open(gfp, "w") as g:
-                text = replace_all(
-                    f.read(),
-                    {
-                        "{z_label}": units[key],
-                        "{title}": f"{key} on {train}",
-                        "{cudnn_csv}": f"./cudnn_{train}_{key}.csv".replace(" ", "_"),
-                        "{libtorch_csv}": f"./libtorch_{train}_{key}.csv".replace(
-                            " ", "_"
-                        ),
-                        "{pytorch_csv}": f"./pytorch_{train}_{key}.csv".replace(
-                            " ", "_"
-                        ),
-                        "{torchscript_csv}": f"./torchscript_{train}_{key}.csv".replace(
-                            " ", "_"
-                        ),
-                    },
-                )
-                g.write(text)
-    u = """
-    \\begin{{figure}}
-        {tikz}
-    \end{{figure}}
-    """
-    with open("../tex/all_plots_tex") as tf, open("../tex/all_plots.tex", "w") as uf:
-        text = tf.read()
-        uf.write(text.replace(
-            "{input_list}",
-            "\n".join([u.format(tikz=f"\input{{{i}}}".replace("../tex/", "")) for i in input_list])
-        ))
+    # units = {
+    #     "avg sample time": "time (ms)",
+    #     "avg used mem": "memory (mb)",
+    #     "avg gpu util": "util (\%)",
+    # }
+    # log = {"zmode=log, log origin=infty"}
+    # batch_sizes = np.power(2, list(range(3, 9 + 1)))
+    # resolutions = np.power(2, list(range(3, 12 + 1)))
+    # for train in ["train", "eval"]:
+    #     for key in ["avg sample time", "avg used mem", "avg gpu util"]:
+    #         for impl in impls:
+    #             points = []
+    #             for i, batch_size in enumerate(batch_sizes):
+    #                 for j, resolution in enumerate(resolutions):
+    #                     if (
+    #                         batch_size in resolution_dfs[impl][train]
+    #                         and resolution in resolution_dfs[impl][train][batch_size]
+    #                     ):
+    #                         points.append(
+    #                             (
+    #                                 batch_size,
+    #                                 resolution,
+    #                                 resolution_dfs[impl][train][batch_size][resolution][
+    #                                     key
+    #                                 ].mean(),
+    #                             )
+    #                         )
+    #             if points:
+    #                 csv.writer(
+    #                     open(f"../tex/{impl}_{train}_{key}.csv".replace(" ", "_"), "w"),
+    #                     delimiter=" ",
+    #                 ).writerows(points)
+    #         gfp = f"../tex/{train}_{key}.tex".replace(" ", "_")
+    #         input_list.append(gfp)
+    #         with open("../tex/scatter_tex") as f, open(gfp, "w") as g:
+    #             text = replace_all(
+    #                 f.read(),
+    #                 {
+    #                     "{z_label}": units[key],
+    #                     "{title}": f"{key} on {train}",
+    #                     "{cudnn_csv}": f"./cudnn_{train}_{key}.csv".replace(" ", "_"),
+    #                     "{libtorch_csv}": f"./libtorch_{train}_{key}.csv".replace(
+    #                         " ", "_"
+    #                     ),
+    #                     "{pytorch_csv}": f"./pytorch_{train}_{key}.csv".replace(
+    #                         " ", "_"
+    #                     ),
+    #                     "{torchscript_csv}": f"./torchscript_{train}_{key}.csv".replace(
+    #                         " ", "_"
+    #                     ),
+    #                 },
+    #             )
+    #             g.write(text)
+    # u = """
+    # \\begin{{figure}}
+    #     {tikz}
+    # \end{{figure}}
+    # """
+    # with open("../tex/all_plots_tex") as tf, open("../tex/all_plots.tex", "w") as uf:
+    #     text = tf.read()
+    #     uf.write(text.replace(
+    #         "{input_list}",
+    #         "\n".join([u.format(tikz=f"\input{{{i}}}".replace("../tex/", "")) for i in input_list])
+    #     ))
 
 if __name__ == "__main__":
     # cleanup_profiles()
     # cleanup_profiles_cudnn()
-    cleanup_resolutions()
+    # cleanup_resolutions()
     profile_dfs = make_dfs()
     resolution_dfs = make_resolution_dfs()
     plot_all(profile_dfs, resolution_dfs)

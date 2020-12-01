@@ -154,10 +154,13 @@ template <typename dtype> void BatchNorm2d<dtype>::fwd_initialize(Tensor<dtype> 
         if (this->load_pretrain_ && !this->freeze_) {
             if (this->load_parameter()) {
                 std::cout << "error occurred loading params batch norm" << std::endl;
-                exit(-1);
+                exit(EXIT_FAILURE);
             }
         } else if (!this->freeze_) {
-            this->init_weight_bias();
+            this->weights_->one_out();
+            this->biases_->zero_out();
+//            this->weights_->print("weights", true);
+//            this->biases_->print("biases", true);
         }
     }
 }

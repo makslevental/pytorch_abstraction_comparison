@@ -191,7 +191,7 @@ def main():
     print(f"running {dataset_name} {run_n}")
     print(epochs, resolution)
     # lost .5 ms with smaller batch size for mnist
-    batch_size = 1
+    batch_size = 128
     monitoring_step = 20
 
     transform = [

@@ -30,6 +30,7 @@ public:
     void train();
     void eval();
     void zero_grad();
+    void print_all_params();
 
     Tensor<dtype> *output_;
 

@@ -47,6 +47,48 @@ template <typename dtype> Layer<dtype>::~Layer() {
     }
 }
 
+enum Nonlinearity {
+    LINEAR,
+    CONV1D,
+    CONV2D,
+    CONV3D,
+    CONV_TRANSPOSE1D,
+    CONV_TRANSPOSE2D,
+    CONV_TRANSPOSE3D,
+    SIGMOID,
+    TANH,
+    RELU,
+    LEAKY_RELU
+};
+
+double calculate_gain(Nonlinearity nonlinearity, double param = -1) {
+    switch (nonlinearity) {
+    case LINEAR:
+    case CONV1D:
+    case CONV2D:
+    case CONV3D:
+    case CONV_TRANSPOSE1D:
+    case CONV_TRANSPOSE2D:
+    case CONV_TRANSPOSE3D:
+    case SIGMOID:
+        return 1.0;
+    case TANH:
+        return 5.0 / 3;
+    case RELU:
+        return sqrt(2.0);
+    case LEAKY_RELU:
+        double negative_slope;
+        if (param == -1) {
+            negative_slope = 0.01;
+        } else {
+            negative_slope = param;
+        }
+        return sqrt(2.0 / (1 + pow(negative_slope, 2)));
+    }
+    std::cout << "couldn't compute gain\n";
+    exit(EXIT_FAILURE);
+}
+
 // wtf this is necessary here but not in libtorch nor pytorch
 template <typename dtype> void Layer<dtype>::init_weight_bias(unsigned int seed) {
     if (weights_ == nullptr || biases_ == nullptr)
@@ -55,28 +97,23 @@ template <typename dtype> void Layer<dtype>::init_weight_bias(unsigned int seed)
     std::random_device rd;
     std::mt19937 gen(seed == 0 ? rd() : static_cast<unsigned int>(seed));
 
-    // He uniform distribution
-    // TODO: initialization Xi
-    if (strcmp(std::getenv("INITIAL"), "normal") == 0) {
-        double range = sqrt(2.f / input_size_); // He's initialization
-        std::normal_distribution<> dis(-range, range);
-        for (int i = 0; i < weights_->len(); i++)
-            weights_->get_host_ptr()[i] = static_cast<double>(dis(gen));
-    } else if (strcmp(std::getenv("INITIAL"), "uniform") == 0) {
-        double range = sqrt(6.f / input_size_); // He's initialization
-        std::uniform_real_distribution<> dis(-range, range);
-        for (int i = 0; i < weights_->len(); i++)
-            weights_->get_host_ptr()[i] = static_cast<double>(dis(gen));
-    } else {
-        std::cout << "no initialization";
-        exit(EXIT_FAILURE);
-    }
-    for (int i = 0; i < biases_->len(); i++)
-        biases_->get_host_ptr()[i] = 0.f;
+    auto [fan_in, fan_out] = calculate_fan_in_and_fan_out();
+    auto gain = calculate_gain(LEAKY_RELU, sqrt(5.0));
+    auto std = gain / fan_in;
+    auto bound = sqrt(3.0) * std;
+//    printf("%s weights %d %f %f %f\n", this->name_.c_str(), fan_in, gain, std, bound);
+    std::uniform_real_distribution<> dis1(-bound, bound);
+    for (int i = 0; i < weights_->len(); i++)
+        weights_->get_host_ptr()[i] = static_cast<double>(dis1(gen));
 
-    // copy initialized value to the device
-    weights_->to(DeviceType::cuda);
-    biases_->to(DeviceType::cuda);
+    bound = 1 / sqrt(fan_in);
+//    printf("%s biases %f\n", this->name_.c_str(), bound);
+    std::uniform_real_distribution<> dis2(-bound, bound);
+    for (int i = 0; i < biases_->len(); i++)
+        biases_->get_host_ptr()[i] = static_cast<double>(dis2(gen));
+
+    weights_->to(cuda);
+    biases_->to(cuda);
 }
 
 template <typename dtype> void Layer<dtype>::update_weights_biases(dtype learning_rate) {
@@ -231,6 +268,10 @@ template <typename dtype> void Layer<dtype>::zero_grad() {
     if (grad_weights_) {
         grad_weights_->zero_out();
     }
+}
+
+template <typename dtype> std::tuple<int, int> Layer<dtype>::calculate_fan_in_and_fan_out() {
+    return std::tuple<int, int>{1, 1};
 }
 
 template class Layer<float>;

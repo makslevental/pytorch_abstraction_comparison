@@ -120,13 +120,16 @@ public:
     }
 
     void zero_out() {
-        std::memset(host_ptr_, 0.0, sizeof(dtype) * len());
-        checkCudaErrors(cudaMemset(device_ptr_, 0.0, sizeof(dtype) * len()));
+        for (int i = 0; i < len(); i++)
+            host_ptr_[i] = 0.0;
+        to(cuda);
     }
 
     void one_out() {
-        std::memset(host_ptr_, 1.0, sizeof(dtype) * len());
-        checkCudaErrors(cudaMemset(device_ptr_, 1.0, sizeof(dtype) * len()));
+        std::memset(host_ptr_, 1, sizeof(dtype) * len());
+        for (int i = 0; i < len(); i++)
+            host_ptr_[i] = 1.0;
+        to(cuda);
     }
 
     void reset(std::array<int, 4> size) { reset(size[0], size[1], size[2], size[3]); }
@@ -205,7 +208,7 @@ public:
     }
 
     void print(const std::string &name, bool view_param = false, int num_batch = 1) {
-        // TODO: copy to host without overwriting
+//         TODO: copy to host without overwriting
         to(host);
         std::cout << "**" << name << "\t: (" << size() << ")\t";
         std::cout << ".n: " << batch_size_ << ", .c: " << channels_ << ", .h: " << height_
@@ -229,7 +232,7 @@ public:
                 int count = 0;
                 int print_line_count = 0;
                 while (count < size() && print_line_count < max_print_line) {
-                    std::cout << "\t";
+                    std::cout << " ";
                     for (int s = 0; s < width_ && count < size(); s++) {
                         if (width_ == 28) {
                             if (host_ptr_[size() * n + count + offset] > 0)
@@ -237,11 +240,11 @@ public:
                             else
                                 std::cout << " ";
                         } else {
-                            std::cout << host_ptr_[size() * n + count + offset] << "\t";
+                            std::cout << host_ptr_[size() * n + count + offset] << " ";
                         }
                         count++;
                     }
-                    std::cout << std::endl;
+//                    std::cout << std::endl;
                     print_line_count++;
                 }
             }

@@ -63,6 +63,8 @@ template <typename dtype> void Dense<dtype>::fwd_initialize(Tensor<dtype> *input
             }
         } else if (!this->freeze_) {
             this->init_weight_bias();
+//            this->weights_->print("weights", true);
+//            this->biases_->print("biases", true);
         }
     }
 }
@@ -273,5 +275,14 @@ template <typename dtype> Tensor<dtype> *Dense<dtype>::backward(Tensor<dtype> *g
 
     return this->grad_of_input_;
 }
+
+template <typename dtype> std::tuple<int, int> Dense<dtype>::calculate_fan_in_and_fan_out() {
+    auto num_input_fmaps = this->input_->get_channels();
+    auto num_output_fmaps = this->output_->get_channels();
+    auto receptive_field_size = 1;
+    return std::make_tuple(
+        num_input_fmaps * receptive_field_size, num_output_fmaps * receptive_field_size);
+}
+
 template class Dense<float>;
 template class Dense<double>;

@@ -32,6 +32,8 @@ public:
     void eval() { train_ = false; }
     void update_weights_biases(dtype learning_rate);
     void zero_grad();
+    Tensor<dtype> *weights_ = nullptr;      /* w */
+    Tensor<dtype> *biases_ = nullptr;       /* b */
 
 protected:
     virtual void fwd_initialize(Tensor<dtype> *input);
@@ -57,14 +59,13 @@ protected:
     // master weights & bias
     bool freeze_ = false; /* control parameter updates */
     bool train_ = false;
-    Tensor<dtype> *weights_ = nullptr;      /* w */
-    Tensor<dtype> *biases_ = nullptr;       /* b */
     Tensor<dtype> *grad_weights_ = nullptr; /* dw */
     Tensor<dtype> *grad_biases_ = nullptr;  /* db */
 
     int batch_size_ = 0; // mini-batch size
 
     // initialize weights along with the input size
+    virtual std::tuple<int, int> calculate_fan_in_and_fan_out();
     void init_weight_bias(unsigned int seed = 0);
 
     // get_device_ptr handle container

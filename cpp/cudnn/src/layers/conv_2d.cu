@@ -189,6 +189,7 @@ template <typename dtype> void Conv2d<dtype>::fwd_initialize(Tensor<dtype> *inpu
         this->input_size_ = input->size();
         this->input_desc_ = input->tensor_descriptor();
         this->batch_size_ = input->get_batch_size();
+        this->in_channels_ = input->get_channels();
 
         // initilaize output
         checkCudnnErrors(cudnnGetConvolution2dForwardOutputDim(
@@ -214,10 +215,12 @@ template <typename dtype> void Conv2d<dtype>::fwd_initialize(Tensor<dtype> *inpu
         if (this->load_pretrain_ && !this->freeze_) {
             if (this->load_parameter()) {
                 std::cout << "error occurred.." << std::endl;
-                exit(-1);
+                exit(EXIT_FAILURE);
             }
         } else if (!this->freeze_) {
             this->init_weight_bias();
+//            this->weights_->print("weights", true);
+//            this->biases_->print("biases", true);
         } else {
             /* do nothing */
         }
@@ -334,6 +337,13 @@ template <typename dtype> Tensor<dtype> *Conv2d<dtype>::backward(Tensor<dtype> *
     }
 
     return this->grad_of_input_;
+}
+
+template <typename dtype> std::tuple<int, int> Conv2d<dtype>::calculate_fan_in_and_fan_out() {
+    auto num_input_fmaps = this->in_channels_;
+    auto num_output_fmaps = this->out_channels_;
+    auto receptive_field_size = kernel_size_ * kernel_size_;
+    return std::make_tuple(num_input_fmaps * receptive_field_size, num_output_fmaps * receptive_field_size);
 }
 
 template class Conv2d<float>;

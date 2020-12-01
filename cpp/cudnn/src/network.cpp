@@ -37,7 +37,7 @@ template <typename dtype> Tensor<dtype> *Network<dtype>::forward(Tensor<dtype> *
 
         if (DEBUG_FORWARD) {
             printf(
-                "%s input squared before: %.20f\n",
+                "%s input squared after: %.20f\n",
                 layer->get_name().c_str(),
                 output_->get_magnitude_squared());
         }
@@ -150,6 +150,27 @@ template <typename dtype> void Network<dtype>::eval() {
         layer->eval();
     }
 }
+
+
+template <typename dtype> void Network<dtype>::print_all_params() {
+    phase_ = inference;
+
+    // freeze all layers
+    for (auto layer : layers_) {
+        if (layer->weights_) {
+            std::stringstream ss;
+            ss << layer->get_name() << " weights";
+            layer->weights_->print(ss.str(), true);
+        }
+        if (layer->biases_) {
+            std::stringstream ss1;
+            ss1 << layer->get_name() << " biases";
+            layer->biases_->print(ss1.str(), true);
+        }
+    }
+}
+
+
 
 template class Network<float>;
 

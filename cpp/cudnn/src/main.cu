@@ -190,8 +190,10 @@ int main(int argc, char *argv[]) {
     Dataset<float> *test_data_loader;
 
     std::stringstream ss;
-    ss << "profiles/run_cudnn_" << argv[1] << "_" << batch_size << "_" << std::getenv("RESOLUTION")
-       << ".csv";
+    //    ss << "profiles/run_cudnn_" << argv[1] << "_" << batch_size << "_" <<
+    //    std::getenv("RESOLUTION")
+    //       << ".csv";
+    ss << "profiles/run_cudnn_" << argv[1] << "_" << argv[2] << ".csv";
     std::ofstream output_file(ss.str());
 
     if (strcmp(argv[1], "mnist") == 0) {
@@ -257,7 +259,7 @@ int main(int argc, char *argv[]) {
         batch_size,
         monitoring_step,
         learning_rate,
-        output_file);
+        std::cout);
 
     return 0;
 }

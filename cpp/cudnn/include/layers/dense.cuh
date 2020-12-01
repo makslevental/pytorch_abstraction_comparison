@@ -18,6 +18,7 @@ public:
 private:
     void fwd_initialize(Tensor<dtype> *input) override;
     void bwd_initialize(Tensor<dtype> *grad_output) override;
+    std::tuple<int, int> calculate_fan_in_and_fan_out() override;
 
     int output_size_ = 0;
 
