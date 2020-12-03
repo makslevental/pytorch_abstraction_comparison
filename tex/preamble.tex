@@ -14,4 +14,11 @@
 \usepackage{appendix}
 \usepackage{subcaption}
 %\usepackage[style=authoryear-icomp,maxbibnames=9,maxcitenames=2,backend=biber]{biblatex}
+\usepackage{cleveref}
+\usepackage{xcolor}
+\usepackage{listings}
 
+\crefdefaultlabelformat{\color{red}(#2#1#3)}
+\newcommand{\code}[1]{\texttt{#1}}
+
+\usepackage[cache=false]{minted}

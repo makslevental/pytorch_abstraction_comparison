@@ -8,7 +8,7 @@
 \title{When they go high we go low}
 
 \author{Maksim Levental}
-\authornote{Both authors contributed equally to this research.}
+\authornote{Both authors contributed equally to this work.}
 \email{mlevental@uchicago.edu}
 \affiliation{%
   \institution{University of Chicago}
@@ -43,7 +43,7 @@
 \section{Introduction}\label{sec:introduction}
 
 Deep Learning (DL) frameworks represent neural network models as dataflow and computation graphs (where nodes correspond to functional units and edges correspond to composition).
-In recent years, there has been a proliferation of DL frameworks\cite{paszke2019pytorch,abadi2016tensorflow,chen2015mxnet,cntk} implemented as domain-specific languages (DSLs) embedded in "high-level" languages%
+In recent years, there has been a proliferation of DL frameworks~\cite{paszke2019pytorch,abadi2016tensorflow,chen2015mxnet,cntk} implemented as domain-specific languages (DSLs) embedded in "high-level" languages%
 \footnote{For the purposes of this article, we take "high-level" to mean garbage collected and agnostic with respect to hardware from \textit{from the perspective of the user}.} such as Python, Java, and C\#.
 These DSLs serve as \textit{abstractions} that aim to map the DL graphs onto hardware pipelines.
 That is to say, they hide (or \textit{encapsulate}) details of DL models that are judged to be either irrelevant or too onerous to consider.
@@ -59,24 +59,61 @@ Trading off ergonomics for performance is manifestly reasonable%
 , especially during the early phases of the DL engineering/research process (i.e.\ during the hypothesis generation and experimentation phases).
 Ultimately though, if one is in industry and taking for granted a research direction bears fruit, one needs to put the DL model into production.
 It is at this phase of the DL engineering process that every percentage point of execution performance becomes critical.
-Alternatively, there are many areas of academic DL where the research community strives to incrementally improve performance\cite{abdelhamed2020ntire,hall2020probability,ILSVRC15}.
-For example, in the area of super-resolution a deliberate goal is to be able to "super-resolve" in real-time\cite{7780576}.
-Similarly, in natural language processing, where enormous language models are becoming the norm\cite{brown2020language}, memory efficiency of DL models is of the utmost concern.
+Alternatively, there are many areas of academic DL where the research community strives to incrementally improve performance~\cite{abdelhamed2020ntire,hall2020probability,ILSVRC15}.
+For example, in the area of super-resolution a deliberate goal is to be able to "super-resolve" in real-time~\cite{7780576}.
+Similarly, in natural language processing, where enormous language models are becoming the norm~\cite{brown2020language}, memory efficiency of DL models is of the utmost concern.
 In such instances it's natural to wonder whether ease-of-use trade-offs that sacrifice execution performance, or memory efficiency, are worthwhile and whether their costs can be mitigated.
 
 Thus, our aim here is to investigate the costs of some of the abstractions employed by framework developers.
-In particular we focus on the PyTorch framework and ecosystem (chosen for its popularity amongst academic researchers).
+In particular we focus on the PyTorch framework and ecosystem (chosen for its popularity amongst academic researchers) on the software side and Graphics Processing Units (GPUs) on the hardware side.
 To that end, we implement a popular and fairly representative%
 \footnote{In the sense that the functional units constituting the model are widely used in various other models.}
 DL model at four levels of abstraction: conventional PyTorch, LibTorch, cuDNN, and TorchScript.
 We argue that in the forthcoming that these four implementations do in fact span considerable breadth in the abstraction spectrum.
 Furthermore we train, test, evaluate each of the implementations on four object detection datasets and tabulate performance and accuracy metrics.
 
-The rest of this article is organizing as follows: section~\ref{sec:background} covers quickly reviews the germaine background material on graph compilers and GPUs, section~\ref{sec:methodology} describes the implementations and our profiling methodology, section~\ref{sec:results} presents our results and a comparative discussion thereof, section~\ref{sec:discussion} discusses broad lessons learned, section~\ref{sec:futurework} proposes future work, and section~\ref{sec:speculation} speculates wildly about the future of DL systems more generally.
+The rest of this article is organizing as follows: ~\cref{sec:background} quickly reviews the germaine background material on GPUs and DL frameworks, ~\cref{sec:methodology} describes the implementations and our profiling methodology,~\cref{sec:results} presents our results and a comparative discussion thereof, ~\cref{sec:discussion} discusses broad lessons learned, ~\cref{sec:futurework} proposes future work, and ~\cref{sec:speculation} speculates wildly about the future of DL systems more generally.
 
-%the DL literature is rich in studies that investigate scaling DL models across various dimensions\cite{kaplan2020scaling,you2017large,you2020large}
+%the DL literature is rich in studies that investigate scaling DL models across various dimensions~\cite{kaplan2020scaling,you2017large,you2020large}
 
 \section{Background}\label{sec:background}
+\subsection{GPUs}\label{subsec:gpus}
+
+We briefly review NVIDIA GPUs%
+\footnote{A more comprehensive introduction to GPUs themselves and CUDA programming is available in~\cite{10.5555/2935593}.}
+in order that the performance criteria we measure in~\cref{sec:methodology} are intelligible.
+
+A GPU consists of many simple processors, called streaming multiprocessors (SMs), colloquially referred to as cores, that run at relatively low clock speeds%
+\footnote{For example, individual NVIDIA GTX-1080 Ti cores run at $\sim$1500MHz.}
+and execute one floating-point operation per clock cycle.
+See ~\cref{fig:fermi_arch} for a diagram of NVIDIA's Fermi architecture, where each SM consists of 32 cores, 16 load/store (LD/ST) units, four special-function units (SFUs) which compute transcendental functions (such as $\sin$, $\cos$, $\exp$), a relatively large register file%
+\footnote{For example, Intel's Haswell architecture supports 168 integer and 168 floating-point registers.}%
+, and thread control logic (to be discussed in the proceeding).
+Each SM has access to local memory, several cache levels, and global memory.
+In the Fermi architecture (and subsequent architectures) this local memory is configurable in software;
+a fraction of it can be apportioned as either local memory or L1 cache (for workloads that query global memory in excess of local memory).
+One final feature worth mentioning, though irrelevant for us here, is the L2 cache's atomic read-modify-write facilities;
+this enables shared data across groups of threads more efficiently than possible in conventional CPUs%
+\footnote{On a CPU, atomic test-and-set instructions manage a semaphore which itself manages access to memory (therefore incurring a cost of at least two clock cycles).}.
+
+Such an architecture, particularly suited to maximizing throughput, necessitates a programming model distinct from that of a conventional, general purpose processor architecture.
+A unit of computation deployed to a GPU is called a \textit{kernel}; kernels can be defined using NVIDIA's Compute Unified Device Architecture (CUDA) extensions to C, C++, and FORTRAN%
+\footnote{In fact CUDA compiles down to a virtual machine assembly code (by way of \code{nvcc}) for a virtual machine called the Parallel Thread Execution (PTX) virtual machine. So, in effect, it's compilers all the way down.}.
+Compiled kernels are comprised by many \textit{threads} that execute the same instruction(s) in parallel;
+NVIDIA describes this addition to Flynn's taxonomy~\cite{5009071} as Single Instruction Multiple Thread (SIMT).
+The large register file enables very fast thread context switching ($\sim$25 microseconds on the Fermi architecture), performed by a centralized hardware thread scheduler.
+Multiple threads are grouped into blocks (SMs are single tenant with respect to blocks) and blocks are grouped into \textit{grids} (grids execute a single kernel).
+All threads in a block, by virtue of running on the same SM, coordinate (execute in arbitrary order, concurrently, or sequentially) and share memory.
+Thread blocks are partitioned into \textit{warps} of 32 threads;
+it is these warps that are dispatched by the warp scheduler (see~\cref{fig:cuda_cores}) and starting with the Fermi architecture two warps can be executed concurrently on the same SM in order to increase utilization.
+
+\input{figures/fermi.tex}
+\input{figures/cuda_code.tex}
+
+
+\subsection{Graph compilers}\label{subsec:graph-compilers}
+
+DL frameworks function as graph compilers.
 What are the design choices made by DL framework architects and what are their costs?
 That is to say, what are the costs of the abstractions
 
@@ -87,10 +124,6 @@ These frameworks encapsulate and "abstract away" many of the implementation deta
   \item hardware specific optimizations
 \end{itemize}
 
-\subsection{GPUs}\label{subsec:gpus}
-
-\subsection{Graph compilers}\label{subsec:graph-compilers}
-
 \subsubsection{Static}
 
 \subsubsection{Dynamic}
@@ -98,7 +131,9 @@ These frameworks encapsulate and "abstract away" many of the implementation deta
 \section{Methodology}\label{sec:methodology}
 
 \begin{figure}
-  \includegraphics[width=.7\linewidth]{plots/resnet50.png}\label{fig:figure5}
+  \includegraphics[width=.7\linewidth]{figures/resnet50.png}
+  \caption{ResNet-50 network architecture\cite{he2015deep}.}
+  \label{fig:resnet}
 \end{figure}
 
 We implement ResNet-50 at four levels of abstraction: PyTorch, TorchScript, LibTorch, and cuDNN.
