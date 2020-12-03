@@ -101,7 +101,7 @@ A unit of computation deployed to a GPU is called a \textit{kernel}; kernels can
 \footnote{In fact CUDA compiles down to a virtual machine assembly code (by way of \code{nvcc}) for a virtual machine called the Parallel Thread Execution (PTX) virtual machine. So, in effect, it's compilers all the way down.}.
 Compiled kernels are comprised by many \textit{threads} that execute the same instruction(s) in parallel;
 NVIDIA describes this addition to Flynn's taxonomy~\cite{5009071} as Single Instruction Multiple Thread (SIMT).
-The large register file enables very fast thread context switching ($\sim$25 microseconds on the Fermi architecture), performed by a centralized hardware thread scheduler.
+The large register file enables very fast thread context switching ($\sim$25 microseconds on the Fermi architecture~\cite{Glaskowsky2009NVIDIAS}), performed by a centralized hardware thread scheduler.
 Multiple threads are grouped into blocks (SMs are single tenant with respect to blocks) and blocks are grouped into \textit{grids} (grids execute a single kernel).
 All threads in a block, by virtue of running on the same SM, coordinate (execute in arbitrary order, concurrently, or sequentially) and share memory.
 Thread blocks are partitioned into \textit{warps} of 32 threads;
