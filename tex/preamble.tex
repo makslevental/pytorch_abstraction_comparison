@@ -17,8 +17,14 @@
 \usepackage{cleveref}
 \usepackage{xcolor}
 \usepackage{listings}
+\usepackage{url}
 
 \crefdefaultlabelformat{\color{red}(#2#1#3)}
 \newcommand{\code}[1]{\texttt{#1}}
 
 \usepackage[cache=false]{minted}
+\newmintedfile{c}{
+    linenos=TRUE,
+    fontsize=\small,
+}
+%\usemintedstyle{trac}

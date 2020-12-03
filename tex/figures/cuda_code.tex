@@ -2,9 +2,10 @@
     \centering
     \begin{subfigure}{\linewidth}
         \centering
-        \inputminted{c}{code/hello_world_kernel.c}
+        \cfile{code/hello_world_kernel.c}
         \caption{CUDA code to be compiled by \mintinline{c}{nvcc}.
-        Note differences \mintinline{c}{__global__} and \mintinline{c}{matrix_sum<<,>>} from standard C.}
+        Note differences \mintinline{c}{__global__} and \mintinline{c}{matrix_sum<<,>>} from standard C.
+        }
         \label{lst:cuda_hello_world}
     \end{subfigure}
     \\[3ex]

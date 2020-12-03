@@ -99,8 +99,9 @@ this enables shared data across groups of threads more efficiently than possible
 Such an architecture, particularly suited to maximizing throughput, necessitates a programming model distinct from that of a conventional, general purpose processor architecture.
 A unit of computation deployed to a GPU is called a \textit{kernel}; kernels can be defined using NVIDIA's Compute Unified Device Architecture (CUDA) extensions to C, C++, and FORTRAN%
 \footnote{In fact CUDA compiles down to a virtual machine assembly code (by way of \code{nvcc}) for a virtual machine called the Parallel Thread Execution (PTX) virtual machine. So, in effect, it's compilers all the way down.}.
-Compiled kernels are comprised by many \textit{threads} that execute the same instruction(s) in parallel;
-NVIDIA describes this addition to Flynn's taxonomy~\cite{5009071} as Single Instruction Multiple Thread (SIMT).
+Compiled kernels are comprised by many \textit{threads} that start with the same instruction(s) in parallel;
+NVIDIA describes this addition to Flynn's taxonomy~\cite{5009071} as Single Instruction Multiple Thread (SIMT)%
+\footnote{They key difference between SIMD and SIMT is that while in SIMD all vector elements in a vector instruction execute synchronously, threads can diverge; branches are handled by predicated instructions~\cite{cuda_toolkit}.}.
 The large register file enables very fast thread context switching ($\sim$25 microseconds on the Fermi architecture~\cite{Glaskowsky2009NVIDIAS}), performed by a centralized hardware thread scheduler.
 Multiple threads are grouped into blocks (SMs are single tenant with respect to blocks) and blocks are grouped into \textit{grids} (grids execute a single kernel).
 All threads in a block, by virtue of running on the same SM, coordinate (execute in arbitrary order, concurrently, or sequentially) and share memory.
@@ -108,6 +109,21 @@ Thread blocks are partitioned into \textit{warps} of 32 threads;
 it is these warps that are dispatched by the warp scheduler (see~\cref{fig:cuda_cores}) and starting with the Fermi architecture two warps can be executed concurrently on the same SM in order to increase utilization.
 
 \input{figures/fermi.tex}
+
+We present an example CUDA program in~\cref{fig:cuda_hello_world} to illustrate some of the artifacts of the CUDA threading model.
+The premise of the program is performing an element-wise sum of two $32 \times 48$ entry matrices.
+Note that all of the data weighs in at  $3 \times 32 \times 48 \times 4 = 18$ kilobytes (well within the bounds of shared memory of an SM).
+The actual work of the summing is partitioned across a grid of 6 thread blocks, each containing $16 \times 16$ threads.
+Such a partitioning means each thread can be logically responsible for exactly one sum and therefore the kernel is quite simple (see~\cref{lst:cuda_hello_world}).
+Within the context of a kernel, each thread is uniquely identified by it's multi-index in the thread hierarchy (\code{threadIdx} and \code{blockIdx}).
+Hence, to carry out the sum, the kernel maps this multi-index to the physical address of the data%
+\footnote{In CUDA C/C++ data is laid out in row-major order but this is not fixed (in CUDA FORTRAN the data is laid out in column-major order).}.
+This (grid, block, thread)$\rightarrow$data mapping is, in effect, the mechanism that implements the SIMT architecture.
+Note that, since each block is allocated to exactly one SM and itself partitioned into warps of 32 threads, this sum will take 
+
+
+
+
 \input{figures/cuda_code.tex}
 
 

@@ -5,7 +5,8 @@ __global__ void matrix_sum(
     int rows,
     int cols
 ) {
-    // blockDim.x == blockDim.y == 16
+    // blockDim is short for block dimension
+    // blockDim.x == blockDim.y == 16 threads
     int x = threadIdx.x + blockIdx.x * blockDim.x;
     int y = threadIdx.y + blockIdx.y * blockDim.y;
     if (x < cols && y < rows) {
@@ -18,8 +19,14 @@ int main() {
     int rows = 32, cols = 48;
     float A[m][n], B[m][n], C[m][n];
 
-    dim3 blocks(3, 2);
-    dim3 threads(16, 16);
+    // initialization and cudaMemcpy
+    // ...
+
+    // dim3 is a 3d integer vector
+    // dimensions omitted in the constructor (e.g. z like here)
+    // are set to 1
+    dim3 numBlocks(3, 2);
+    dim3 numThreads(16, 16);
     matrix_sum<<blocks, threads>>(A, B, C, rows, cols);
 }
 
