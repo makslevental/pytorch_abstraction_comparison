@@ -168,10 +168,87 @@
     author = {P. Glaskowsky},
     year = {2009}
 }
-%@misc{cuda_toolkit,
-%    author = "{NVIDIA}",
-%    title = "CUDA Toolkit Documentation",
-%    year = "2020",
-%    howpublished = "\url{https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#control-flow-instructions}",
-%    note = "[Online; accessed 3-December-2020]"
-%}
+@misc{cuda_toolkit,
+    author = "{NVIDIA}",
+    title = "CUDA Toolkit Documentation",
+    year = "2020",
+    howpublished = "\url{https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html\#control-flow-instructions}",
+    note = "[Online; accessed 3-December-2020]"
+}
+@misc{named_tensor,
+    author = "{Alexander Rush}",
+    title = "Tensor Considered Harmful",
+    year = "2020",
+    howpublished = "\url{http://nlp.seas.harvard.edu/NamedTensor}",
+    note = "[Online; accessed 3-December-2020]"
+}
+@misc{vasilache2018tensor,
+    title = {Tensor Comprehensions: Framework-Agnostic High-Performance Machine Learning Abstractions},
+    author = {Nicolas Vasilache and Oleksandr Zinenko and Theodoros Theodoridis and Priya Goyal and Zachary DeVito and William S. Moses and Sven Verdoolaege and Andrew Adams and Albert Cohen},
+    year = {2018},
+    eprint = {1802.04730},
+    archivePrefix = {arXiv},
+    primaryClass = {cs.PL}
+}
+@article{Chen_2017,
+    title = {Typesafe abstractions for tensor operations (short paper)},
+    ISBN = {9781450355292},
+    url = {http://dx.doi.org/10.1145/3136000.3136001},
+    DOI = {10.1145/3136000.3136001},
+    journal = {Proceedings of the 8th ACM SIGPLAN International Symposium on Scala - SCALA 2017},
+    publisher = {ACM Press},
+    author = {Chen, Tongfei},
+    year = {2017}
+}
+@misc{le2019tflms,
+    title = {TFLMS: Large Model Support in TensorFlow by Graph Rewriting},
+    author = {Tung D. Le and Haruki Imai and Yasushi Negishi and Kiyokuni Kawachiya},
+    year = {2019},
+    eprint = {1807.02037},
+    archivePrefix = {arXiv},
+    primaryClass = {cs.LG}
+}
+@inproceedings{Pradelle2017PolyhedralOO,
+    title = {Polyhedral Optimization of TensorFlow Computation Graphs},
+    author = {B. Pradelle and Beno {\^i} t Meister and M. Baskaran and J. Springer and R. Lethin},
+    booktitle = {ESPT/VPA@SC},
+    year = {2017}
+}
+@misc{lattner2020mlir,
+    title = {MLIR: A Compiler Infrastructure for the End of Moore's Law},
+    author = {Chris Lattner and Mehdi Amini and Uday Bondhugula and Albert Cohen and Andy Davis and Jacques Pienaar and River Riddle and Tatiana Shpeisman and Nicolas Vasilache and Oleksandr Zinenko},
+    year = {2020},
+    eprint = {2002.11054},
+    archivePrefix = {arXiv},
+    primaryClass = {cs.PL}
+}
+@misc{zerrell2019stripe,
+    title = {Stripe: Tensor Compilation via the Nested Polyhedral Model},
+    author = {Tim Zerrell and Jeremy Bruestle},
+    year = {2019},
+    eprint = {1903.06498},
+    archivePrefix = {arXiv},
+    primaryClass = {cs.DC}
+}
+@INPROCEEDINGS{Griebl98codegeneration,
+    author = {Martin Griebl and Christian Lengauer and Sabine Wetzel},
+    title = {Code Generation in the Polytope Model},
+    booktitle = {In IEEE PACT},
+    year = {1998},
+    pages = {106--111},
+    publisher = {IEEE Computer Society Press}
+}
+@inproceedings{10.5555/3291168.3291211,
+    author = {Chen, Tianqi and Moreau, Thierry and Jiang, Ziheng and Zheng, Lianmin and Yan, Eddie and Cowan, Meghan and Shen, Haichen and Wang, Leyuan and Hu, Yuwei and Ceze, Luis and Guestrin, Carlos and Krishnamurthy, Arvind},
+    title = {TVM: An Automated End-to-End Optimizing Compiler for Deep Learning},
+    year = {2018},
+    isbn = {9781931971478},
+    publisher = {USENIX Association},
+    address = {USA},
+    abstract = {There is an increasing need to bring machine learning to a wide diversity of hardware devices. Current frameworks rely on vendor-specific operator libraries and optimize for a narrow range of server-class GPUs. Deploying workloads to new platforms - such as mobile phones, embedded devices, and accelerators (e.g., FPGAs, ASICs) - requires significant manual effort. We propose TVM, a compiler that exposes graph-level and operator-level optimizations to provide performance portability to deep learning workloads across diverse hardware back-ends. TVM solves optimization challenges specific to deep learning, such as high-level operator fusion, mapping to arbitrary hardware primitives, and memory latency hiding. It also automates optimization of low-level programs to hardware characteristics by employing a novel, learning-based cost modeling method for rapid exploration of code optimizations. Experimental results show that TVM delivers performance across hardware back-ends that are competitive with state-of-the-art, hand-tuned libraries for low-power CPU, mobile GPU, and server-class GPUs. We also demonstrate TVM's ability to target new accelerator back-ends, such as the FPGA-based generic deep learning accelerator. The system is open sourced and in production use inside several major companies.},
+    booktitle = {Proceedings of the 13th USENIX Conference on Operating Systems Design and Implementation},
+    pages = {579–594},
+    numpages = {16},
+    location = {Carlsbad, CA, USA},
+    series = {OSDI'18}
+}

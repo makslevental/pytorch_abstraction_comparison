@@ -23,8 +23,8 @@ int main() {
     // ...
 
     // dim3 is a 3d integer vector
-    // dimensions omitted in the constructor (e.g. z like here)
-    // are set to 1
+    // dimensions omitted in the constructor
+    // (e.g. z like here) are set to 1
     dim3 numBlocks(3, 2);
     dim3 numThreads(16, 16);
     matrix_sum<<blocks, threads>>(A, B, C, rows, cols);
