@@ -1,0 +1,33 @@
+Deep Learning (DL) frameworks represent neural network models as dataflow and computation graphs (where nodes correspond to functional units and edges correspond to composition).
+In recent years, there has been a proliferation of DL frameworks~\cite{paszke2019pytorch,abadi2016tensorflow,chen2015mxnet,cntk} implemented as domain-specific languages (DSLs) embedded in ``high-level'' languages%
+\footnote{For the purposes of this article, we take ``high-level'' to mean garbage collected and agnostic with respect to hardware from \textit{from the perspective of the user}.} such as Python, Java, and C\#.
+These DSLs serve as \textit{abstractions} that aim to map the DL graphs onto hardware pipelines.
+That is to say, they hide (or \textit{encapsulate}) details of DL models that are judged to be either irrelevant or too onerous to consider.
+By virtue of these design decisions the frameworks trade-off ease-of-use for execution performance;
+quoting the architects of PyTorch:
+\begin{displayquote}
+  To be useful, PyTorch needs to deliver compelling performance, although not at the expense of simplicity and ease of use.
+  Trading 10\% of speed for a significantly simpler to use model is acceptable; 100\% is not.
+\end{displayquote}
+
+Trading off ergonomics for performance is manifestly reasonable%
+\footnote{\textcquote{knuth}{The real problem is that programmers have spent far too much time worrying about efficiency in the wrong places and at the wrong times; premature optimization is the root of all evil (or at least most of it) in programming.}}%
+, especially during the early phases of the DL engineering/research process (i.e.\ during the hypothesis generation and experimentation phases).
+Ultimately one needs to put the DL model into production.
+It is at this phase of the DL engineering process that every percentage point of execution performance becomes critical.
+Alternatively, there are many areas of academic DL where the research community strives to incrementally improve performance~\cite{abdelhamed2020ntire,hall2020probability,ILSVRC15}.
+For example, in the area of super-resolution a deliberate goal is to be able to ``super-resolve'' in real-time~\cite{7780576}.
+Similarly, in natural language processing, where enormous language models are becoming the norm~\cite{brown2020language}, memory efficiency of DL models is of the utmost concern.
+In such instances it's natural to wonder whether ease-of-use trade-offs that sacrifice execution performance, or memory efficiency, are worthwhile and whether their costs can be mitigated.
+
+Thus, our intent here is to investigate the costs of some of the abstractions employed by framework developers.
+In particular we focus on the PyTorch framework and ecosystem (chosen for its popularity amongst academic researchers) on the software side and Graphics Processing Units (GPUs) on the hardware side.
+To that end, we implement a popular and fairly representative%
+\footnote{In the sense that the functional units constituting the model are widely used in various other models.}
+DL model at four levels of abstraction: conventional PyTorch, LibTorch, cuDNN, and TorchScript.
+We argue that in the forthcoming that these four implementations do in fact span considerable breadth in the abstraction spectrum.
+Furthermore we train, test, evaluate each of the implementations on four object detection datasets and tabulate performance and accuracy metrics.
+
+The rest of this article is organizing as follows: ~\cref{sec:background} quickly reviews the germaine background material on GPUs and DL frameworks, ~\cref{sec:methodology} describes the implementations and our profiling methodology,~\cref{sec:results} presents our results and a comparative discussion thereof, ~\cref{sec:discussion} discusses broad lessons learned, ~\cref{sec:futurework} proposes future work, and ~\cref{sec:speculation} speculates wildly about the future of DL systems more generally.
+
+%the DL literature is rich in studies that investigate scaling DL models across various dimensions~\cite{kaplan2020scaling,you2017large,you2020large}
