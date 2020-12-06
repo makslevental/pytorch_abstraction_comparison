@@ -1,0 +1,160 @@
+%! Author = maksim
+%! Date = 11/27/20
+
+% Preamble
+\documentclass[11pt]{article}
+
+% Packages
+\usepackage{amsmath}
+\usepackage[utf8]{inputenc}
+\usepackage{pgfplots}
+\usepgfplotslibrary{patchplots,colormaps}
+\DeclareUnicodeCharacter{2212}{−}
+\usepgfplotslibrary{groupplots,dateplot}
+\usetikzlibrary{patterns,shapes.arrows}
+\pgfplotsset{compat=newest}
+
+% Document
+\begin{document}
+
+
+    \begin{figure}
+        \input{figures/plots/train_accuracy_per_epoch_mnist.tex}
+    \end{figure}
+
+
+    \begin{figure}
+        \input{figures/plots/train_accuracy_per_epoch_cifar10.tex}
+    \end{figure}
+
+
+    \begin{figure}
+        \input{figures/plots/train_accuracy_per_epoch_stl10.tex}
+    \end{figure}
+
+
+    \begin{figure}
+        \input{figures/plots/train_accuracy_per_epoch_pascal.tex}
+    \end{figure}
+
+
+    \begin{figure}
+        \input{figures/plots/eval_accuracy_per_epoch_mnist.tex}
+    \end{figure}
+
+
+    \begin{figure}
+        \input{figures/plots/eval_accuracy_per_epoch_cifar10.tex}
+    \end{figure}
+
+
+    \begin{figure}
+        \input{figures/plots/eval_accuracy_per_epoch_stl10.tex}
+    \end{figure}
+
+
+    \begin{figure}
+        \input{figures/plots/eval_accuracy_per_epoch_pascal.tex}
+    \end{figure}
+
+
+    \begin{figure}
+        \input{figures/plots/train_avg_loss_per_epoch_mnist.tex}
+    \end{figure}
+
+
+    \begin{figure}
+        \input{figures/plots/train_avg_loss_per_epoch_cifar10.tex}
+    \end{figure}
+
+
+    \begin{figure}
+        \input{figures/plots/train_avg_loss_per_epoch_stl10.tex}
+    \end{figure}
+
+
+    \begin{figure}
+        \input{figures/plots/train_avg_loss_per_epoch_pascal.tex}
+    \end{figure}
+
+
+    \begin{figure}
+        \input{figures/plots/eval_avg_loss_per_epoch_mnist.tex}
+    \end{figure}
+
+
+    \begin{figure}
+        \input{figures/plots/eval_avg_loss_per_epoch_cifar10.tex}
+    \end{figure}
+
+
+    \begin{figure}
+        \input{figures/plots/eval_avg_loss_per_epoch_stl10.tex}
+    \end{figure}
+
+
+    \begin{figure}
+        \input{figures/plots/eval_avg_loss_per_epoch_pascal.tex}
+    \end{figure}
+    
+
+    \begin{figure}
+        \input{figures/plots/train_avg_sample_time.tex}
+    \end{figure}
+    
+
+    \begin{figure}
+        \input{figures/plots/train_avg_used_mem.tex}
+    \end{figure}
+
+
+    \begin{figure}
+        \input{figures/plots/train_avg_gpu_util.tex}
+    \end{figure}
+
+
+    \begin{figure}
+        \input{figures/plots/eval_avg_sample_time.tex}
+    \end{figure}
+
+
+    \begin{figure}
+        \input{figures/plots/eval_avg_used_mem.tex}
+    \end{figure}
+
+
+    \begin{figure}
+        \input{figures/plots/eval_avg_gpu_util.tex}
+    \end{figure}
+
+
+    \begin{figure}
+        \input{figures/plots/batch_size_32_avg_sample_time_for_resolutions.tex}
+    \end{figure}
+
+
+    \begin{figure}
+        \input{figures/plots/batch_size_32_avg_used_mem_for_resolutions.tex}
+    \end{figure}
+
+
+    \begin{figure}
+        \input{figures/plots/batch_size_32_avg_gpu_util_for_resolutions.tex}
+    \end{figure}
+
+
+    \begin{figure}
+        \input{figures/plots/resolution_32_avg_sample_time_for_batch_size.tex}
+    \end{figure}
+
+
+    \begin{figure}
+        \input{figures/plots/resolution_32_avg_used_mem_for_batch_size.tex}
+    \end{figure}
+
+
+    \begin{figure}
+        \input{figures/plots/resolution_32_avg_gpu_util_for_batch_size.tex}
+    \end{figure}
+
+\end{document}

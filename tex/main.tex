@@ -25,11 +25,10 @@
   Such frameworks function primarily by abstracting away the implementation details of arbitrary neural architectures, thereby enabling researchers and engineers to focus on design.
   In principle, such frameworks could be ``zero-cost abstractions'';
   in practice, they incur translation and indirection overheads.
-  We study at which points exactly in the engineering life-cycle of a DL model are the highest costs paid and whether they can be mitigated.
-  We train, test, and evaluate a representative DL model using PyTorch, LibTorch, TorchScript, and cuDNN on representative datasets.
+  We study at which points exactly in the engineering life-cycle of a DL model the highest costs are paid and whether they can be mitigated.
+  We train, test, and evaluate a representative DL model using PyTorch, LibTorch, TorchScript, and cuDNN on representative datasets, comparing execution time and memory efficiency.
 \end{abstract}
 
-%\include{plots/teaser}
 
 \maketitle
 
@@ -43,23 +42,15 @@
 \input{methods}
 
 \section{Results}\label{sec:results}
-
-\subsection{Training and evaluation}\label{subsec:training-and-evaluation}
-
-\subsection{Memory and utilization}\label{subsec:memory-and-utilization}
+\input{results}
 
 \section{Discussion}\label{sec:discussion}
-
-% initialization in conv layers in pytorch/libtorch
 
 \section{Future work}\label{sec:futurework}
 
 \section{Speculation}\label{sec:speculation}
 
-%%% The next two lines define the bibliography style to be used, and
-%%% the bibliography file.
 \bibliographystyle{science}
-%\bibliographystyle{ACM-Reference-Format}
 \bibliography{main}
 
 \appendix
@@ -68,7 +59,9 @@
 
 \section{Appendix}\label{sec:appendix}
 
-%\input{plots/3dplots.tex}
+\input{figures/3dplots.tex}
+
+\input{figures/other_accuracy_results.tex}
 
 \end{document}
 \endinput

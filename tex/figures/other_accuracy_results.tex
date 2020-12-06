@@ -1,0 +1,30 @@
+\begin{figure*}
+    \centering
+    \begin{subfigure}{0.45\linewidth}
+        \centering
+        \begin{adjustbox}{width=\textwidth}
+            \input{figures/plots/train_accuracy_per_epoch_stl10.tex}
+        \end{adjustbox}
+    \end{subfigure}%
+    \begin{subfigure}{0.45\textwidth}
+        \centering
+        \begin{adjustbox}{width=\textwidth}
+            \input{figures/plots/train_accuracy_per_epoch_pascal.tex}
+        \end{adjustbox}
+    \end{subfigure}
+    \quad
+    \begin{subfigure}{0.45\textwidth}
+        \centering
+        \begin{adjustbox}{width=\textwidth}
+            \input{figures/plots/eval_accuracy_per_epoch_stl10.tex}
+        \end{adjustbox}
+    \end{subfigure}
+    \begin{subfigure}{0.45\textwidth}
+        \centering
+        \begin{adjustbox}{width=\textwidth}
+            \input{figures/plots/eval_accuracy_per_epoch_pascal.tex}
+        \end{adjustbox}
+    \end{subfigure}
+    \caption{Comparison of accuracy for PyTorch, LibTorch, and cuDNN implementations during training and evaluation. Solid line corresponds to mean while shaded regions correspond to min and max. Time is measured in units of \textit{epoch} $\times$ \textit{average epoch time}. }
+    \label{fig:other_accuracy_results}
+\end{figure*}

@@ -1,0 +1,75 @@
+\begin{tikzpicture}[
+    axisbg/.style={
+        fill=#1!50,
+        nearly transparent
+    },
+    declare function={
+      ticklen=0.15;
+      xmax=5;
+      ymax=5;
+      zmax=5;
+    },
+]
+
+    \definecolor{cudnn}{rgb}{0.886274509803922,0.290196078431373,0.2}
+    \definecolor{libtorch}{rgb}{0.203921568627451,0.541176470588235,0.741176470588235}
+    \definecolor{pytorch}{rgb}{0.596078431372549,0.556862745098039,0.835294117647059}
+    \definecolor{torchscript}{rgb}{0.996078431372549,0.556862745098039,0.835294117647059}
+
+    \begin{axis}[%
+        axis background/.style={fill=white!89.8039215686275!black},
+        title={PASCAL},
+        grid=major,
+        width=12cm,height=12cm,
+        xlabel={\textit{batch size}},
+        ylabel={\textit{resolution}},
+        zlabel={\textit{util (\%)}},
+        legend style={
+            mark size=5,
+            legend cell align=left
+        },
+        legend entries={
+            cuDNN, LibTorch, PyTorch, TorchScript
+        },
+        label style={font=\scriptsize},
+        ticklabel style={font=\scriptsize},
+        view={40}{30},
+        xmode=log,
+        ymode=log,
+        log basis x={2},
+        log basis y={2},
+        zmode=log,
+        log origin=infty
+    ]
+        \addplot3 [
+            opacity=0.7,
+            ycomb,
+            line width=0.5pt,
+            mark=cube*,
+            mark size=3,
+            fill=cudnn
+        ]
+        file{./figures/plots/cudnn_train_avg_gpu_util.csv};
+
+        \addplot3 [
+            opacity=0.7,
+            ycomb,
+            line width=0.5pt,
+            mark=ball,
+            mark size=3,
+            fill=libtorch,
+        ]
+        file{./figures/plots/libtorch_train_avg_gpu_util.csv};
+
+        \addplot3 [
+            opacity=0.7,
+            ycomb,
+            line width=0.5pt,
+            mark=diamond*,
+            mark size=3,
+            fill=pytorch,
+        ]
+        file{./figures/plots/pytorch_train_avg_gpu_util.csv};
+
+    \end{axis}
+\end{tikzpicture}

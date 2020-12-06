@@ -26,7 +26,7 @@ Distinct models were trained in parallel in order to expedite the overall traini
 In addition we perform scaling experiments (in resolution and batch size) on the PASCAL dataset;
 for $\code{batch\_size}, \code{resolution} = 8, 16, \dots, 1024$.
 For this purpose we employ the ``Resolutions platform'', which has GPU RAM enough to accommodate large batch sizes and large image resolutions.
-For both sets of experiments, each run is repeated 10 times to reduce variance in the measurements.
+For both sets of experiments, each run is repeated 10 times and results are averaged to reduce variance in the measurements.
 Precise execution time measurements are collected using the CUDA \code{cudaEventCreate}, \code{cudaEventRecord}, \code{cudaEventElapsedTime} APIs.
 Precise memory and GPU utilization measurements are collecting using the NVIDIA Management Library C API\@.
 Both sets of APIs were appropriately wrapped for use in Python.
