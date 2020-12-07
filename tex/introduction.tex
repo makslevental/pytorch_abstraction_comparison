@@ -1,7 +1,7 @@
 Deep Learning (DL) frameworks represent neural network models as dataflow and computation graphs (where nodes correspond to functional units and edges correspond to composition).
 In recent years, there has been a proliferation of DL frameworks~\cite{paszke2019pytorch,abadi2016tensorflow,chen2015mxnet,cntk} implemented as domain-specific languages (DSLs) embedded in ``high-level'' languages%
 \footnote{For the purposes of this article, we take ``high-level'' to mean garbage collected and agnostic with respect to hardware from \textit{from the perspective of the user}.} such as Python, Java, and C\#.
-These DSLs serve as \textit{abstractions} that aim to map the DL graphs onto hardware pipelines.
+These DSLs serve as \textit{abstractions} that aim to map the DL graphs to hardware pipelines.
 That is to say, they hide (or \textit{encapsulate}) details of DL models that are judged to be either irrelevant or too onerous to consider.
 By virtue of these design decisions the frameworks trade-off ease-of-use for execution performance;
 quoting the architects of PyTorch:
@@ -21,12 +21,12 @@ Similarly, in natural language processing, where enormous language models are be
 In such instances it's natural to wonder whether ease-of-use trade-offs that sacrifice execution performance, or memory efficiency, are worthwhile and whether their costs can be mitigated.
 
 Thus, our intent here is to investigate the costs of some of the abstractions employed by framework developers.
-In particular we focus on the PyTorch framework and ecosystem (chosen for its popularity amongst academic researchers) on the software side and Graphics Processing Units (GPUs) on the hardware side.
+In particular we focus on the PyTorch framework and ecosystem (chosen for its popularity amongst academic researchers) deployed to Graphics Processing Units (GPUs).
 To that end, we implement a popular and fairly representative%
 \footnote{In the sense that the functional units constituting the model are widely used in various other models.}
 DL model at four levels of abstraction: conventional PyTorch, LibTorch, cuDNN, and TorchScript.
-We argue that in the forthcoming that these four implementations do in fact span considerable breadth in the abstraction spectrum.
-Furthermore we train, test, evaluate each of the implementations on four object detection datasets and tabulate performance and accuracy metrics.
+We argue, in the forthcoming, that these four implementations span considerable breadth in the abstraction spectrum.
+Furthermore we train, test, and evaluate each of the implementations on four object detection datasets and tabulate performance and accuracy metrics.
 
 The rest of this article is organizing as follows: ~\cref{sec:background} quickly reviews the germaine background material on GPUs and DL frameworks, ~\cref{sec:methodology} describes the implementations and our profiling methodology,~\cref{sec:results} presents our results and a comparative discussion thereof, ~\cref{sec:discussion} discusses broad lessons learned, ~\cref{sec:futurework} proposes future work, and ~\cref{sec:speculation} speculates wildly about the future of DL systems more generally.
 

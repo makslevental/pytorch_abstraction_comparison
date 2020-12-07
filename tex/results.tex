@@ -1,31 +1,30 @@
 \input{figures/accuracy_results.tex}
 
-The PyTorch implementation compares favorably with both LibTorch and the cuDNN implementations (see~\cref{fig:accuracy_results}).
+The PyTorch implementation compares favorably with both LibTorch and the cuDNN implementations (see~\cref{fig:accuracy_results}) in terms of accuracy.
 On MNIST and CIFAR10 all three implementations perform reasonably well;
 LibTorch and PyTorch attain maximum accuracy at around the same time while cuDNN lags behind.
 On the more complex STL10 and PASCAL datasets (see~\cref{fig:other_accuracy_results} in the appendix) the cuDNN implementation dramatically underperformed PyTorch and LibTorch.
-The cause of the difference between the cuDNN implementation and the others is unclear;
-on the complex datasets the cuDNN implementation vacillated between vanishing gradients and exploding gradients.
+The cause of the difference between the cuDNN implementation and the others is unclear.
 
 In attempting to resolve the poor performance of the cuDNN implementation it was discovered that PyTorch (and LibTorch as well) initialize weights in convolutional, linear, and batch normalization layers.
 This is \textbf{not documented and not configurable}.
 For convolutional and linear layers Kaiming uniform initialization~\cite{he2015delving} is used and for batch normalization layers $(1,0)$ initialization for the weights and biases is used.
-We implemented Kaiming initialization for the cuDNN implementation but it did not resolve the underperformance issues (the network vacillated between vanishing gradients and exploding gradients depending on various settings of the parameters in the Kaiming initialization).
+We implemented Kaiming initialization for the cuDNN implementation but it did not resolve the underperformance issues (the network vacillated between vanishing gradients and exploding gradients depending on various settings of the hyper-parameters in the Kaiming initialization).
 Note that TorchScript training and evaluation accuracy is not measured/reported because TorchScript implementations cannot (as of yet) be trained, only evaluated.
 
 The undocumented initialization leads us to believe that most likely there are several other heuristic optimizations implemented by Pytorch (and LibTorch).
-While such optimizations generally do improve performance (to wit: here on STL10 and PASCAL) this prompts the question of whether or not this is a ``moral'' cost of abstraction (since the optimizations might hurt performance for particular models).
+While such optimizations generally do improve performance (to wit: here on STL10 and PASCAL) this prompts the question of whether or not this is a ``moral'' cost of abstraction (since the optimizations might hurt performance for other models).
 
 \input{figures/timing_results.tex}
 
 In terms of execution time and memory usage PyTorch compares \textbf{unfavorably} with each of the other implementations.
 We measure execution time, memory usage, and GPU utilization during evaluation on PASCAL for various batch sizes and resolution.
-For example, for fixed batch size and various resolutions and for fixed resolution and various batch sizes (see~\cref{fig:timing_results}), we see that PyTorch is almost an order of magnitude slower than all other implementations for resolutions less $2^7$.
+For example, for fixed batch size and various resolutions and for fixed resolution and various batch sizes (see~\cref{fig:timing_results}), we see that PyTorch is almost an order of magnitude slower than all other implementations.
 This execution time difference persists across resolutions and batch sizes but narrows as either increases (see~\cref{fig:train_avg_sample_time,,fig:train_avg_used_mem,,fig:train_avg_gpu_util,,fig:eval_avg_sample_time,,fig:eval_avg_used_mem,,fig:eval_avg_gpu_util} in the appendix).
 With respect to memory usage PyTorch and LibTorch are approximately the same across resolutions and batch sizes, while cuDNN and TorchScript are more memory efficient especially below resolution $2^6$ and batch size $2^7$.
 
-We use NVIDIA's Visual profiler\footnote{\url{https://developer.nvidia.com/nvidia-visual-profiler}} to investigate further.
-One critical way in which the PyTorch implementation differs the others is in host-to-device per batch copy size: PyTorch copies 25.166 MB while the other implementations copy 12.583 MB\@.
+We use NVIDIA's Visual profiler\footnote{\url{https://developer.nvidia.com/nvidia-visual-profiler}} to investigate fixed \code{batch\_size = 32} further.
+One critical way in which the PyTorch implementation differs from the others is in host-to-device per batch copy size: PyTorch copies 25.166 MB while the other implementations copy 12.583 MB\@.
 Consequently PyTorch requires $\sim$15.17ms to copy the batch while all other implementations require $\sim$7.55ms\footnote{In fact pinning memory (copy from memory that isn't paged) halves copy time again.}.
 Another significant discrepancy is the choice in block size and grid size (regarding threaded distribution across GPU SMs).
 For the ReLU kernel, which is the second most often executed kernel ($\sim$12\% of total execution time), the PyTorch implementation allocates a grid of size $\left( 1024,2,1 \right)$ while the LibTorch and cuDNN implementations allocate grids of size $\left( 512,2,1 \right)$.

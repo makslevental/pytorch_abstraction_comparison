@@ -11,7 +11,7 @@ See ~\cref{fig:fermi_arch} for a diagram of NVIDIA's Fermi architecture, where e
 \footnote{For example, Intel's Haswell architecture supports 168 integer and 168 floating-point registers.}%
 , and thread control logic (to be discussed in the proceeding).
 Each SM has access to local memory, several cache levels, and global memory.
-In the Fermi architecture (and subsequent architectures) this local memory is configurable in software;
+In the Fermi architecture (and subsequent architectures) local memory is configurable in software;
 a fraction of it can be apportioned as either local memory or L1 cache (for workloads that query global memory in excess of local memory).
 One final feature worth mentioning, though irrelevant for us here, is the L2 cache's atomic \code{read-modify-write} facilities;
 this enables sharing data across groups of threads more efficiently than possible in conventional CPUs%
@@ -34,13 +34,13 @@ it is these warps that are dispatched by the warp scheduler (see~\cref{fig:cuda_
 
 We present an example CUDA program in~\cref{fig:cuda_hello_world} to illustrate some of the artifacts of the CUDA threading model.
 The premise of the program is performing an element-wise sum of two $32 \times 48$ entry matrices.
-Note that all of the data weighs in at  $3 \times 32 \times 48 \times 4 = 18$ kilobytes (well within the bounds of shared memory of any one SM).
-The actual work of the summing is partitioned across a grid of 6 thread blocks, each containing $16 \times 16$ threads.
+Note that all of the data weighs in at  $3 \times 32 \times 48 \times 4 = 18$ kilobytes (well within the bounds of shared memory on any one SM).
+The actual work of summing is partitioned across a grid of 6 thread blocks, each containing $16 \times 16$ threads.
 Such a partitioning means each thread can be logically responsible for exactly one sum and therefore the kernel is quite simple (see~\cref{lst:cuda_hello_world}).
 Within the context of a kernel, each thread is uniquely identified by it's multi-index in the thread hierarchy (\code{threadIdx} and \code{blockIdx}).
 Hence, to carry out the sum, the kernel maps this multi-index to the physical address of the data%
 \footnote{In CUDA C/C++ data is laid out in row-major order but this is not fixed (in CUDA FORTRAN the data is laid out in column-major order).}.
-This (grid, block, thread)$\rightarrow$data mapping is, in effect, the mechanism that implements the SIMT architecture.
+This (grid, block, thread)-to-data mapping is, in effect, the mechanism that implements the SIMT architecture.
 Note that, since each block is allocated to exactly one SM, this sum will take $\left( 16 \times 16 \right) \div 16 = 16$ clock cycles on the Fermi architecture;
 better throughput could be achieved by increasing the number of blocks (and therefore the number of SMs assigned work).
 
@@ -62,7 +62,7 @@ There are two types of autodiff: \textit{forward mode} (or \textit{forward accum
 Reverse mode autodiff enables the framework to effectively calculate the gradients of parameters of a neural network with respect to some relevant loss or objective function.
 Note that such gradients can be \textit{back-propagated} through the neural network in order to adjust the parameters of the neural network such that it minimizes the loss\footnote{In which case, it is in fact the negatives of the gradients that are back-propagated.} or maximizes the objective.
 
-Dataflow graphs (and their corresponding gradient-flow graphs) can be specified either statically, with fan-in and fan-out for all functions predetermined, or dynamically, where connections between functions are determined ``on-the-run''.
+Dataflow graphs (and their corresponding gradient-flow graphs) can be specified either statically, with fan-in and fan-out for all functions predetermined, or dynamically, where compositions of functions are determined ``on-the-run''.
 There are advantages and disadvantages to both specification strategies.
 Static specifications tightly constrain\footnote{For example, branches and loops are cumbersome to specify statically.} the intricacy of the dataflow graph but, obversely, can be leveraged to improve performance and scalability~\cite{le2019tflms,Pradelle2017PolyhedralOO}.
 TensorFlow (prior to v2.0) is an example of a DL framework that compiles statically specified graphs.
@@ -72,7 +72,7 @@ Both PyTorch and TensorFlow also support just-in-time (JIT) compilation strategi
 such JIT compilers strike a balance between fluency and scalability.
 In this work we investigate TorchScript (see~\cref{sec:methodology}).
 
-It warrants mentioning that, in addition to vertically integrated DL frameworks (i.e.\ specification language and hardware compiler), recently there has been work on intermediate byte code representations for dataflow graphs that arbitrary compiler ``frontends'' can target.
+It warrants mention that, in addition to vertically integrated DL frameworks (i.e.\ specification language and hardware compiler), recently there has been work on intermediate byte code representations for dataflow graphs that arbitrary compiler ``frontends'' can target.
 The Multi-Level Intermediate Representation (MLIR)~\cite{lattner2020mlir} project has goals that include supporting dataflow graphs, optimization passes on those graphs and hardware specific optimizations%
 \footnote{Interestingly enough, the project is headed by Chris Lattner who, in developing LLVM, pioneered the same ideas in general purpose programming languages.}.
 Stripe~\cite{zerrell2019stripe} is a polyhedral compiler%

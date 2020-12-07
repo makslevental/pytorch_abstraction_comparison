@@ -1,18 +1,18 @@
 As discussed in the preceding, the translation from high-level neural network specification to hardware native involves a diverse set of choices at design time and translation time.
 Any such choice made implicitly by the DL framework abstracts away intermediary details at the level of abstraction at which the choice is made.
-For example, in PyTorch, by default convolutions include not only learnable filters but also a learnable bias.
+For example, in PyTorch, by default, convolutions include not only learnable filters but also a learnable bias.
 Naturally this increases the number of parameters for which gradients need to be kept account of and updated for.
 At the next level of abstraction (translation from Python specification to C++ objects) another implicit choice is made in choosing tensor dimension ordering%
 \footnote{PyTorch uses some heuristics to order tensor dimensions either NCHW or NHWC.}.
 Finally, at the level of abstraction just prior to compilation into CUDA kernels a convolution strategy is chosen%
 \footnote{Winograd convolution, general matrix multiply (GEMM), or FFT convolution.} according to heuristics.
-Each of these choices potentially incurs a runtime execution and memory cost, depending on whether the heuristics according to which the choice was made apply to the DL model.
+Each of these choices potentially incurs a runtime execution and memory cost, depending on whether the heuristics according to which the choice was made apply to the user's DL model.
 
 With this as subtext, we describe the intent and design of our experiments.
 We implement the popular object detection deep neural network ResNet-50~\cite{he2015deep} at four levels of abstraction (PyTorch, TorchScript\footnote{TorchScript models are serializations of PyTorch models but can run in inference mode in C++, i.e. sans Python runtime.}, LibTorch, and cuDNN) in order to investigate the differences amongst them.
 We measure accuracy, execution time, GPU utilization, and memory efficiency of each implementation on four image datasets (MNIST, CIFAR10, STL10, PASCAL).
 The source for the implementations is available on GitHub\footnote{\url{https://github.com/makslevental/pytorch_abstraction_comparison}}.
-The datasets were chosen because they span the spectrum of image complexity (from small single-channel to large multi-channel).
+The datasets were chosen because they span the spectrum of image complexity (from small single-channel images to large multi-channel images).
 The reasons for choosing ResNet-50 (see~\cref{fig:resnet}) are two fold.
 Firstly, it serves as a benchmark architecture in the research community.
 Secondly, it includes functional units included in many other network architectures (residual units, convolutions of various sizes, batch normalizations, ReLU activations, and pooling layers) and is therefore representative of typical neural network compute workloads.
@@ -28,7 +28,7 @@ for $\code{batch\_size}, \code{resolution} = 8, 16, \dots, 1024$.
 For this purpose we employ the ``Resolutions platform'', which has GPU RAM enough to accommodate large batch sizes and large image resolutions.
 For both sets of experiments, each run is repeated 10 times and results are averaged to reduce variance in the measurements.
 Precise execution time measurements are collected using the CUDA \code{cudaEventCreate}, \code{cudaEventRecord}, \code{cudaEventElapsedTime} APIs.
-Precise memory and GPU utilization measurements are collecting using the NVIDIA Management Library C API\@.
+Precise memory and GPU utilization measurements are collected using the NVIDIA Management Library C API\@.
 Both sets of APIs were appropriately wrapped for use in Python.
 
 \input{figures/test_platforms}
