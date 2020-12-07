@@ -1,11 +1,11 @@
 % This file was created by tikzplotlib v0.9.5.
 \begin{tikzpicture}
 
-\definecolor{color0}{rgb}{0.886274509803922,0.290196078431373,0.2}
-\definecolor{color1}{rgb}{0.203921568627451,0.541176470588235,0.741176470588235}
-\definecolor{color2}{rgb}{0.596078431372549,0.556862745098039,0.835294117647059}
-\definecolor{color3}{rgb}{0.984313725490196,0.756862745098039,0.368627450980392}
-\definecolor{torchscript}{rgb}{0.996078431372549,0.556862745098039,0.835294117647059}
+
+
+
+
+
 
 \begin{axis}[
 axis background/.style={fill=white!89.8039215686275!black},
@@ -15,14 +15,14 @@ axis line style={white},
 log basis y={10},
 tick align=outside,
 tick pos=left,
-title={Average used memory for resolution $=96$},
+title={Average used memory for resolution $=128$},
 x grid style={white},
-xlabel={\textit{batch size}},
+xlabel={batch size},
 xmajorgrids,
 xmin=2.7, xmax=9.3,
 xtick style={color=white!33.3333333333333!black},
 y grid style={white},
-%ylabel={memory (mb)},
+%ylabel={memory (MB)},
 ymajorgrids,
 ymin=1000, ymax=4631.40123788891,
 ymode=log,
@@ -30,7 +30,7 @@ ytick style={color=white!33.3333333333333!black},
 xticklabels={$2^3$, $2^4$, $2^5$, $2^6$, $2^7$, $2^8$, $2^9$},
 xtick={3,...,9},
 ]
-\path [fill=color0, fill opacity=0.2, very thin]
+\path [fill=cudnn, fill opacity=0.2, very thin]
 (axis cs:3,1079)
 --(axis cs:3,1079)
 --(axis cs:4,1163)
@@ -49,7 +49,7 @@ xtick={3,...,9},
 --(axis cs:3,1079)
 --cycle;
 
-\path [fill=color1, fill opacity=0.2, very thin]
+\path [fill=libtorch, fill opacity=0.2, very thin]
 (axis cs:3,1551)
 --(axis cs:3,1551)
 --(axis cs:4,1573)
@@ -68,7 +68,7 @@ xtick={3,...,9},
 --(axis cs:3,1551)
 --cycle;
 
-\path [fill=color2, fill opacity=0.2, very thin]
+\path [fill=pytorch, fill opacity=0.2, very thin]
 (axis cs:3,1537)
 --(axis cs:3,1537)
 --(axis cs:4,1553)
@@ -125,7 +125,7 @@ xtick={3,...,9},
 --(axis cs:3,1341)
 --cycle;
 
-\addplot [semithick, color0]
+\addplot [semithick, cudnn]
 table {%
 3 1079
 4 1162.99987792969
@@ -136,7 +136,7 @@ table {%
 9 4321.0009765625
 };
 %\addlegendentry{cudnn}
-\addplot [semithick, color1]
+\addplot [semithick, libtorch]
 table {%
 3 1551.00012207031
 4 1573
@@ -147,7 +147,7 @@ table {%
 9 2781
 };
 %\addlegendentry{libtorch}
-\addplot [semithick, color2]
+\addplot [semithick, pytorch]
 table {%
 3 1537
 4 1554.19982910156

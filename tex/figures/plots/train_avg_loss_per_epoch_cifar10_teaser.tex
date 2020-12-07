@@ -1,9 +1,9 @@
 % This file was created by tikzplotlib v0.9.5.
 \begin{tikzpicture}
 
-    \definecolor{color0}{rgb}{0.886274509803922,0.290196078431373,0.2}
-    \definecolor{color1}{rgb}{0.203921568627451,0.541176470588235,0.741176470588235}
-    \definecolor{color2}{rgb}{0.596078431372549,0.556862745098039,0.835294117647059}
+
+
+
 
     \begin{axis}[
     axis background/.style={fill=white!89.8039215686275!black},
@@ -21,7 +21,7 @@
     ymajorgrids,
     ytick style={color=white!33.3333333333333!black}
     ]
-        \path [fill=color0, fill opacity=0.2, very thin]
+        \path [fill=cudnn, fill opacity=0.2, very thin]
         (axis cs:0,0.0151240059283182)
         --(axis cs:0,0.0149210059283182)
         --(axis cs:1,0.011554033442775)
@@ -226,7 +226,7 @@
         --(axis cs:0,0.0151240059283182)
         --cycle;
 
-        \path [fill=color1, fill opacity=0.2, very thin]
+        \path [fill=libtorch, fill opacity=0.2, very thin]
         (axis cs:0,0.0148290059283182)
         --(axis cs:0,0.0142490059283182)
         --(axis cs:1,0.011255033442775)
@@ -431,7 +431,7 @@
         --(axis cs:0,0.0148290059283182)
         --cycle;
 
-        \path [fill=color2, fill opacity=0.2, very thin]
+        \path [fill=pytorch, fill opacity=0.2, very thin]
         (axis cs:0,0.0120750081283182)
         --(axis cs:0,0.0117504048283182)
         --(axis cs:1,0.00865788344277504)
@@ -636,7 +636,7 @@
         --(axis cs:0,0.0120750081283182)
         --cycle;
 
-        \addplot [semithick, color0]
+        \addplot [semithick, cudnn]
         table {%
         0 0.0150217823684216
         1 0.0116855911910534
@@ -729,7 +729,7 @@
         98 0.00013635827053804
         99 0.000124171463539824
         };
-        \addplot [semithick, color1]
+        \addplot [semithick, libtorch]
         table {%
         0 0.0145088071003556
         1 0.0114285312592983
@@ -826,7 +826,7 @@
         98 4.18360832554754e-05
         99 4.50825900770724e-05
         };
-        \addplot [semithick, color2]
+        \addplot [semithick, pytorch]
         table {%
         0 0.0118992496281862
         1 0.0087874848395586

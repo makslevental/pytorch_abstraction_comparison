@@ -1,9 +1,9 @@
 % This file was created by tikzplotlib v0.9.5.
 \begin{tikzpicture}
 
-\definecolor{color0}{rgb}{0.886274509803922,0.290196078431373,0.2}
-\definecolor{color1}{rgb}{0.203921568627451,0.541176470588235,0.741176470588235}
-\definecolor{color2}{rgb}{0.596078431372549,0.556862745098039,0.835294117647059}
+
+
+
 
 \begin{axis}[
 axis background/.style={fill=white!89.8039215686275!black},
@@ -26,7 +26,7 @@ ymin=1.12370019055739e-05, ymax=0.0267288376849893,
 ymode=log,
 ytick style={color=white!33.3333333333333!black}
 ]
-\path [fill=color0, fill opacity=0.2, very thin]
+\path [fill=cudnn, fill opacity=0.2, very thin]
 (axis cs:3.1015922,0.018772)
 --(axis cs:3.1015922,0.017531)
 --(axis cs:4.3881964,0.016275)
@@ -229,7 +229,7 @@ ytick style={color=white!33.3333333333333!black}
 --(axis cs:3.1015922,0.018772)
 --cycle;
 
-\path [fill=color1, fill opacity=0.2, very thin]
+\path [fill=libtorch, fill opacity=0.2, very thin]
 (axis cs:1.2572434,0.018227)
 --(axis cs:1.2572434,0.017148)
 --(axis cs:2.5172312,0.015322)
@@ -434,7 +434,7 @@ ytick style={color=white!33.3333333333333!black}
 --(axis cs:1.2572434,0.018227)
 --cycle;
 
-\path [fill=color2, fill opacity=0.2, very thin]
+\path [fill=pytorch, fill opacity=0.2, very thin]
 (axis cs:1.1923205,0.0171678581)
 --(axis cs:1.1923205,0.0166454546)
 --(axis cs:2.3809789,0.012965562)
@@ -639,7 +639,7 @@ ytick style={color=white!33.3333333333333!black}
 --(axis cs:1.1923205,0.0171678581)
 --cycle;
 
-\addplot [semithick, color0]
+\addplot [semithick, cudnn]
 table {%
 3.10159230232239 0.0180822983384132
 4.38819646835327 0.0173634998500347
@@ -697,7 +697,7 @@ table {%
 128.990768432617 0.00999750290066004
 };
 \addlegendentry{cudnn}
-\addplot [semithick, color1]
+\addplot [semithick, libtorch]
 table {%
 1.25724339485168 0.017689798027277
 2.51723122596741 0.0161491017788649
@@ -801,7 +801,7 @@ table {%
 125.540809631348 0.00062690005870536
 };
 \addlegendentry{libtorch}
-\addplot [semithick, color2]
+\addplot [semithick, pytorch]
 table {%
 1.19232046604156 0.0168561302125454
 2.38097882270813 0.0133398603647947

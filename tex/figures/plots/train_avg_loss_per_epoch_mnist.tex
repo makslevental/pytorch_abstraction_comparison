@@ -1,9 +1,9 @@
 % This file was created by tikzplotlib v0.9.5.
 \begin{tikzpicture}
 
-\definecolor{color0}{rgb}{0.886274509803922,0.290196078431373,0.2}
-\definecolor{color1}{rgb}{0.203921568627451,0.541176470588235,0.741176470588235}
-\definecolor{color2}{rgb}{0.596078431372549,0.556862745098039,0.835294117647059}
+
+
+
 
 \begin{axis}[
 axis background/.style={fill=white!89.8039215686275!black},
@@ -26,7 +26,7 @@ ymin=6.42533567318612e-76, ymax=26.6741291967659,
 ymode=log,
 ytick style={color=white!33.3333333333333!black}
 ]
-\path [fill=color0, fill opacity=0.2, very thin]
+\path [fill=cudnn, fill opacity=0.2, very thin]
 (axis cs:0.4782266,0.007964)
 --(axis cs:0.4782266,0.006996)
 --(axis cs:0.9232159,0.0039)
@@ -231,7 +231,7 @@ ytick style={color=white!33.3333333333333!black}
 --(axis cs:0.4782266,0.007964)
 --cycle;
 
-\path [fill=color1, fill opacity=0.2, very thin]
+\path [fill=libtorch, fill opacity=0.2, very thin]
 (axis cs:0.4514206,0.002729)
 --(axis cs:0.4514206,0.002292)
 --(axis cs:0.9022784,0.000486)
@@ -436,7 +436,7 @@ ytick style={color=white!33.3333333333333!black}
 --(axis cs:0.4514206,0.002729)
 --cycle;
 
-\path [fill=color2, fill opacity=0.2, very thin]
+\path [fill=pytorch, fill opacity=0.2, very thin]
 (axis cs:0.4638433,0.0016304536)
 --(axis cs:0.4638433,0.0015096476)
 --(axis cs:0.9270713,0.0003472789)
@@ -641,7 +641,7 @@ ytick style={color=white!33.3333333333333!black}
 --(axis cs:0.4638433,0.0016304536)
 --cycle;
 
-\addplot [semithick, color0]
+\addplot [semithick, cudnn]
 table {%
 0.478226661682129 0.00755599839612842
 0.923215866088867 0.00483450153842568
@@ -726,7 +726,7 @@ table {%
 44.5409812927246 0.00010877780005103
 };
 \addlegendentry{cudnn}
-\addplot [semithick, color1]
+\addplot [semithick, libtorch]
 table {%
 0.451420545578003 0.0024763997644186
 0.902278423309326 0.000518100045155734
@@ -822,7 +822,7 @@ table {%
 45.0979652404785 6.99999986863986e-07
 };
 \addlegendentry{libtorch}
-\addplot [semithick, color2]
+\addplot [semithick, pytorch]
 table {%
 0.46384334564209 0.00157971098087728
 0.927071332931519 0.000372060749214143

@@ -1,9 +1,9 @@
 % This file was created by tikzplotlib v0.9.5.
 \begin{tikzpicture}
 
-\definecolor{color0}{rgb}{0.886274509803922,0.290196078431373,0.2}
-\definecolor{color1}{rgb}{0.203921568627451,0.541176470588235,0.741176470588235}
-\definecolor{color2}{rgb}{0.596078431372549,0.556862745098039,0.835294117647059}
+
+
+
 
 \begin{axis}[
 axis background/.style={fill=white!89.8039215686275!black},
@@ -15,18 +15,18 @@ tick align=outside,
 tick pos=left,
 title={MNIST training},
 x grid style={white},
-xlabel={\textit{time}},
+xlabel={time},
 xmajorgrids,
 xmin=-1.8444581, xmax=48.6648733,
 xtick style={color=white!33.3333333333333!black},
 y grid style={white},
-ylabel={\textit{accuracy}},
+ylabel={accuracy},
 ymajorgrids,
 ymin=23.6870160941979, ymax=107.098952012845,
 %ymode=log,
 ytick style={color=white!33.3333333333333!black}
 ]
-\path [fill=color0, fill opacity=0.2, very thin]
+\path [fill=cudnn, fill opacity=0.2, very thin]
 (axis cs:0.4782266,70.409309)
 --(axis cs:0.4782266,25.368546)
 --(axis cs:0.9232159,52.610394)
@@ -231,7 +231,7 @@ ytick style={color=white!33.3333333333333!black}
 --(axis cs:0.4782266,70.409309)
 --cycle;
 
-\path [fill=color1, fill opacity=0.2, very thin]
+\path [fill=libtorch, fill opacity=0.2, very thin]
 (axis cs:0.4514206,90.555367)
 --(axis cs:0.4514206,88.639603)
 --(axis cs:0.9022784,97.686821)
@@ -436,7 +436,7 @@ ytick style={color=white!33.3333333333333!black}
 --(axis cs:0.4514206,90.555367)
 --cycle;
 
-\path [fill=color2, fill opacity=0.2, very thin]
+\path [fill=pytorch, fill opacity=0.2, very thin]
 (axis cs:0.4638433,94.087976)
 --(axis cs:0.4638433,93.598845)
 --(axis cs:0.9270713,98.466372)
@@ -641,7 +641,7 @@ ytick style={color=white!33.3333333333333!black}
 --(axis cs:0.4638433,94.087976)
 --cycle;
 
-\addplot [semithick, color0]
+\addplot [semithick, cudnn]
 table {%
 0.478226661682129 59.8707580566406
 0.923215866088867 71.2729263305664
@@ -713,7 +713,7 @@ table {%
 44.5409812927246 99.6338424682617
 };
 \addlegendentry{cudnn}
-\addplot [semithick, color1]
+\addplot [semithick, libtorch]
 table {%
 0.451420545578003 89.7015914916992
 0.902278423309326 97.9094696044922
@@ -732,7 +732,7 @@ table {%
 45.0979652404785 99.9972839355469
 };
 \addlegendentry{libtorch}
-\addplot [semithick, color2]
+\addplot [semithick, pytorch]
 table {%
 0.46384334564209 93.8077392578125
 0.927071332931519 98.5961303710938

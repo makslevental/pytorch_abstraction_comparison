@@ -1,9 +1,9 @@
 % This file was created by tikzplotlib v0.9.5.
 \begin{tikzpicture}
 
-\definecolor{color0}{rgb}{0.886274509803922,0.290196078431373,0.2}
-\definecolor{color1}{rgb}{0.203921568627451,0.541176470588235,0.741176470588235}
-\definecolor{color2}{rgb}{0.596078431372549,0.556862745098039,0.835294117647059}
+
+
+
 
 \begin{axis}[
 axis background/.style={fill=white!89.8039215686275!black},
@@ -15,7 +15,7 @@ tick align=outside,
 tick pos=left,
 title={CIFAR10 evaluation},
 x grid style={white},
-xlabel={\textit{epoch}},
+xlabel={epoch},
 xmajorgrids,
 xmin=-4.95, xmax=103.95,
 xtick style={color=white!33.3333333333333!black},
@@ -25,7 +25,7 @@ ymin=15.7517645561491, ymax=80.8079673084566,
 %ymode=log,
 ytick style={color=white!33.3333333333333!black}
 ]
-\path [fill=color0, fill opacity=0.2, very thin]
+\path [fill=cudnn, fill opacity=0.2, very thin]
 (axis cs:0,22.2756)
 --(axis cs:0,16.9671)
 --(axis cs:1,22.0553)
@@ -230,7 +230,7 @@ ytick style={color=white!33.3333333333333!black}
 --(axis cs:0,22.2756)
 --cycle;
 
-\path [fill=color1, fill opacity=0.2, very thin]
+\path [fill=libtorch, fill opacity=0.2, very thin]
 (axis cs:0,45.7278)
 --(axis cs:0,41.9205)
 --(axis cs:1,47.765)
@@ -435,7 +435,7 @@ ytick style={color=white!33.3333333333333!black}
 --(axis cs:0,45.7278)
 --cycle;
 
-\path [fill=color2, fill opacity=0.2, very thin]
+\path [fill=pytorch, fill opacity=0.2, very thin]
 (axis cs:0,54.153481)
 --(axis cs:0,49.129747)
 --(axis cs:1,54.252373)
@@ -640,7 +640,7 @@ ytick style={color=white!33.3333333333333!black}
 --(axis cs:0,54.153481)
 --cycle;
 
-\addplot [semithick, color0]
+\addplot [semithick, cudnn]
 table {%
 0 20.3896198272705
 1 24.7235527038574
@@ -730,7 +730,7 @@ table {%
 99 71.6085662841797
 };
 %\addlegendentry{cudnn}
-\addplot [semithick, color1]
+\addplot [semithick, libtorch]
 table {%
 0 44.0516204833984
 1 50.2492065429688
@@ -826,7 +826,7 @@ table {%
 99 66.4685516357422
 };
 %\addlegendentry{libtorch}
-\addplot [semithick, color2]
+\addplot [semithick, pytorch]
 table {%
 0 51.5002021789551
 1 57.3081474304199

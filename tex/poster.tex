@@ -1,0 +1,294 @@
+\documentclass[portrait,final,archD,fontscale=0.477]{baposter}
+% Currently set to 24" wide by 36" tall (archD).
+% See baposter.cls for info on changing paper dimensions
+\include{preamble}
+
+\usepackage{calc}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{relsize}
+\usepackage{multirow}
+\usepackage{rotating}
+\usepackage{bm}
+\usepackage{url}
+\usepackage{subcaption}
+
+\usepackage{graphicx}
+\usepackage{multicol}
+
+%\usepackage{times}
+%\usepackage{helvet}
+%\usepackage{bookman}
+\usepackage{palatino}
+\newmintedfile{cpp}{
+  fontsize=\scriptsize,
+}
+
+\usepackage{etoolbox}
+\patchcmd{\thebibliography}{\section*{\refname}}{}{}{}
+%\newcommand{\captionfont}{\footnotesize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%% Some math symbols used in the text
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Multicol Settings
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\setlength{\columnsep}{1.5em}
+\setlength{\columnseprule}{0mm}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Save space in lists. Use this after the opening of the list
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\compresslist}{%
+\setlength{\itemsep}{1pt}%
+\setlength{\parskip}{0pt}%
+\setlength{\parsep}{0pt}%
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Begin of Document
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Here starts the poster
+%%%---------------------------------------------------------------------------
+%%% Format it to your taste with the options
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Define some colors
+
+\definecolor{stevensred}{rgb}{0.639, 0.149, 0.219}
+\definecolor{stevensgray}{rgb}{0.60392, 0.596, 0.60392}
+\definecolor{burgundy}{rgb}{0.5, 0.0, 0.13}
+\definecolor{brightmaroon}{rgb}{0.76, 0.13, 0.28}
+\definecolor{mediumcandyapplered}{rgb}{0.89, 0.02, 0.17}
+
+%%
+\begin{poster}%
+  % Poster Options
+  {
+    % Show grid to help with alignment
+    grid=false,
+    % Column spacing
+    colspacing=1em,
+    % Color style
+    bgColorOne=white,
+    bgColorTwo=white,
+    borderColor=stevensgray,
+    headerColorOne=mediumcandyapplered,
+    headerColorTwo=mediumcandyapplered,
+    headerFontColor=white,
+    boxColorOne=white,
+    boxColorTwo=stevensgray,
+    % Format of textbox
+    textborder=rectangle,
+    % Format of text header
+    eyecatcher=true,
+    headerborder=closed,
+    headerheight=0.1\textheight,
+    %  textfont=\sc, An example of changing the text font
+    headershape=rectangle,
+    headershade=plain,
+    headerfont=\Large\bf\textsc, %Sans Serif
+    textfont={\setlength{\parindent}{1.5em}},
+    boxshade=plain,
+    %  background=shade-tb,
+    background=plain,
+    linewidth=2pt
+  }
+  % Eye Catcher
+  {\begin{minipage}{8em}
+      \hfill\vspace{1in}
+    \end{minipage} } % Empty space, replace with image if desired
+  % Title
+  {\bf \textsc{  Comparing the costs of abstraction for DL frameworks } }
+  % Authors
+  {\textsc{  Maksim Levental and Elena Orlova \\ University of Chicago, Chicago IL}}
+  % University logo
+  {% The makebox allows the title to flow into the logo, this is a hack because of the L shaped logo.
+    \includegraphics[height=9.0em]{figures/uchicago_seal.jpg}
+  }
+
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  %%% Now define the boxes that make up the poster
+  %%%---------------------------------------------------------------------------
+  %%% Each box has a name and can be placed absolutely or relatively.
+  %%% The only inconvenience is that you can only specify a relative position
+  %%% towards an already declared box. So if you have a box attached to the
+  %%% bottom, one to the top and a third one which should be in between, you
+  %%% have to specify the top and bottom boxes before you specify the middle
+  %%% box.
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  %
+  % A coloured circle useful as a bullet with an adjustably strong filling
+  \newcommand{\colouredcircle}{%
+    \tikz{\useasboundingbox (-0.2em,-0.32em) rectangle(0.2em,0.32em); \draw[draw=black,fill=lightblue,line width=0.03em] (0,0) circle(0.18em);}}
+
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  \headerbox{Introduction}{name=problem,column=0,row=0}{
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    Deep Learning (DL) frameworks represent neural network models as dataflow and computation graphs (where nodes correspond to functional units and edges correspond to composition).
+    In recent years, there has been a proliferation of DL frameworks implemented as domain-specific languages (DSLs) embedded in ``high-level'' languages such as Python, Java, and C\#.
+    These DSLs serve as abstractions that aim to map the DL graphs to hardware pipelines.
+    That is to say, they hide details of DL models that are judged to be either irrelevant or too onerous to consider.
+    Thus, our intent here is to investigate the costs of some of the abstractions employed by framework developers.
+    In particular we focus on the PyTorch framework and ecosystem deployed to GPUs.
+
+  }
+
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  \headerbox{References}{name=references,column=0,above=bottom}{
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    \smaller
+    \bibliographystyle{science}
+    \bibliography{main}
+  }
+
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  \headerbox{CUDA semantics and ResNet-50}{name=method,column=0,below=problem, above=references}{
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    \begin{figure}[H]
+      \centering
+      \cppfile{code/softmax.c}
+      \caption{Softmax loss CUDA kernel}
+      \label{fig:cuda_hello_world}
+    \end{figure}
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width=.7\linewidth]{figures/matrix_thread.png}
+      \caption{Mapping from thread and block to matrix element~\cite{10.5555/1891996}.}\label{fig:figure}
+    \end{figure}
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width=0.5\linewidth]{figures/resnet50.png}
+      \caption{ResNet-50 network architecture~\cite{he2015deep}. Note that each convolution is followed by a batch normalization unit and each ``stage'' is followed by a ReLU (residual connections omitted).}\label{fig:resnet}
+    \end{figure}
+
+  }
+
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  \headerbox{Methods}{name=results,column=1,span=2,row=0}{
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    \begin{multicols}{2}
+      We implement the popular object detection deep neural network ResNet-50~\cite{he2015deep} at four levels of abstraction (PyTorch, TorchScript\footnote{TorchScript models are serializations of PyTorch models but can run in inference mode in C++, i.e. sans Python runtime.}, LibTorch, and cuDNN) in order to investigate the differences amongst them.
+      We measure accuracy, execution time, GPU utilization, and memory efficiency of each implementation on four image datasets (MNIST, CIFAR10, STL10, PASCAL).
+      The source for the implementations is available on GitHub\footnote{\url{https://github.com/makslevental/pytorch_abstraction_comparison}}.
+      The datasets were chosen because they span the spectrum of image complexity (from small single-channel images to large multi-channel images).
+      The reasons for choosing ResNet-50 are two fold.
+      Firstly, it serves as a benchmark architecture in the research community.
+      Secondly, it includes functional units included in many other network architectures (residual units, convolutions of various sizes, batch normalizations, ReLU activations, and pooling layers) and is therefore representative of typical neural network compute workloads.
+    \end{multicols}
+
+  }
+
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  \headerbox{Experimental Results}{name=background model,column=1, span=2,below=results, above=bottom}{
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    The PyTorch implementation compares \textbf{favorably} with both LibTorch and the cuDNN implementations in terms of accuracy.
+    On MNIST and CIFAR10 all three implementations perform reasonably well;
+    LibTorch and PyTorch attain maximum accuracy at around the same time while cuDNN lags behind.
+    In terms of execution time and memory usage PyTorch compares \textbf{unfavorably} with each of the other implementations.
+    We measure execution time, memory usage, and GPU utilization during evaluation on PASCAL for various batch sizes and resolution.
+    \begin{figure}[H]
+      \centering
+      \begin{subfigure}{0.24\linewidth}
+        \centering
+        \begin{adjustbox}{width=\textwidth}
+          \input{figures/plots/train_accuracy_per_epoch_mnist.tex}
+        \end{adjustbox}
+      \end{subfigure}%
+      \begin{subfigure}{0.24\textwidth}
+        \centering
+        \begin{adjustbox}{width=\textwidth}
+          \input{figures/plots/train_accuracy_per_epoch_cifar10.tex}
+        \end{adjustbox}
+      \end{subfigure}
+      \begin{subfigure}{0.24\textwidth}
+        \centering
+        \begin{adjustbox}{width=\textwidth}
+          \input{figures/plots/eval_accuracy_per_epoch_mnist.tex}
+        \end{adjustbox}
+      \end{subfigure}
+      \begin{subfigure}{0.24\textwidth}
+        \centering
+        \begin{adjustbox}{width=\textwidth}
+          \input{figures/plots/eval_accuracy_per_epoch_cifar10.tex}
+        \end{adjustbox}
+      \end{subfigure}
+      \\[1ex]
+      \begin{subfigure}{0.24\linewidth}
+        \centering
+        \begin{adjustbox}{width=\textwidth}
+          \input{figures/plots/train_accuracy_per_epoch_stl10.tex}
+        \end{adjustbox}
+      \end{subfigure}%
+      \begin{subfigure}{0.24\textwidth}
+        \centering
+        \begin{adjustbox}{width=\textwidth}
+          \input{figures/plots/train_accuracy_per_epoch_pascal.tex}
+        \end{adjustbox}
+      \end{subfigure}
+      \begin{subfigure}{0.24\textwidth}
+        \centering
+        \begin{adjustbox}{width=\textwidth}
+          \input{figures/plots/eval_accuracy_per_epoch_stl10.tex}
+        \end{adjustbox}
+      \end{subfigure}
+      \begin{subfigure}{0.24\textwidth}
+        \centering
+        \begin{adjustbox}{width=\textwidth}
+          \input{figures/plots/eval_accuracy_per_epoch_pascal.tex}
+        \end{adjustbox}
+      \end{subfigure}
+      \caption{Comparison of accuracy for PyTorch, LibTorch, and cuDNN implementations during training and evaluation. Solid line corresponds to mean while shaded regions correspond to min and max. Time is measured in units of \textit{epoch} $\times$ \textit{average epoch time}. }
+      \label{fig:accuracy_results}
+    \end{figure}
+    \vspace{-3ex}
+    \begin{figure}[H]
+      \centering
+      \begin{subfigure}{0.45\linewidth}
+        \centering
+        \begin{adjustbox}{width=\textwidth}
+          \input{figures/plots/eval_avg_sample_time.tex}
+        \end{adjustbox}
+        \caption{Average sample time in evaluation}\label{fig:eval_avg_sample_time}
+      \end{subfigure}
+      \begin{subfigure}{0.45\linewidth}
+        \centering
+        \begin{adjustbox}{width=\textwidth}
+          \input{figures/plots/eval_avg_used_mem.tex}
+        \end{adjustbox}
+        \caption{Average memory used in evaluation}\label{fig:eval_avg_used_mem}
+      \end{subfigure}
+      \\[2ex]
+      \begin{subfigure}{0.45\linewidth}
+        \centering
+        \begin{adjustbox}{width=\textwidth}
+          \input{figures/plots/train_avg_sample_time.tex}
+        \end{adjustbox}
+        \caption{Average sample time in training}\label{fig:train_avg_sample_time}
+      \end{subfigure}
+      \begin{subfigure}{0.45\linewidth}
+        \centering
+        \begin{adjustbox}{width=\textwidth}
+          \input{figures/plots/train_avg_used_mem.tex}
+        \end{adjustbox}
+        \caption{Average memory used in training}\label{fig:train_avg_used_mem}
+      \end{subfigure}
+      \caption{Execution time and memory efficiency comparison of accuracy for PyTorch, TorchScript, LibTorch, cuDNN implementations during training and evaluation on the PASCAL dataset.}
+      \label{fig:other_accuracy_results}
+    \end{figure}
+
+  }
+
+\end{poster}
+
+\end{document}
+

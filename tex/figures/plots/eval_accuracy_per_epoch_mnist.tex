@@ -1,9 +1,9 @@
 % This file was created by tikzplotlib v0.9.5.
 \begin{tikzpicture}
 
-\definecolor{color0}{rgb}{0.886274509803922,0.290196078431373,0.2}
-\definecolor{color1}{rgb}{0.203921568627451,0.541176470588235,0.741176470588235}
-\definecolor{color2}{rgb}{0.596078431372549,0.556862745098039,0.835294117647059}
+
+
+
 
 \begin{axis}[
 axis background/.style={fill=white!89.8039215686275!black},
@@ -15,18 +15,18 @@ tick align=outside,
 tick pos=left,
 title={MNIST evaluation},
 x grid style={white},
-xlabel={\textit{epoch}},
+xlabel={epoch},
 xmajorgrids,
 xmin=-4.95, xmax=103.95,
 xtick style={color=white!33.3333333333333!black},
 y grid style={white},
-ylabel={\textit{accuracy}},
+ylabel={accuracy},
 ymajorgrids,
 ymin=36.0171940474293, ymax=104.289020392695,
 %ymode=log,
 ytick style={color=white!33.3333333333333!black}
 ]
-\path [fill=color0, fill opacity=0.2, very thin]
+\path [fill=cudnn, fill opacity=0.2, very thin]
 (axis cs:0,92.1575)
 --(axis cs:0,37.8005)
 --(axis cs:1,70.0821)
@@ -231,7 +231,7 @@ ytick style={color=white!33.3333333333333!black}
 --(axis cs:0,92.1575)
 --cycle;
 
-\path [fill=color1, fill opacity=0.2, very thin]
+\path [fill=libtorch, fill opacity=0.2, very thin]
 (axis cs:0,96.7267)
 --(axis cs:0,96.1036)
 --(axis cs:1,96.875)
@@ -436,7 +436,7 @@ ytick style={color=white!33.3333333333333!black}
 --(axis cs:0,96.7267)
 --cycle;
 
-\path [fill=color2, fill opacity=0.2, very thin]
+\path [fill=pytorch, fill opacity=0.2, very thin]
 (axis cs:0,97.498022)
 --(axis cs:0,96.696994)
 --(axis cs:1,97.250791)
@@ -641,7 +641,7 @@ ytick style={color=white!33.3333333333333!black}
 --(axis cs:0,97.498022)
 --cycle;
 
-\addplot [semithick, color0]
+\addplot [semithick, cudnn]
 table {%
 0 80.7982864379883
 1 86.7437896728516
@@ -704,7 +704,7 @@ table {%
 99 99.1105728149414
 };
 %\addlegendentry{cudnn}
-\addplot [semithick, color1]
+\addplot [semithick, libtorch]
 table {%
 0 96.3271408081055
 1 97.0688171386719
@@ -756,7 +756,7 @@ table {%
 99 98.0201797485352
 };
 %\addlegendentry{libtorch}
-\addplot [semithick, color2]
+\addplot [semithick, pytorch]
 table {%
 0 97.1321182250977
 1 97.5870132446289

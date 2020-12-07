@@ -1,9 +1,9 @@
 % This file was created by tikzplotlib v0.9.5.
 \begin{tikzpicture}
 
-  \definecolor{color0}{rgb}{0.886274509803922,0.290196078431373,0.2}
-  \definecolor{color1}{rgb}{0.203921568627451,0.541176470588235,0.741176470588235}
-  \definecolor{color2}{rgb}{0.596078431372549,0.556862745098039,0.835294117647059}
+
+
+
 
   \begin{axis}[
       axis background/.style={fill=white!89.8039215686275!black},
@@ -26,7 +26,7 @@
 %      ymode=log,
       ytick style={color=white!33.3333333333333!black}
     ]
-    \path [fill=color0, fill opacity=0.2, very thin]
+    \path [fill=cudnn, fill opacity=0.2, very thin]
     (axis cs:0,32.6932560059283)
     --(axis cs:0,30.9477790059283)
     --(axis cs:1,46.4206430334428)
@@ -231,7 +231,7 @@
     --(axis cs:0,32.6932560059283)
     --cycle;
 
-    \path [fill=color1, fill opacity=0.2, very thin]
+    \path [fill=libtorch, fill opacity=0.2, very thin]
     (axis cs:0,35.3577310059283)
     --(axis cs:0,32.9440800059283)
     --(axis cs:1,46.8400500334428)
@@ -436,7 +436,7 @@
     --(axis cs:0,35.3577310059283)
     --cycle;
 
-    \path [fill=color2, fill opacity=0.2, very thin]
+    \path [fill=pytorch, fill opacity=0.2, very thin]
     (axis cs:0,45.0328950059283)
     --(axis cs:0,43.8692430059283)
     --(axis cs:1,59.2722040334428)
@@ -641,7 +641,7 @@
     --(axis cs:0,45.0328950059283)
     --cycle;
 
-    \addplot [semithick, color0]
+    \addplot [semithick, cudnn]
     table {%
         0 31.8480434417725
         1 47.021427154541
@@ -715,7 +715,7 @@
         99 99.4789276123047
       };
     \addlegendentry{cudnn}
-    \addplot [semithick, color1]
+    \addplot [semithick, libtorch]
     table {%
         0 34.242603302002
         1 48.0653877258301
@@ -772,7 +772,7 @@
         99 99.8166198730469
       };
     \addlegendentry{libtorch}
-    \addplot [semithick, color2]
+    \addplot [semithick, pytorch]
     table {%
         0 44.5092468261719
         1 59.8593711853027

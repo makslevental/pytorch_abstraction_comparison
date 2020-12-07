@@ -1,9 +1,9 @@
 % This file was created by tikzplotlib v0.9.5.
 \begin{tikzpicture}
 
-\definecolor{color0}{rgb}{0.886274509803922,0.290196078431373,0.2}
-\definecolor{color1}{rgb}{0.203921568627451,0.541176470588235,0.741176470588235}
-\definecolor{color2}{rgb}{0.596078431372549,0.556862745098039,0.835294117647059}
+
+
+
 
 \begin{axis}[
 axis background/.style={fill=white!89.8039215686275!black},
@@ -15,7 +15,7 @@ tick align=outside,
 tick pos=left,
 title={PASCAL evaluation},
 x grid style={white},
-xlabel={\textit{epoch}},
+xlabel={epoch},
 xmajorgrids,
 xmin=-4.95, xmax=103.95,
 xtick style={color=white!33.3333333333333!black},
@@ -26,7 +26,7 @@ ymin=12.524687588205, ymax=96.7215659804425,
 %ymode=log,
 ytick style={color=white!33.3333333333333!black}
 ]
-\path [fill=color0, fill opacity=0.2, very thin]
+\path [fill=cudnn, fill opacity=0.2, very thin]
 (axis cs:0,40.3329)
 --(axis cs:0,39.632)
 --(axis cs:1,39.5444)
@@ -231,7 +231,7 @@ ytick style={color=white!33.3333333333333!black}
 --(axis cs:0,40.3329)
 --cycle;
 
-\path [fill=color1, fill opacity=0.2, very thin]
+\path [fill=libtorch, fill opacity=0.2, very thin]
 (axis cs:0,39.7569)
 --(axis cs:0,35.9086)
 --(axis cs:1,27.8067)
@@ -436,7 +436,7 @@ ytick style={color=white!33.3333333333333!black}
 --(axis cs:0,39.7569)
 --cycle;
 
-\path [fill=color2, fill opacity=0.2, very thin]
+\path [fill=pytorch, fill opacity=0.2, very thin]
 (axis cs:0,88.139535)
 --(axis cs:0,31.540698)
 --(axis cs:1,27.703488)
@@ -641,7 +641,7 @@ ytick style={color=white!33.3333333333333!black}
 --(axis cs:0,88.139535)
 --cycle;
 
-\addplot [semithick, color0]
+\addplot [semithick, cudnn]
 table {%
 0 39.8569030761719
 1 39.8773460388184
@@ -719,7 +719,7 @@ table {%
 99 41.1068878173828
 };
 %\addlegendentry{cudnn}
-\addplot [semithick, color1]
+\addplot [semithick, libtorch]
 table {%
 0 39.0075225830078
 1 36.2586708068848
@@ -821,7 +821,7 @@ table {%
 99 43.6313743591309
 };
 %\addlegendentry{libtorch}
-\addplot [semithick, color2]
+\addplot [semithick, pytorch]
 table {%
 0 71.0145263671875
 1 53.7819862365723

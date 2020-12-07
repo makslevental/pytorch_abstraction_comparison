@@ -1,9 +1,9 @@
 % This file was created by tikzplotlib v0.9.5.
 \begin{tikzpicture}
 
-\definecolor{color0}{rgb}{0.886274509803922,0.290196078431373,0.2}
-\definecolor{color1}{rgb}{0.203921568627451,0.541176470588235,0.741176470588235}
-\definecolor{color2}{rgb}{0.596078431372549,0.556862745098039,0.835294117647059}
+
+
+
 
 \begin{axis}[
 axis background/.style={fill=white!89.8039215686275!black},
@@ -15,7 +15,7 @@ tick align=outside,
 tick pos=left,
 title={PASCAL training},
 x grid style={white},
-xlabel={\textit{time}},
+xlabel={time},
 xmajorgrids,
 xmin=-22.51834367, xmax=591.13580227,
 xtick style={color=white!33.3333333333333!black},
@@ -26,7 +26,7 @@ ymin=24.8298675401421, ymax=106.842256333744,
 %ymode=log,
 ytick style={color=white!33.3333333333333!black}
 ]
-\path [fill=color0, fill opacity=0.2, very thin]
+\path [fill=cudnn, fill opacity=0.2, very thin]
 (axis cs:5.5412714,39.293156)
 --(axis cs:5.5412714,38.586311)
 --(axis cs:10.7587541,40.17857)
@@ -231,7 +231,7 @@ ytick style={color=white!33.3333333333333!black}
 --(axis cs:5.5412714,39.293156)
 --cycle;
 
-\path [fill=color1, fill opacity=0.2, very thin]
+\path [fill=libtorch, fill opacity=0.2, very thin]
 (axis cs:5.6260672,39.561012)
 --(axis cs:5.6260672,38.139881)
 --(axis cs:11.2535209,39.657738)
@@ -436,7 +436,7 @@ ytick style={color=white!33.3333333333333!black}
 --(axis cs:5.6260672,39.561012)
 --cycle;
 
-\path [fill=color2, fill opacity=0.2, very thin]
+\path [fill=pytorch, fill opacity=0.2, very thin]
 (axis cs:5.3750266,27.455357)
 --(axis cs:5.3750266,26.532738)
 --(axis cs:10.7446771,31.153274)
@@ -641,7 +641,7 @@ ytick style={color=white!33.3333333333333!black}
 --(axis cs:5.3750266,27.455357)
 --cycle;
 
-\addplot [semithick, color0]
+\addplot [semithick, cudnn]
 table {%
 5.5412712097168 38.8288688659668
 10.7587537765503 40.2686004638672
@@ -731,7 +731,7 @@ table {%
 524.433959960938 43.6331825256348
 };
 %\addlegendentry{cudnn}
-\addplot [semithick, color1]
+\addplot [semithick, libtorch]
 table {%
 5.62606716156006 38.9724731445312
 11.2535209655762 39.9866027832031
@@ -824,7 +824,7 @@ table {%
 563.242431640625 99.4568405151367
 };
 %\addlegendentry{libtorch}
-\addplot [semithick, color2]
+\addplot [semithick, pytorch]
 table {%
 5.37502670288086 27.0059547424316
 10.7446775436401 31.8556575775146
