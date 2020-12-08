@@ -28,7 +28,7 @@ Multiple threads are grouped into blocks (SMs are single tenant with respect to 
 All threads in a block, by virtue of running on the same SM, coordinate (execute in arbitrary order, concurrently, or sequentially) and share memory.
 Thread blocks are partitioned into \textit{warps} of 32 threads;
 it is these warps that are dispatched by the warp scheduler (see~\cref{fig:cuda_cores}) and starting with the Fermi architecture two warps can be executed concurrently on the same SM in order to increase utilization%
-\footnote{I.e. one warp can occupy the compute cores while the other occupies the SFUs or Load/Store units.}.
+\footnote{That is, one warp can occupy the compute cores while the other occupies the SFUs or Load/Store units.}.
 
 \input{figures/fermi.tex}
 
