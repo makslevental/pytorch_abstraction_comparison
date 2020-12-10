@@ -1,3 +1,5 @@
 thread the abstraction thrad through the background section
 
 fix evaluation back to epoch
+
+stack trace from conv2d all the way down to cudnn (with arrows to where libtorch comes in)

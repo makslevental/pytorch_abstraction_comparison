@@ -1,0 +1,5 @@
+#0  0x00007fffd9405ff0 in cudnnConvolutionForward () from /usr/lib/x86_64-linux-gnu/libcudnn.so.7
+#1  0x00005555555ab88c in Conv2d<float>::forward (this=0x5555611b4cc0, input=0x5555558ba010) at /home/maksim/dev_projects/pytorch_abstraction_comparison/cpp/cudnn/src/layers/conv_2d.cu:233
+#2  0x00005555555cf169 in ResNet50<float>::forward (this=0x555561849150, input=0x5555558ba010) at /home/maksim/dev_projects/pytorch_abstraction_comparison/cpp/cudnn/include/resnet.cuh:249
+#3  0x00005555555c2dfd in train<float> (train_data_loader=0x5555558c23a0, test_data_loader=0x5555618475c0, num_classes=10, epochs=100, batch_size=128, monitoring_step=20, learning_rate=0.10000000000000001, output_file=...) at /home/maksim/dev_projects/pytorch_abstraction_comparison/cpp/cudnn/src/main.cu:95
+#4  0x00005555555c18a0 in main (argc=3, argv=0x7fffffffdf78) at /home/maksim/dev_projects/pytorch_abstraction_comparison/cpp/cudnn/src/main.cu:257

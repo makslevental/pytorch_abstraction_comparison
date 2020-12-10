@@ -2,7 +2,7 @@
 
 We briefly review NVIDIA GPUs%
 \footnote{A more comprehensive introduction to GPUs themselves and CUDA programming is available in~\cite{10.5555/1891996}.}
-in order that the performance criteria we measure in~\cref{sec:methodology} are intelligible.
+in order that the performance criteria we measure in~\cref{sec:methodology} are legible.
 
 A GPU consists of many simple processors, called streaming multiprocessors (SMs), which are comprised by many compute \textit{cores} that run at relatively low clock speeds%
 \footnote{For example, individual NVIDIA GTX-1080 Ti cores run at $\sim$1500MHz.}.
@@ -20,7 +20,7 @@ this enables sharing data across groups of threads more efficiently than possibl
 Such an architecture, particularly suited to maximizing throughput, necessitates a programming model distinct from that of a conventional, general purpose processor architecture.
 A unit of computation deployed to a GPU is called a \textit{kernel}; kernels can be defined using NVIDIA's Compute Unified Device Architecture (CUDA) extensions to C, C++, and FORTRAN%
 \footnote{In fact CUDA compiles down to a virtual machine assembly code (by way of \code{nvcc}) for a virtual machine called the Parallel Thread Execution (PTX) virtual machine. So, in effect, it's compilers all the way down.}.
-Compiled kernels are comprised by many \textit{threads} that start with the same instruction(s) in parallel;
+Compiled kernels are executed by many \textit{threads} in parallel, with each thread starting at the same instruction;
 NVIDIA describes this addition to Flynn's taxonomy~\cite{5009071} as Single Instruction Multiple Thread (SIMT)%
 \footnote{They key difference between SIMD and SIMT is that while in SIMD all vector elements in a vector instruction execute synchronously, threads in SIMT can diverge; branches are handled by predicated instructions~\cite{cuda_toolkit}.}.
 The large register file enables very fast thread context switching ($\sim$25 microseconds on the Fermi architecture~\cite{Glaskowsky2009NVIDIAS}), performed by a centralized hardware thread scheduler.
