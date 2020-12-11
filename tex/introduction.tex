@@ -2,10 +2,10 @@ Deep Learning (DL) frameworks represent neural network models as dataflow and co
 In recent years, there has been a proliferation of DL frameworks~\cite{paszke2019pytorch,abadi2016tensorflow,chen2015mxnet,cntk} implemented as domain-specific languages (DSLs) embedded in ``high-level'' languages%
 \footnote{For the purposes of this article, we take ``high-level'' to mean garbage collected and agnostic with respect to hardware from \textit{from the perspective of the user}.} such as Python, Java, and C\#.
 These DSLs serve as \textit{abstractions} that aim to map the DL graphs to hardware pipelines.
-That is to say, they hide (or \textit{encapsulate}) details of DL models that are judged to be either irrelevant or too onerous to consider.
+That is to say, they hide (or \textit{encapsulate}) details of DL models that are judged to be either irrelevant or too onerous to consider (see~\cref{subsec:abstraction} for a more comprehensive discussion on abstraction in computer science).
 By virtue of these design decisions the frameworks trade-off ease-of-use for execution performance;
 quoting the architects of PyTorch:
-\begin{displayquote}
+\begin{displayquote}[\cite{paszke2019pytorch}]
   To be useful, PyTorch needs to deliver compelling performance, although not at the expense of simplicity and ease of use.
   Trading 10\% of speed for a significantly simpler to use model is acceptable; 100\% is not.
 \end{displayquote}

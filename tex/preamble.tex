@@ -8,7 +8,8 @@
 \pgfplotsset{compat=newest}
 \usepackage{adjustbox}
 \usepackage{csquotes}
-\renewcommand{\mkbegdispquote}[2]{\itshape}
+%\renewcommand{\mkbegdispquote}[2]{\itshape}
+\renewcommand*{\mkcitation}[1]{ #1}
 \usepackage{appendix}
 \usepackage{subcaption}
 \usepackage{xcolor}
@@ -18,12 +19,7 @@
 \usepackage{hyperref}
 \hypersetup{colorlinks=true,linkcolor=blue,urlcolor=blue, linkbordercolor=red}
 
-\usepackage[
-        noabbrev,
-        capitalise,
-        nameinlink,
-    ]
-    {cleveref}
+\usepackage{cleveref}
 \usepackage{tabularx}
 \usepackage{drawstack}
 

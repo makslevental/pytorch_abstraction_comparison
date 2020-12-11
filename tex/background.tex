@@ -1,7 +1,68 @@
-\subsection{Abstraction}{subsec:abstraction}
+\subsection{Abstraction}\label{subsec:abstraction}
+What is abstraction?
+In fact there are several closely related notions of abstraction.
+First there is the philosophical notion of abstraction;
+Locke defines abstraction as follows:
+\begin{displayquote}[\cite{Locke1689-LOCAEC-4}]
+    The acts of the mind, wherein it exerts its power over simple ideas, are chiefly these three: \textellipsis
+    The third is separating them from all other ideas that accompany them in their real existence: this is called abstraction \textellipsis
+\end{displayquote}
+Then there is mathematical abstraction;
+Russell defines abstraction as follows:
+\begin{displayquote}[\cite{Russell1937-RUSPOM-7}]
+    This principle [of abstraction] asserts that, whenever a relation, of which there are instances, has the two properties of being symmetrical and transitive, then the relation in question is not primitive, but is analyzable into sameness of relation to some other term;
+    and that this common relation is such that there is only one term at most to which a given term can be so related, though many terms may be so related to a given term.
+\end{displayquote}
+Intriguing as these notions of abstraction may be, they are distinctly different from the notion of abstraction in computer science;
+in particular with respect to mathematical abstraction (bolding ours):
+\begin{displayquote}[\cite{abstraction}]
+    \textellipsis the primary product of mathematics is \textit{inference structures}, while the primary product of computer science is \textit{interaction patterns}.
+    This is a crucial difference, and it shapes their use of formalism and the kind of abstraction used in the two disciplines.
 
-\input{figures/stack_traces/stacks.tex}
-\input{figures/dispatch.tex}
+    \vspace{4pt}
+
+    \textellipsis computer science is distinguished from mathematics in the use of a kind of abstraction that computer scientists call \textit{information hiding}.
+    The complexity of behaviour of modern computing devices makes the task of programming them impossible without abstraction tools that hide, but do not neglect, \textbf{details that are essential in a lower-level processing context but inessential in a [particular] software design and programming context}.
+\end{displayquote}
+Thus, abstraction is the modulation of concern for details in accordance with the needs of the user.
+Moreover, abstractions are graded by the degree of the elision (bolding ours):
+\begin{displayquote}[\cite{abstraction}]
+    To specify nontrivial computational processes in machine language is a practical impossibility for humans, and so programming languages with higher levels of abstraction are necessary.
+
+    \vspace{4pt}
+
+    \textellipsis At a higher level of [abstraction], a \textit{subroutine}, \textit{function}, or \textit{procedure} is an abstraction of a segment of memory that hides the details of how the segment represents a piece of a program that is passed certain parameter values and returns a value as a result.
+
+    \vspace{4pt}
+
+    \textellipsis A \textit{garbage collector} is an abstraction of a special process that collects garbage and makes it once again available to the original progam, hiding from that program the details of how this is done.
+
+
+    \vspace{4pt}
+
+    \textellipsis \textbf{This use of code libraries is an example of \textit{procedural abstraction}}, or the ability to execute code through the calling of named procedures that accept explicitly described parameters and return certain guaranteed results.
+    It is an example of abstraction because the details of how the procedure performs its computation are hidden from the procedure's caller;
+    since the caller only makes use of the procedure for its results, there is no need for it to know the internals.
+\end{displayquote}
+
+
+Taking \textit{pragmatic information and concern encapsulation} as our operational definition of abstraction, in what sense shall we measure the costs of the abstractions employed by DL frameworks?
+An immediate candidate measure of cost is the asymptotic time (or space) complexity of various operations.
+Indeed there is precedent for reasoning about pure abstractions in this way;
+Pippenger~\cite{10.1145/244795.244798} produces a program that runs in O$(n)$ on an impure\footnote{A language is \textit{pure} if it cannot mutate data (only transform); a language is \textit{impure} if it can.} LISP but which runs in $\Theta(n \log n)$ a pure LISP\@.
+Unfortunately, even if it were practicable to analyze the asymptotic complexity of DL frameworks, the result would most likely be uninteresting and inconsequential for actual systems.
+It is well known that the constant factors in the complexity and peculiarities of those systems themselves more closely govern performance than the order terms.
+For example, Quicksort, an O$\left(n^2\right)$ sorting routine, outperforms even many $\Theta(n\log n)$ sorting routines because it is more cache efficient~\cite{10.5555/1410219}.
+
+Another way to reason about the cost of abstractions is according to the ``zero-overhead'' principle as articulated by Bjarne Stroustrup:
+\begin{displayquote}[\cite{10.1007/978-3-642-28869-2_1}]
+    In general, C++ implementations obey the zero-overhead principle: What you don’t use, you don't pay for.
+    And further: What you do use, you couldn't hand code any better.
+\end{displayquote}
+Therefore we make the expedient and practical assumption that what is more interesting and valuable to the DL community than asymptotics is in fact an empirical study of the resource efficiency of the abstractions;
+namely execution time, memory usage, and GPU utilization.
+
+
 
 \subsection{GPUs}\label{subsec:gpus}
 
@@ -51,13 +112,16 @@ better throughput could be achieved by increasing the number of blocks (and ther
 
 \input{figures/cuda_code.tex}
 
-\subsection{Graph compilers}\label{subsec:graph-compilers}
+\subsection{Graph compilers and Tensors}\label{subsec:graph-compilers}
 
-DL frameworks primarily function as graph compilers;
-they compile abstract dataflow and compute graphs into sequences of operations that execute on various hardware architectures.
-They typically also implement some ``quality of life'' abstractions like \code{Tensor}%
-\footnote{A tensor in this context is a data structure similar to a multidimensional array that supports some useful operations (e.g. slicing, flattening, index permutation). Most DL frameworks also abstract memory layout on hardware behind this abstraction.} and include utilities useful for the training of DL models (e.g. optimizers and data loaders).
-Here we focus in particular on the graph compiler functionality.
+DL frameworks primarily function as graph compilers and tensor abstractions\footnote{A tensor in this context is a data structure similar to a multidimensional array that supports some useful operations (e.g. slicing, flattening, index permutation). Most DL frameworks also abstract memory layout on hardware behind this abstraction.};
+They typically also include some ``quality of life'' utilities useful for the training of DL models (e.g.\ optimizers and data loaders).
+PyTorch's \code{Tensor} abstraction is responsible for a great deal of the complexity and implementation overhead of the framework.
+Due to the framework's broad support for hardware and data types, dynamic dispatch\footnote{Kernels live in shared-object libraries (e.g. \code{libcaffe2.so}, \code{libcaffe2\_gpu.so}) and therefore implementations of virtual functions (indirection) are resolved at runtime.} is employed to resolve methods on tensors (see~\cref{fig:dispatch}).
+This dynamic dispatch produces deep call stacks for every single operation on a \code{Tensor} (see~\cref{fig:stacks}); it remains to be seen whether the context switching\footnote{Every function call corresponds to a stack frame allocation and register allocations. In addition indirection to far away call sites leads to poor instruction cache efficiency~\cite{10.5555/3314872.3314876}} incurs any appreciable execution time penalty.
+
+\input{figures/dispatch.tex}
+\input{figures/stack_traces/stacks.tex}
 
 DL graph compilers are distinct from other dataflow compilers (such as VHDL and Verilog\footnote{Verilog and Very High Speed Integrated Circuit Hardware Description Language (VHSIC-HDL or VHDL) are specification languages for specifying circuits on field programmable gate arrays.}); in addition to keeping account of how the data streams through the compute graph, they also keep account of how the gradients of the data stream through the graph (i.e.\ the \textit{gradient-flow}).
 This is called \textit{automatic differentiation} (often shortened to \textit{autodiff}).

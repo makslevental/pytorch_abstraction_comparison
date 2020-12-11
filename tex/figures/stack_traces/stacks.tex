@@ -1,4 +1,4 @@
-\begin{figure*}
+\begin{figure*}[h]
   \centering
   \begin{adjustbox}{width=\textwidth}
     \centering
@@ -53,5 +53,6 @@
 
     \end{tikzpicture}
   \end{adjustbox}
-  \caption["Short" caption without tikz code]{Call stacks representing the number of calls between \code{Conv2d.forward} at the level of abstraction and the ultimate execution of the convolution \code{cudnnConvolutionForward} on the GPU. \tikz{\path[fill=red!10,draw=red!50!black] (0,0) rectangle (.25cm,.25cm);} represents calls where the implementations diverge and \tikz{\path[pattern=north west lines, pattern color=green!50, draw=green!50!black] (0,0) rectangle (.25cm,.25cm);} represents calls where the implementations coincide. Note that program setup calls are omitted. Complete stacktraces are available on GitHub at \link{\href{https://github.com/makslevental/pytorch_abstraction_comparison/tree/main/tex/stack_traces}{main/tex/stack\_traces}}.}
+  \caption["Short" caption without tikz code]{Call stacks representing the number of calls between \code{Conv2d.forward} at the level of abstraction and the ultimate execution of the convolution \code{cudnnConvolutionForward} on the GPU. \tikz{\path[fill=red!10,draw=red!50!black] (0,0) rectangle (.25cm,.25cm);} represents calls where the implementations diverge and \tikz{\path[pattern=north west lines, pattern color=green!50, draw=green!50!black] (0,0) rectangle (.25cm,.25cm);} represents calls where the implementations coincide. Note that program setup calls are omitted. These were produced by building each implementation with debug symbols and using \code{gdb} to set a breakpoint at \code{cudnnConvolutionForward}. Complete stacktraces are available on GitHub at \link{\href{https://github.com/makslevental/pytorch_abstraction_comparison/tree/main/tex/stack_traces}{main/tex/stack\_traces}}.}
+  \label{fig:stacks}
 \end{figure*}

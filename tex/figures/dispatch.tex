@@ -1,4 +1,4 @@
-\begin{figure*}
+\begin{figure*}[h]
     \begin{tikzpicture}[>=latex]
         \tikzset{block/.style= {draw,rectangle,align=center,minimum width=2cm,minimum height=1cm}}
         \node [](code)  {\code{torch.conv2d(x,y)}};
@@ -20,6 +20,7 @@
         \node [below=0cm of twodots](CUDADoubleType) {\code{CUDADoubleType::conv2d}};
         \node [below=0cm of CUDADoubleType](threedots) {\vdots};
         \node [below=0cm of threedots](CUDAHalfType) {\code{CUDAHalfType::conv2d}};
+        \node[block,draw=black,dashed, inner sep=5mm, fit= (SparseCUDAByteType) (CUDAHalfType),label={[anchor=south]north:static\ dispatch\ on\ data\ type}](dtype) {};
 
         \path[draw]
         (code.east) edge[->] (dynamic.west);
