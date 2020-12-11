@@ -11,7 +11,7 @@ Each of these choices potentially incurs a runtime execution and memory cost, de
 With this as subtext, we describe the intent and design of our experiments.
 We implement the popular object detection deep neural network ResNet-50~\cite{he2015deep} at four levels of abstraction (PyTorch, TorchScript\footnote{TorchScript models are serializations of PyTorch models but can run in inference mode in C++, i.e. sans Python runtime.}, LibTorch, and cuDNN) in order to investigate the differences amongst them.
 We measure accuracy, execution time, GPU utilization, and memory efficiency of each implementation on four image datasets (MNIST, CIFAR10, STL10, PASCAL).
-The source for the implementations is available on GitHub\footnote{\url{https://github.com/makslevental/pytorch_abstraction_comparison}}.
+The source for the implementations is available on GitHub\footnote{\link{\url{https://github.com/makslevental/pytorch_abstraction_comparison}}}.
 The datasets were chosen because they span the spectrum of image complexity (from small single-channel images to large multi-channel images).
 The reasons for choosing ResNet-50 (see~\cref{fig:resnet}) are two fold.
 Firstly, it serves as a benchmark architecture in the research community.

@@ -23,9 +23,9 @@ For example, for fixed batch size and various resolutions and for fixed resoluti
 This execution time difference persists across resolutions and batch sizes but narrows as either increases (see~\cref{fig:train_avg_sample_time,,fig:train_avg_used_mem,,fig:train_avg_gpu_util,,fig:eval_avg_sample_time,,fig:eval_avg_used_mem,,fig:eval_avg_gpu_util} in the appendix).
 With respect to memory usage PyTorch and LibTorch are approximately the same across resolutions and batch sizes, while cuDNN and TorchScript are more memory efficient especially below resolution $2^6$ and batch size $2^7$.
 
-We use NVIDIA's Visual profiler\footnote{\url{https://developer.nvidia.com/nvidia-visual-profiler}} to investigate fixed \code{batch\_size = 32} further.
+We use NVIDIA's Visual profiler\footnote{\link{\url{https://developer.nvidia.com/nvidia-visual-profiler}}} to investigate fixed \code{batch\_size = 32} further.
 One critical way in which the PyTorch implementation differs from the others is in host-to-device per batch copy size: PyTorch copies 25.166 MB while the other implementations copy 12.583 MB\@.
-Consequently PyTorch requires $\sim$15.17ms to copy the batch while all other implementations require $\sim$7.55ms\footnote{In fact pinning memory (copy from memory that isn't paged) halves copy time again.}.
+Consequently PyTorch requires $\sim$15.17ms to copy the batch while all other implementations require $\sim$7.55ms\footnote{In fact pinning memory (copying from memory that isn't paged) halves copy time again.}.
 Another significant discrepancy is the choice in block size and grid size (regarding threaded distribution across GPU SMs).
 For the ReLU kernel, which is the second most often executed kernel ($\sim$12\% of total execution time), the PyTorch implementation allocates a grid of size $\left( 1024,2,1 \right)$ while the LibTorch and cuDNN implementations allocate grids of size $\left( 512,2,1 \right)$.
 Consequently, on average, each PyTorch ReLU invocation consumes $\sim$690.6 microseconds while each invocation consumes $\sim$372.6 microseconds.

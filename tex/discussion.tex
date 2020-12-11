@@ -15,8 +15,8 @@ In the latter case, we face a sort of existential crisis: how many results in DL
 In theory a sufficiently flexible DL compiler could rescue us from the purgatory we find ourselves in;
 a sufficiently powerful compiler would implement the necessary DL abstractions in a robust way but also have enough flexibility to enable users to implement custom extensions of those abstractions.
 One promising project that has as its goal such a high-level compiler is the ``Extensible Programming''~\cite{Besard_2019} project.
-Besard et al. expose interfaces to alter the compilation process for Julia-lang\footnote{https://julialang.org/}.
+Besard et al. expose interfaces to alter the compilation process for Julia-lang\footnote{\link{\url{https://julialang.org/}}}.
 The project instruments the Julia compiler itself and enables users to build high-level hardware abstractions in the source language itself%
-\footnote{This is possible because Julia is JITed using LLVM and homo-iconic i.e. it supports a macrosystem that can manipulate the JITed LLVM bytecode.}.
-They've had initial success writing high-level GPU code that performs comparably with CUDA C\footnote{https://github.com/JuliaGPU/CUDAnative.jl}.
+\footnote{This is possible because Julia is JITed using LLVM and is homo-iconic i.e. it supports a macro system that can manipulate the JITed LLVM bytecode.}.
+They've had initial success writing high-level GPU code that performs comparably with CUDA C\footnote{\link{\url{https://github.com/JuliaGPU/CUDAnative.jl}}}.
 
