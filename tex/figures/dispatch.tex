@@ -1,0 +1,34 @@
+\begin{figure*}
+    \begin{tikzpicture}[>=latex]
+        \tikzset{block/.style= {draw,rectangle,align=center,minimum width=2cm,minimum height=1cm}}
+        \node [](code)  {\code{torch.conv2d(x,y)}};
+%    \node [thick,block,right =0.5cm of code, draw=red, text=red](dynamic)   {device/layout \\ dispatch};
+        \node [above right =1.25cm and 2cm of code, text=red](CUDA)   {\code{CUDA}};
+        \node [below=0cm of CUDA, text=red](CPU) {\code{CPU}};
+        \node [below=0cm of CUDA, text=red](CPU) {\code{CPU}};
+        \node [below=0cm of CPU, text=red](FPGA) {\code{FPGA}};
+        \node [below=0cm of FPGA, text=red](XLA) {\code{XLA}};
+        \node [below=0cm of XLA, text=red](dots) {\vdots};
+        \node [below=0cm of dots, text=red](vulkan) {\code{Vulkan}};
+        \node [below=0cm of vulkan, text=red](mkldnn) {\code{MKLDNN}};
+        \node [below=0cm of mkldnn, text=red](qcuda) {\code{QuantizedCUDA}};
+%    \node [rectangle, right =0.5cm of code, draw=red, text=red, inner sep=0mm, fit= (cpu) (cuda),label=below right:device/layout \\ dispatch] {};
+        \node[block,draw=red,dashed, text=red, inner sep=5mm, fit= (CUDA) (qcuda),label={[anchor=south,text=red]north:dynamic dispatch}](dynamic) {};
+
+        \node [right=2cm of CPU](SparseCUDAByteType) {\code{SparseCUDAByteType::conv2d}};
+        \node [below=0cm of SparseCUDAByteType](twodots) {\vdots};
+        \node [below=0cm of twodots](CUDADoubleType) {\code{CUDADoubleType::conv2d}};
+        \node [below=0cm of CUDADoubleType](threedots) {\vdots};
+        \node [below=0cm of threedots](CUDAHalfType) {\code{CUDAHalfType::conv2d}};
+
+        \path[draw]
+        (code.east) edge[->] (dynamic.west);
+        \path[draw]
+        (CUDA.east) edge[out=0, in=180,->] (SparseCUDAByteType.west);
+        \path[draw]
+        (CUDA.east) edge[out=0, in=180,->] (CUDADoubleType.west);
+        \path[draw]
+        (CUDA.east) edge[out=0, in=180,->] (CUDAHalfType.west);
+    \end{tikzpicture}
+    \caption{How the \code{torch.conv2d} operation on tensors \code{x}, \code{y} is implemented in PyTorch.}\label{fig:dispatch}
+\end{figure*}

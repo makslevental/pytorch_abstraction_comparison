@@ -1,0 +1,57 @@
+\begin{figure*}
+  \centering
+  \begin{adjustbox}{width=\textwidth}
+    \centering
+    \begin{tikzpicture}[scale=.8]
+
+      \tikzstyle{padding}=[fill=red!10,draw=red!50!black]
+      \tikzstyle{freecell}=[fill=red!10,draw=red!30!black]
+%      \tikzstyle{freestruct}=[fill=blue!10,draw=blue!30!black]
+
+      \stacktop{}
+      \cell{\scriptsize\texttt{call\_function}} \coordinate (p3) at (currentcell.east);
+      \startframe
+      \padding{2}{\large\vdots}
+      \finishframe{30 calls\hspace*{0.3cm}}
+      \cell[pattern=north west lines, pattern color=green!50, draw=green!50!black]{\scriptsize\texttt{at::conv2d}}               \coordinate (p2) at (currentcell.east);
+      \startframe
+      \llcell{3}{pattern=north west lines, pattern color=green!50, draw=green!50!black}{\large\vdots}
+%      \padding{3}{\large\vdots}
+      \finishframe{61 calls\hspace*{0.3cm}}
+      \cell[pattern=north west lines, pattern color=green!50, draw=green!50!black]{\scriptsize\texttt{cudnnConvolutionForward}}
+      \cell[draw=none]{PyTorch call stack}
+
+      \draw[freecell] (5,-1)
+      +(-2,.5) -- +(-2,-.5) -- +(2,-.5) -- +(2,.5);
+      \draw (5,-1+1/6) node{\vdots};
+      \drawstruct{(5,-1)})
+      \structcell[freecell]{\scriptsize\texttt{Conv2dImpl::forward}}
+      \structcell[freecell]{\scriptsize\texttt{functional::detail::conv2d}}
+      \structcell[pattern=north west lines, pattern color=green!50, draw=green!50!black]{\scriptsize\texttt{at::conv2d}}
+      \structcellpaddingthree[pattern=north west lines, pattern color=green!50, draw=green!50!black]{\vdots}
+      \structcell[pattern=north west lines, pattern color=green!50, draw=green!50!black]{\scriptsize\texttt{cudnnConvolutionForward}}
+      \structcell[draw=none]{LibTorch call stack}
+
+      \draw[freecell] (10,-6)
+      +(-2,.5) -- +(-2,-.5) -- +(2,-.5) -- +(2,.5);
+      \draw (10,-6+1/6) node{\vdots};
+      \drawstruct{(10,-6)}
+      \structcell[freecell]{\scriptsize\texttt{Conv2d<float>::forward}}
+      \structcell[pattern=north west lines, pattern color=green!50, draw=green!50!black]{\scriptsize\texttt{cudnnConvolutionForward}}
+      \structcell[draw=none]{cuDNN call stack}
+
+      \draw[freecell] (15,-4)
+      +(-2,.5) -- +(-2,-.5) -- +(2,-.5) -- +(2,.5);
+      \draw (15,-4+1/6) node{\vdots};
+      \drawstruct{(15,-4)}
+      \structcell[freecell]{\tiny\texttt{autograd::VariableType::\_convolution}}
+      \structcellpadding[freecell]{\vdots}
+      \structcell[pattern=north west lines, pattern color=green!50, draw=green!50!black]{\scriptsize\texttt{cudnnConvolutionForward}}
+      \structcell[draw=none]{TorchScript call stack}
+      \draw[snake=brace, line width=0.6pt, segment amplitude=7pt]
+      (17,-5-0.5) -- (17,-7-0.5) node [black,midway,xshift=1cm] {14 calls};
+
+    \end{tikzpicture}
+  \end{adjustbox}
+  \caption["Short" caption without tikz code]{Call stacks representing the number of calls between \code{Conv2d.forward} at the level of abstraction and the ultimate execution of the convolution \code{cudnnConvolutionForward} on the GPU. \tikz{\path[fill=red!10,draw=red!50!black] (0,0) rectangle (.25cm,.25cm);} represents calls where the implementations diverge and \tikz{\path[pattern=north west lines, pattern color=green!50, draw=green!50!black] (0,0) rectangle (.25cm,.25cm);} represents calls where the implementations coincide. Note that program setup calls are omitted. Complete stacktraces are available on GitHub at \link{\href{https://github.com/makslevental/pytorch_abstraction_comparison/tree/main/tex/stack_traces}{main/tex/stack\_traces}}.}
+\end{figure*}

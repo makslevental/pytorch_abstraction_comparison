@@ -4,7 +4,7 @@
 \usepgfplotslibrary{patchplots,colormaps}
 \DeclareUnicodeCharacter{2212}{−}
 \usepgfplotslibrary{groupplots,dateplot}
-\usetikzlibrary{patterns,shapes.arrows}
+\usetikzlibrary{patterns,shapes.arrows,positioning,shapes.geometric,fit}
 \pgfplotsset{compat=newest}
 \usepackage{adjustbox}
 \usepackage{csquotes}
@@ -16,13 +16,21 @@
 \usepackage{url}
 \usepackage{graphicx}
 \usepackage{hyperref}
-% TODO: how come this doesn't work?
-\hypersetup{colorlinks={true},linkcolor={blue},citecolor=green}
-\usepackage{cleveref}
+\hypersetup{colorlinks=true,linkcolor=blue,urlcolor=blue, linkbordercolor=red}
+
+\usepackage[
+        noabbrev,
+        capitalise,
+        nameinlink,
+    ]
+    {cleveref}
 \usepackage{tabularx}
+\usepackage{drawstack}
 
 \crefdefaultlabelformat{\color{red}(#2#1#3)}
 \newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\link}[1]{\color{blue}#1}
+
 
 \usepackage[cache=false]{minted}
 \newmintedfile{c}{

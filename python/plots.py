@@ -1,4 +1,3 @@
-import csv
 import glob
 import os
 import re
@@ -29,11 +28,11 @@ def cleanup_profiles_cudnn():
             train_summaries = list(
                 reduce(
                     lambda accum, fp: accum
-                    + [
-                        f"{fp[0]}," + f"{epoch}," + re.sub(r"[a-zA-Z%\[\]:\s]", "", l)
-                        for (epoch, l) in enumerate(open(fp[1]).readlines())
-                        if "SUMMARY" in l
-                    ],
+                                      + [
+                                          f"{fp[0]}," + f"{epoch}," + re.sub(r"[a-zA-Z%\[\]:\s]", "", l)
+                                          for (epoch, l) in enumerate(open(fp[1]).readlines())
+                                          if "SUMMARY" in l
+                                      ],
                     enumerate(
                         sorted(glob.glob(f"profiles/cudnn2/run*{impl}_{dataset}_*.csv"))
                     ),
@@ -43,11 +42,11 @@ def cleanup_profiles_cudnn():
             eval_summaries = list(
                 reduce(
                     lambda accum, fp: accum
-                    + [
-                        f"{fp[0]}," + f"{epoch}," + re.sub(r"[a-zA-Z%\[\]:\s]", "", l)
-                        for (epoch, l) in enumerate(open(fp[1]).readlines())
-                        if "EVAL" in l
-                    ],
+                                      + [
+                                          f"{fp[0]}," + f"{epoch}," + re.sub(r"[a-zA-Z%\[\]:\s]", "", l)
+                                          for (epoch, l) in enumerate(open(fp[1]).readlines())
+                                          if "EVAL" in l
+                                      ],
                     enumerate(
                         sorted(glob.glob(f"profiles/cudnn2/run*{impl}_{dataset}_*.csv"))
                     ),
@@ -72,11 +71,11 @@ def cleanup_profiles():
             train_summaries = list(
                 reduce(
                     lambda accum, fp: accum
-                    + [
-                        f"{fp[0]}," + f"{epoch}," + re.sub(r"[a-zA-Z%\[\]:\s]", "", l)
-                        for (epoch, l) in enumerate(open(fp[1]).readlines())
-                        if "SUMMARY" in l
-                    ],
+                                      + [
+                                          f"{fp[0]}," + f"{epoch}," + re.sub(r"[a-zA-Z%\[\]:\s]", "", l)
+                                          for (epoch, l) in enumerate(open(fp[1]).readlines())
+                                          if "SUMMARY" in l
+                                      ],
                     enumerate(
                         sorted(glob.glob(f"profiles/run*{impl}_{dataset}_*.csv"))
                     ),
@@ -86,11 +85,11 @@ def cleanup_profiles():
             eval_summaries = list(
                 reduce(
                     lambda accum, fp: accum
-                    + [
-                        f"{fp[0]}," + f"{epoch}," + re.sub(r"[a-zA-Z%\[\]:\s]", "", l)
-                        for (epoch, l) in enumerate(open(fp[1]).readlines())
-                        if "EVAL" in l
-                    ],
+                                      + [
+                                          f"{fp[0]}," + f"{epoch}," + re.sub(r"[a-zA-Z%\[\]:\s]", "", l)
+                                          for (epoch, l) in enumerate(open(fp[1]).readlines())
+                                          if "EVAL" in l
+                                      ],
                     enumerate(
                         sorted(glob.glob(f"profiles/run*{impl}_{dataset}_*.csv"))
                     ),
@@ -122,7 +121,7 @@ def cleanup_resolutions():
                             lines = src.readlines()
                             if len(lines) > 1:
                                 with open(fp_clean_train, "w") as dst1, open(
-                                    fp_clean_eval, "w"
+                                        fp_clean_eval, "w"
                                 ) as dst2:
                                     dst1.write(
                                         "avg loss, accuracy, avg sample time, avg used mem, avg gpu util\n"
@@ -179,15 +178,15 @@ def make_dfs():
 
 
 def plot(
-    min,
-    mean,
-    max,
-    times,
-    fig_ax=None,
-    label="cudnn",
-    title="Average train loss per epoch",
-    ylabel="loss",
-    shift=np.abs(np.random.normal(0, 1e-70, 100)),
+        min,
+        mean,
+        max,
+        times,
+        fig_ax=None,
+        label="cudnn",
+        title="Average train loss per epoch",
+        ylabel="loss",
+        shift=np.abs(np.random.normal(0, 1e-70, 100)),
 ):
     fig, ax = fig_ax
     if fig is None or ax is None:
@@ -204,16 +203,16 @@ def plot(
 
 
 def scatter(
-    min,
-    mean,
-    max,
-    times,
-    fig_ax=None,
-    label="cudnn",
-    title="Average train loss per epoch",
-    ylabel="loss",
-    xlabel="",
-    shift=np.abs(np.random.normal(0, 1e-70, 100)),
+        min,
+        mean,
+        max,
+        times,
+        fig_ax=None,
+        label="cudnn",
+        title="Average train loss per epoch",
+        ylabel="loss",
+        xlabel="",
+        shift=np.abs(np.random.normal(0, 1e-70, 100)),
 ):
     times = np.log2(times)
     fig, ax = fig_ax
@@ -441,10 +440,31 @@ def plot_all(profile_dfs, resolution_dfs: dict):
     #     )
 
 
+def plot_ryan():
+    nodes = [1, 2, 4, 8, 16]
+    times = [
+        6702.273237,
+        3396.035063,
+        1707.082913,
+        885.493695,
+        481.190628]
+
+    fig, ax = plt.subplots()
+    ax.plot(nodes, times, "-")
+    ax.legend()
+    ax.set_title("runtimes")
+    ax.set_ylabel("time (ms)")
+    ax.set_xlabel("# nodes")
+    ax.set_yscale("log")
+
+    tikzplotlib.clean_figure()
+    tikzplotlib.save("ryan.tex", standalone=True)
+
 if __name__ == "__main__":
     # cleanup_profiles()
-    cleanup_profiles_cudnn()
+    # cleanup_profiles_cudnn()
     # cleanup_resolutions()
-    profile_dfs = make_dfs()
-    resolution_dfs = make_resolution_dfs()
-    plot_all(profile_dfs, resolution_dfs)
+    # profile_dfs = make_dfs()
+    # resolution_dfs = make_resolution_dfs()
+    # plot_all(profile_dfs, resolution_dfs)
+    plot_ryan()
