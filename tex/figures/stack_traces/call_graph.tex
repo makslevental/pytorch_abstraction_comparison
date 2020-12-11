@@ -1,0 +1,55 @@
+\begin{figure*}[h]
+\centering
+\begin{adjustbox}{width=0.8\textwidth}
+  \centering
+  \begin{tikzpicture}[%
+      level distance=10mm,
+      inner sep=2mm,
+      edge from parent path={[thick,->] ([thick]\tikzparentnode.south) -> (\tikzchildnode.north)}]
+    \tikzstyle{calls}=[draw=black,thick,anchor=west]
+    \tikzstyle{commoncode}=[pattern=north west lines, pattern color=green!50, draw=green!50!black]
+    \tikzstyle{uncommoncode}=[pattern=north west lines, pattern color=red!50, draw=red!50!black]
+    \node[] (node) at (1.3,0) {\Large PyTorch};
+    \node[] (node) at (4.5,-2) {\Large LibTorch};
+    \node[] (node) at (6.5,-7.2) {\Large cuDNN};
+    \node[] (node) at (9.5,-5) {\Large TorchScript};
+    \node[] (node) at (0,0) {}
+    child[] { node[calls,uncommoncode] { \code{call\_function} } edge from parent[draw=none]
+        child { node[uncommoncode] {$\bigcdot$}
+            child { node[uncommoncode] {$\bigcdot$} edge from parent[draw=none]
+                child { node[uncommoncode] {$\bigcdot$} edge from parent[draw=none]
+                    child[] { node[calls,commoncode] {\code{at::conv2d}}
+                        child[grow=up, edge from parent path={[<-] ([thick]\tikzparentnode.north) -> (\tikzchildnode.south)}] { node[calls, uncommoncode] {\code{functional::detail::conv2d}}
+                            child[grow via three points={one child at (-1.72,1) and two children at (0.1,-1) and (0.1,-2)}, edge from parent path={[<-] ([]\tikzparentnode.north) -> (\tikzchildnode.south)}] { node[calls, uncommoncode] {\code{Conv2dImpl::forward}}
+                              }
+                          }
+                        child { node[commoncode] {$\bigcdot$}
+                            child { node[commoncode] {$\bigcdot$} edge from parent[draw=none]
+                                child { node[commoncode] {$\bigcdot$} edge from parent[draw=none]
+                                    child[grow via three points={one child at (-0.5,-1) and
+                                            two children at (0,1) and (5,0)}] { node[calls,commoncode] {\code{cudnnConvolutionForward}}
+                                        child[edge from parent path={[<-] ([]\tikzparentnode.north) -> (\tikzchildnode.south)}] { node[calls, uncommoncode] {\code{Conv2d<float>::forward}}
+                                          }
+                                        child[edge from parent path={[<-] ([]\tikzparentnode.east) -> (\tikzchildnode.west)}] { node[uncommoncode] {$\bigcdot$}
+                                            child[grow=up, edge from parent path={[<-] ([]\tikzparentnode.east) -> (\tikzchildnode.west)}] { node[uncommoncode] {$\bigcdot$} edge from parent[draw=none]
+                                                child[grow=up, edge from parent path={[<-] ([]\tikzparentnode.east) -> (\tikzchildnode.west)}] { node[uncommoncode] {$\bigcdot$} edge from parent[draw=none]
+                                                    child[grow via three points={one child at (-3.07,1) and
+                                                            two children at (0,0) and (0,0)}, edge from parent path={[<-] ([]\tikzparentnode.north) -> (\tikzchildnode.south)}] { node[calls, uncommoncode] {\code{autograd::VariableType::\_convolution}}
+                                                      }
+                                                  }
+                                              }
+                                          }
+                                      }
+                                  }
+                              }}}}}}};
+    \draw[thick,|<->|]
+    (0.25,-2) -- (0.25,-4) node [midway, fill=white] {30 calls};
+    \draw[thick,|<->|]
+    (2,-6) -- (2,-8) node [midway, fill=white] {61 calls};
+    \draw[thick,|<->|]
+    (10.8,-7) -- (10.8,-9) node [midway, fill=white] {14 calls};
+  \end{tikzpicture}
+\end{adjustbox}
+      \caption["Short" caption without tikz code]{Call graphs representing the number of calls between \code{Conv2d.forward} at the level of abstraction and the ultimate execution of the convolution \code{cudnnConvolutionForward} on the GPU. \tikz{\path[fill=red!10,draw=red!50!black] (0,0) rectangle (.25cm,.25cm);}\, represents calls where the implementations diverge and \tikz{\path[pattern=north west lines, pattern color=green!50, draw=green!50!black] (0,0) rectangle (.25cm,.25cm);} represents calls where the implementations coincide. Note that program setup calls are omitted. These were produced by building each implementation with debug symbols and using \code{gdb} to set a breakpoint at \code{cudnnConvolutionForward}. Complete stacktraces are available on GitHub at \link{\href{https://github.com/makslevental/pytorch_abstraction_comparison/tree/main/tex/stack_traces}{main/tex/stack\_traces}}.}
+  \label{fig:stacks}
+\end{figure*}

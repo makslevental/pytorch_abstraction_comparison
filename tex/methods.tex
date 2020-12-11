@@ -3,7 +3,7 @@ Any such choice made implicitly by the DL framework abstracts away intermediary 
 For example, in PyTorch, by default, convolutions include not only learnable filters but also a learnable bias.
 Naturally this increases the number of parameters for which gradients need to be kept account of and updated for.
 At the next level of abstraction (translation from Python specification to C++ objects) another implicit choice is made in choosing tensor dimension ordering%
-\footnote{PyTorch uses some heuristics to order tensor dimensions either NCHW or NHWC.}.
+\footnote{PyTorch uses some heuristics to order tensor dimensions as either NCHW or NHWC.}.
 Finally, at the level of abstraction just prior to compilation into CUDA kernels a convolution strategy is chosen%
 \footnote{Winograd convolution, general matrix multiply (GEMM), or FFT convolution.} according to heuristics.
 Each of these choices potentially incurs a runtime execution and memory cost, depending on whether the heuristics according to which the choice was made apply to the user's DL model.

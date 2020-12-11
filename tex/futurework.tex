@@ -1,0 +1,9 @@
+In this work we have implemented ResNet-50 in PyTorch, LibTorch, TorchScript, and cuDNN.
+We then trained\footnote{With the exception of TorchScript since currently it cannot be trained.} and evaluated each implementation on the MNIST, CIFAR10, STL10, and PASCAL VOC datasets.
+Despite difficulties with the cuDNN implementation, we show that PyTorch underperforms lower level abstractions along various batch sizes and resolutions (see~\cref{fig:train_avg_sample_time,,fig:train_avg_used_mem,,fig:train_avg_gpu_util,,fig:eval_avg_sample_time,,fig:eval_avg_used_mem,,fig:eval_avg_gpu_util} in the appendix).
+The ultimate causes for these differences in performance are hypothesized to be the larger buffers and larger grid allocations used by PyTorch and consequently longer host-to-device copy times.
+
+Future work will focus on further narrowing down the causes of the memory and sample time inefficiencies of PyTorch;
+in particular we hope to more closely investigate the execution paths of the PyTorch and LibTorch implementations in order to discover what additional heuristic choices are made (relative to the cuDNN implementation).
+A long term research goal is to design a DL framework that uses code generation to statically generate C++ code corresponding to neural network graphs.
+Such a framework would obviate the need for dynamic dispatch at the object level.

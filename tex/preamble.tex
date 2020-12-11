@@ -4,7 +4,7 @@
 \usepgfplotslibrary{patchplots,colormaps}
 \DeclareUnicodeCharacter{2212}{−}
 \usepgfplotslibrary{groupplots,dateplot}
-\usetikzlibrary{patterns,shapes.arrows,positioning,shapes.geometric,fit}
+\usetikzlibrary{patterns,shapes.arrows,positioning,shapes.geometric,fit, trees}
 \pgfplotsset{compat=newest}
 \usepackage{adjustbox}
 \usepackage{csquotes}
@@ -41,3 +41,8 @@ numbersep=4pt,
 \definecolor{libtorch}{rgb}{    0.20392,0.54117,0.74117}
 \definecolor{pytorch}{rgb}{     0.59607,0.55686,0.83529}
 \definecolor{torchscript}{rgb}{ 0.99607,0.55686,0.83529}
+
+\makeatletter
+\newcommand*\bigcdot{\mathpalette\bigcdot@{.5}}
+\newcommand*\bigcdot@[2]{\mathbin{\vcenter{\hbox{\scalebox{#2}{$\m@th#1\bullet$}}}}}
+\makeatother

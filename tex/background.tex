@@ -1,6 +1,6 @@
 \subsection{Abstraction}\label{subsec:abstraction}
 What is abstraction?
-In fact there are several closely related notions of abstraction.
+In fact, there are several closely related notions of abstraction.
 First there is the philosophical notion of abstraction;
 Locke defines abstraction as follows:
 \begin{displayquote}[\cite{Locke1689-LOCAEC-4}]
@@ -35,7 +35,7 @@ Moreover, abstractions are graded by the degree of the elision (bolding ours):
 
     \vspace{4pt}
 
-    \textellipsis A \textit{garbage collector} is an abstraction of a special process that collects garbage and makes it once again available to the original progam, hiding from that program the details of how this is done.
+    \textellipsis A \textit{garbage collector} is an abstraction of a special process that collects garbage and makes it once again available to the original program, hiding from that program the details of how this is done.
 
 
     \vspace{4pt}
@@ -56,10 +56,10 @@ For example, Quicksort, an O$\left(n^2\right)$ sorting routine, outperforms even
 
 Another way to reason about the cost of abstractions is according to the ``zero-overhead'' principle as articulated by Bjarne Stroustrup:
 \begin{displayquote}[\cite{10.1007/978-3-642-28869-2_1}]
-    In general, C++ implementations obey the zero-overhead principle: What you don’t use, you don't pay for.
+    In general, C++ implementations obey the zero-overhead principle: What you don't use, you don't pay for.
     And further: What you do use, you couldn't hand code any better.
 \end{displayquote}
-Therefore we make the expedient and practical assumption that what is more interesting and valuable to the DL community than asymptotics is in fact an empirical study of the resource efficiency of the abstractions;
+Therefore we make the expedient and practical assumption that what is more interesting and valuable to the DL community than asymptotics is, in fact, an empirical study of the resource efficiency of the abstractions;
 namely execution time, memory usage, and GPU utilization.
 
 
@@ -85,7 +85,7 @@ this enables sharing data across groups of threads more efficiently than possibl
 
 Such an architecture, particularly suited to maximizing throughput, necessitates a programming model distinct from that of a conventional, general purpose processor architecture.
 A unit of computation deployed to a GPU is called a \textit{kernel}; kernels can be defined using NVIDIA's Compute Unified Device Architecture (CUDA) extensions to C, C++, and FORTRAN%
-\footnote{In fact CUDA compiles down to a virtual machine assembly code (by way of \code{nvcc}) for a virtual machine called the Parallel Thread Execution (PTX) virtual machine. So, in effect, it's compilers all the way down.}.
+\footnote{In fact, CUDA compiles down to a virtual machine assembly code (by way of \code{nvcc}) for a virtual machine called the Parallel Thread Execution (PTX) virtual machine. So, in effect, it is compilers all the way down.}.
 Compiled kernels are executed by many \textit{threads} in parallel, with each thread starting at the same instruction;
 NVIDIA describes this addition to Flynn's taxonomy~\cite{5009071} as Single Instruction Multiple Thread (SIMT)%
 \footnote{They key difference between SIMD and SIMT is that while in SIMD all vector elements in a vector instruction execute synchronously, threads in SIMT can diverge; branches are handled by predicated instructions~\cite{cuda_toolkit}.}.
@@ -101,9 +101,9 @@ it is these warps that are dispatched by the warp scheduler (see~\cref{fig:cuda_
 We present an example CUDA program in~\cref{fig:cuda_hello_world} to illustrate some of the artifacts of the CUDA threading model.
 The premise of the program is performing an element-wise sum of two $32 \times 48$ entry matrices.
 Note that all of the data weighs in at  $3 \times 32 \times 48 \times 4 = 18$ kilobytes (well within the bounds of shared memory on any one SM).
-The actual work of summing is partitioned across a grid of 6 thread blocks, each containing $16 \times 16$ threads.
+The actual work of summing is partitioned across a grid of six thread blocks, each containing $16 \times 16$ threads.
 Such a partitioning means each thread can be logically responsible for exactly one sum and therefore the kernel is quite simple (see~\cref{lst:cuda_hello_world}).
-Within the context of a kernel, each thread is uniquely identified by it's multi-index in the thread hierarchy (\code{threadIdx} and \code{blockIdx}).
+Within the context of a kernel, each thread is uniquely identified by its multi-index in the thread hierarchy (\code{threadIdx} and \code{blockIdx}).
 Hence, to carry out the sum, the kernel maps this multi-index to the physical address of the data%
 \footnote{In CUDA C/C++ data is laid out in row-major order but this is not fixed (in CUDA FORTRAN the data is laid out in column-major order).}.
 This (grid, block, thread)-to-data mapping is, in effect, the mechanism that implements the SIMT architecture.
@@ -117,11 +117,11 @@ better throughput could be achieved by increasing the number of blocks (and ther
 DL frameworks primarily function as graph compilers and tensor abstractions\footnote{A tensor in this context is a data structure similar to a multidimensional array that supports some useful operations (e.g. slicing, flattening, index permutation). Most DL frameworks also abstract memory layout on hardware behind this abstraction.};
 They typically also include some ``quality of life'' utilities useful for the training of DL models (e.g.\ optimizers and data loaders).
 PyTorch's \code{Tensor} abstraction is responsible for a great deal of the complexity and implementation overhead of the framework.
-Due to the framework's broad support for hardware and data types, dynamic dispatch\footnote{Kernels live in shared-object libraries (e.g. \code{libcaffe2.so}, \code{libcaffe2\_gpu.so}) and therefore implementations of virtual functions (indirection) are resolved at runtime.} is employed to resolve methods on \code{Tensor}s (see~\cref{fig:dispatch}).
+Due to the framework's broad support for hardware and data types, dynamic dispatch\footnote{Kernels live in shared-object libraries (e.g. \code{libcaffe2.so}, \code{libcaffe2\_gpu.so}) and therefore call sites of virtual functions (indirection) are resolved at runtime.} is employed to resolve methods on \code{Tensor}s (see~\cref{fig:dispatch}).
 This dynamic dispatch produces deep call stacks for every single operation on a \code{Tensor} (see~\cref{fig:stacks}); it remains to be seen whether the context switching\footnote{Every function call corresponds to a stack frame allocation and register allocations. In addition indirection to far away call sites leads to poor instruction cache efficiency~\cite{10.5555/3314872.3314876}} between function contexts incurs any appreciable execution time penalty.
 
 \input{figures/dispatch.tex}
-\input{figures/stack_traces/stacks.tex}
+\input{figures/stack_traces/call_graph.tex}
 
 DL graph compilers are distinct from other dataflow compilers (such as VHDL and Verilog\footnote{Verilog and Very High Speed Integrated Circuit Hardware Description Language (VHSIC-HDL or VHDL) are specification languages for specifying circuits on field programmable gate arrays.}); in addition to keeping account of how the data streams through the compute graph, they also keep account of how the gradients of the data stream through the graph (i.e.\ the \textit{gradient-flow}).
 This is called \textit{automatic differentiation} (often shortened to \textit{autodiff}).
@@ -129,7 +129,7 @@ In principle autodiff is implemented by using the rules of Newton's calculus to 
 There are two types of autodiff: \textit{forward mode} (or \textit{forward accumulation}) and \textit{reverse mode} (or \textit{reverse accumulation})%
 \footnote{Briefly, for a composition of functions $y=f(g(h(x)))$, forward mode evaluates the derivative $y'(x)$, as given by the chain rule, inside-out while reverse mode evaluates the derivative outside-in. For those familiar with functional programming, these operations correspond to \code{foldl} and \code{foldr} on the sequence of functions with $\partial_x$ as the operator.}.
 Reverse mode autodiff enables the framework to effectively calculate the gradients of parameters of a neural network with respect to some relevant loss or objective function.
-Note that such gradients can be \textit{back-propagated} through the neural network in order to adjust the parameters of the neural network such that it minimizes the loss\footnote{In which case, it is in fact the negatives of the gradients that are back-propagated.} or maximizes the objective.
+Note that such gradients can be \textit{back-propagated} through the neural network in order to adjust the parameters of the neural network such that it minimizes the loss\footnote{In which case, it is, in fact, the negatives of the gradients that are back-propagated.} or maximizes the objective.
 
 Dataflow graphs (and their corresponding gradient-flow graphs) can be specified either statically, with fan-in and fan-out for all functions predetermined, or dynamically, where compositions of functions are determined ``on-the-run''.
 There are advantages and disadvantages to both specification strategies.
@@ -141,12 +141,12 @@ Both PyTorch and TensorFlow also support just-in-time (JIT) compilation strategi
 such JIT compilers strike a balance between fluency and scalability.
 In this work we investigate TorchScript (see~\cref{sec:methodology}).
 
-It warrants mention that, in addition to vertically integrated DL frameworks (i.e.\ specification language and hardware compiler), recently there has been work on intermediate byte code representations for dataflow graphs that arbitrary compiler ``frontends'' can target.
+It warrants mention that, in addition to vertically integrated DL frameworks (i.e.\ specification language and hardware compiler), recently there has been work on intermediate bytecode representations for dataflow graphs that arbitrary compiler ``frontends'' can target.
 The Multi-Level Intermediate Representation (MLIR)~\cite{lattner2020mlir} project has goals that include supporting dataflow graphs, optimization passes on those graphs and hardware specific optimizations%
 \footnote{Interestingly enough, the project is headed by Chris Lattner who, in developing LLVM, pioneered the same ideas in general purpose programming languages.}.
 Stripe~\cite{zerrell2019stripe} is a polyhedral compiler%
 \footnote{A polyhedral compiler models complex programs (usually deeply nested loops) as polyhedra and then performs transformations on those polyhedra in order to produce equivalent but optimized programs~\cite{Griebl98codegeneration}.}
 that aims to support general machine learning kernels, which are distinguished by their high parallelism with limited mutual dependence between iterations.
-Tensor Comprehensions~\cite{vasilache2018tensor} is an intermediate specification language (rather than intermediate byte code representation) and corresponding polyhedral compiler;
+Tensor Comprehensions~\cite{vasilache2018tensor} is an intermediate specification language (rather than intermediate bytecode representation) and corresponding polyhedral compiler;
 the syntax bears close resemblance to Einstein summation notation and the compiler supports operator fusion and specialization for particular data shapes.
 Finally, Tensor Virtual Machine (TVM)~\cite{10.5555/3291168.3291211} is an optimizing graph compiler that automates optimization using a learning-based cost modeling method that enables it to efficiently explore the space of low-level code optimizations.

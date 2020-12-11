@@ -2,17 +2,29 @@
 
 Overall the central challenges for this work revolved around the cuDNN implementation.
 Chief among them involved familiarizing ourselves with the SIMT compute model and the CUDA/cuDNN APIs.
-It's important to contextualize these challenges appropriately: how much of the challenge is akin to the initial learning curve associated with any new software toolset (e.g.\ PyTorch) and how much is enduring.
-Certainly memory leaks, and debugging them, given that C++ is not a memory managed language, will persist, but the difficulties associated with the idiosyncrasies of the APIs most likely won't.
+it is important to contextualize these challenges appropriately: how much of the challenge is akin to the initial learning curve associated with any new software toolset (e.g.\ PyTorch) and how much is enduring.
+Certainly memory leaks, and debugging them, given that C++ is not a memory managed language, will persist, but the difficulties associated with the idiosyncrasies of the APIs most likely will not.
 Assuming that the majority of challenge decreases with time, are these lower levels of abstraction worth the investment of effort and time?
 
-The lackluster accuracy results of cuDNN seemingly don't bode well for the hypothesis that one can, in a straightforward way, trade performance for implementation effort.
+The lackluster accuracy results of cuDNN seemingly do not bode well for the hypothesis that one can, in a straightforward way, trade performance for implementation effort.
 The cuDNN performance indicates there are serious bugs with the implementation.
 Alternatively the accuracy results suggest that there are optimizations present in the PyTorch and LibTorch implementations that are obscured from the user (such as the Kaiming initialization mentioned in~\cref{sec:results}).
 The former case, when juxtaposed with the execution time and memory usage results, suggests that the cuDNN implementation could be as accurate the PyTorch and LibTorch implementations, with much lower execution time and memory usage (assuming the bugs can be rectified \textemdash\ a reasonable assumption).
-In the latter case, we face a sort of existential crisis: how many results in DL research, attributed to architectural innovations, in fact hinge on the implementation details of the frameworks those architectures are themselves implemented against.
+In the latter case, we face a sort of existential crisis: how many results in DL research, attributed to architectural innovations, in fact, hinge on the implementation details of the frameworks those architectures are themselves implemented against?
 
-In theory a sufficiently flexible DL compiler could rescue us from the purgatory we find ourselves in;
+It bears repetition: even broadly useful heuristics are a cost of abstraction if they cannot be adjusted.
+Case in point, \textbf{Kaiming initialization is not always net positive with respect to performance}:
+\begin{displayquote}[\cite{zhang2019fixup}]
+    Standard initialization methods (Glorot \& Bengio, 2010; He et al., 2015; Xiao et al., 2018) attempt to  set  the  initial  parameters  of  the  network  such  that  the  activations  neither  vanish  nor  explode.
+    Unfortunately, it has been observed that without normalization techniques such as BatchNorm they do not account properly for the effect of residual connections and this causes exploding gradients.
+\end{displayquote}
+In addition batch normalization layers being initialized to $(\gamma=1,\beta=0)$ also does not uniformly improve performance:
+\begin{displayquote}[\cite{goyal2018accurate}]
+    For BN layers, the learnable scaling coefficient $\gamma$ is initialized  to  be  1, \textit{except  for  each  residual  block’s  last  BN where $\gamma$ is initialized to be 0}.
+    Setting $\gamma = 0$ in the last BN of each residual block causes the forward/backward signal initially to propagate through the identity shortcut of ResNets, which we found to ease optimization at the start of training.
+\end{displayquote}
+
+In theory, a sufficiently flexible DL compiler could rescue us from the purgatory we find ourselves in;
 a sufficiently powerful compiler would implement the necessary DL abstractions in a robust way but also have enough flexibility to enable users to implement custom extensions of those abstractions.
 One promising project that has as its goal such a high-level compiler is the ``Extensible Programming''~\cite{Besard_2019} project.
 Besard et al. expose interfaces to alter the compilation process for Julia-lang\footnote{\link{\url{https://julialang.org/}}}.
