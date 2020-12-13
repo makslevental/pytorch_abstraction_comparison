@@ -22,6 +22,8 @@
         \node [below=0cm of threedots](CUDAHalfType) {\code{CUDAHalfType::conv2d}};
         \node[block,draw=black,dashed, inner sep=5mm, fit= (SparseCUDAByteType) (CUDAHalfType),label={[anchor=south]north:static\ dispatch\ on\ data\ type}](dtype) {};
 
+        \node [right=2cm of CUDADoubleType](cudnnforward) {\code{cudnnConvolutionForward}};
+
         \path[draw]
         (code.east) edge[->] (dynamic.west);
         \path[draw]
@@ -30,6 +32,8 @@
         (CUDA.east) edge[out=0, in=180,->] (CUDADoubleType.west);
         \path[draw]
         (CUDA.east) edge[out=0, in=180,->] (CUDAHalfType.west);
+        \path[draw]
+        (dtype.east) edge[out=0, in=180,->] (cudnnforward.west);
     \end{tikzpicture}
     \caption{How the \code{torch.conv2d} operation on tensors \code{x}, \code{y} is implemented in PyTorch.}\label{fig:dispatch}
 \end{figure*}

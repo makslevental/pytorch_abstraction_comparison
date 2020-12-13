@@ -2,10 +2,10 @@
 What is abstraction?
 In fact, there are several closely related notions of abstraction.
 First there is the philosophical notion of abstraction;
-Locke defines abstraction as follows:
+Locke defines abstraction as follows (bolding ours):
 \begin{displayquote}[\cite{Locke1689-LOCAEC-4}]
     The acts of the mind, wherein it exerts its power over simple ideas, are chiefly these three: \textellipsis
-    The third is separating them from all other ideas that accompany them in their real existence: this is called abstraction \textellipsis
+    The third is \textbf{separating them from all other ideas that accompany them in their real existence}: this is called abstraction \textellipsis
 \end{displayquote}
 Then there is mathematical abstraction;
 Russell defines abstraction as follows:
@@ -24,8 +24,16 @@ in particular with respect to mathematical abstraction (bolding ours):
     \textellipsis computer science is distinguished from mathematics in the use of a kind of abstraction that computer scientists call \textit{information hiding}.
     The complexity of behaviour of modern computing devices makes the task of programming them impossible without abstraction tools that hide, but do not neglect, \textbf{details that are essential in a lower-level processing context but inessential in a [particular] software design and programming context}.
 \end{displayquote}
-Thus, abstraction is the modulation of concern for details in accordance with the needs of the user.
-Moreover, abstractions are graded by the degree of the elision (bolding ours):
+This understanding of abstraction is widely agreed upon;
+notably Abelson, Sussman, and Sussman in their much revered \textit{Structure and Interpretation of Programs}:
+\begin{displayquote}[\cite{abelson1996structure}]
+    We are not at that moment concerned with how the procedure computes its result, only with the fact that it computes the square.
+    The details of how the square is computed can be suppressed, to be considered at a later time.
+    Indeed, as far as the \code{good-enough?} procedure is concerned, \code{square} is not quite a procedure but rather an abstraction of a procedure, a so-called \textit{procedural abstraction}.
+    At this level of abstraction, any procedure that computes the square is equally good.
+\end{displayquote}
+
+Thus, abstraction is the modulation of concern for details in accordance with the needs of the user and levels of abstractions are graded by the degree of the elision (bolding ours):
 \begin{displayquote}[\cite{abstraction}]
     To specify nontrivial computational processes in machine language is a practical impossibility for humans, and so programming languages with higher levels of abstraction are necessary.
 
@@ -46,11 +54,11 @@ Moreover, abstractions are graded by the degree of the elision (bolding ours):
 \end{displayquote}
 
 
-Taking \textit{pragmatic information and concern encapsulation} as our operational definition of abstraction, in what sense shall we measure the costs of the abstractions employed by DL frameworks?
-An immediate candidate measure of cost is the asymptotic time (or space) complexity of various operations.
-Indeed there is precedent for reasoning about pure abstractions in this way;
-Pippenger~\cite{10.1145/244795.244798} produces a program that runs in O$(n)$ on an impure\footnote{A language is \textit{pure} if it cannot mutate data (only transform); a language is \textit{impure} if it can.} LISP but which runs in $\Theta(n \log n)$ a pure LISP\@.
-Unfortunately, even if it were practicable to analyze the asymptotic complexity of DL frameworks, the result would most likely be uninteresting and inconsequential for actual systems.
+Taking \textit{information and concern encapsulation} as our operational definition of abstraction, in what sense shall we measure the costs of the abstractions employed by DL frameworks?
+An immediate candidate measure of cost is the asymptotic time (or space) complexity of various operations and data structures that comprise the abstraction.
+We claim that, with rare exception\footnote{One result does come to mind: Pippenger~\cite{10.1145/244795.244798} produces a program that runs in O$(n)$ on an impure LISP but which runs in $\Theta(n \log n)$ a pure LISP\@.}, asymptotic complexity is a poorly suited measure of the complexity or cost of abstractions in the sense that we here deal with.
+If the abstraction is truly abstract then it bears no resemblance to the realization (recall Locke's definition of abstraction) and if the abstraction is reified then the analysis becomes completely impractical (owing to the numerous components and operations).
+Even if such analysis were practicable the result would most likely be uninteresting and inconsequential for actual DL frameworks and their users.
 It is well known that the constant factors in the complexity and peculiarities of those systems themselves more closely govern performance than the order terms.
 For example, Quicksort, an O$\left(n^2\right)$ sorting routine, outperforms even many $\Theta(n\log n)$ sorting routines because it is more cache efficient~\cite{10.5555/1410219}.
 

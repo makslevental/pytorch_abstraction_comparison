@@ -1,0 +1,11 @@
+We speculate about DL systems along three dimensions: hardware, software, and use cases/techniques.
+Firstly, we project that with the end of Dennard scaling~\cite{CARDOSO201717} general purpose processors will give way to Application Specific Integrated Circuit (ASIC).
+Architectures like Cerebras' CS-1, SambdaNova's Cardinal SN10, Google's TPU, and even Apple's Neural Engine (packaged with their M1) demonstrate that chip designers recognize the need for ML/DL purpose built hardware.
+These purpose built chips are better suited for the concurrency and memory access patterns unique to ML/DL workloads.
+With the impending cambrian explosion of different architectures, there will be a great need for compilers that act as intermediaries between high-level neural network representations and their hardware implementations.
+Compiler infrastructures such as MLIR, PlaidML, and Intel's oneAPI~\cite{oneapi} will become critical for software developers.
+As ML/DL ASICs become more ubiquitous and more performant, ML/DL powered software will become commensurately more ubiquitous;
+already mobile phones employ ML/DL for text autocorrection~\cite{DBLP:journals/corr/abs-1709-06429}, image compression/super-resolution~\cite{DBLP:journals/corr/RomanoIM16}, and facial fingerprinting~\cite{cuda_toolkit}.
+We project that most user-interaction driven tasks (e.g.\ setting alarms, coordinating appointments/meetings, planning daily routines) will have ML/DL solutions in the coming years.
+Further, more platforms that have been up until today analog or simple computers (e.g.\ kitchen appliances, light power tools) will become ``smart''.
+This distribution of lower power edge devices will necessitate more effective (and private) federated learning methods~\cite{48690}.
