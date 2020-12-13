@@ -186,18 +186,17 @@ def plot(
         label="cudnn",
         title="Average train loss per epoch",
         ylabel="loss",
-        shift=np.abs(np.random.normal(0, 1e-70, 100)),
 ):
     fig, ax = fig_ax
     if fig is None or ax is None:
         fig, ax = plt.subplots()
-    ax.plot(times, mean + shift, "-", label=label)
+    ax.plot(times, mean, "-", label=label)
     ax.legend()
     ax.set_title(title)
     ax.set_ylabel(ylabel)
     ax.set_xlabel("epoch/time")
     ax.set_yscale("log")
-    ax.fill_between(times, min + shift, max + shift, alpha=0.2)
+    ax.fill_between(times, min, max, alpha=0.2)
 
     return fig, ax
 
@@ -212,19 +211,18 @@ def scatter(
         title="Average train loss per epoch",
         ylabel="loss",
         xlabel="",
-        shift=np.abs(np.random.normal(0, 1e-70, 100)),
 ):
     times = np.log2(times)
     fig, ax = fig_ax
     if fig is None or ax is None:
         fig, ax = plt.subplots()
-    ax.plot(times, mean + shift, "-", label=label)
+    ax.plot(times, mean, "-", label=label)
     ax.legend()
     ax.set_title(title)
     ax.set_ylabel(ylabel)
     ax.set_xlabel(xlabel)
     ax.set_yscale("log")
-    ax.fill_between(times, min + shift, max + shift, alpha=0.2)
+    ax.fill_between(times, min, max, alpha=0.2)
 
     return fig, ax
 
@@ -363,7 +361,6 @@ def plot_all(profile_dfs, resolution_dfs: dict):
     #                     title=f"batch size {batch_size} {key} for resolutions",
     #                     ylabel=units[key],
     #                     xlabel="resolution",
-    #                     shift=np.abs(np.random.normal(0, 1e-70, len(points))),
     #                 )
     #
     #         # plt.show()
@@ -407,7 +404,6 @@ def plot_all(profile_dfs, resolution_dfs: dict):
     #                     title=f"resolution {resolution} {key} for batch size",
     #                     ylabel=units[key],
     #                     xlabel="batch size",
-    #                     shift=np.abs(np.random.normal(0, 1e-70, len(points))),
     #                 )
     #         # plt.show()
     #         tikzplotlib.clean_figure()
