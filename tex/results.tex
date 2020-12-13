@@ -6,7 +6,7 @@ LibTorch and PyTorch attain maximum accuracy at around the same time while cuDNN
 On the more complex STL10 and PASCAL datasets (see~\cref{fig:other_accuracy_results} in the appendix) the cuDNN implementation dramatically underperformed PyTorch and LibTorch.
 The cause of the difference between the cuDNN implementation and the others is unclear.
 
-In attempting to resolve the poor performance of the cuDNN implementation it was discovered that PyTorch (and LibTorch as well) initialize weights in convolutional, linear, and batch normalization layers.
+In attempting to resolve the poor performance of the cuDNN implementation it was discovered that PyTorch (and LibTorch as well) initializes weights in convolutional, linear, and batch normalization layers.
 This is not documented and not configurable.
 For convolutional and linear layers Kaiming uniform initialization~\cite{he2015delving} is used and for batch normalization layers $(\gamma=1,\beta=0)$ initialization is used.
 This presents a serious problem for us because it is known that \textbf{ResNets with Kaiming initializations lead to exploding gradients}~\cite{zhang2019fixup}.

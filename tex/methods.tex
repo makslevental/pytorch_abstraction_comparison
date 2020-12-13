@@ -1,4 +1,4 @@
-As discussed in the preceding, the translation from high-level neural network specification to hardware native involves a diverse set of choices at design time and translation time.
+As discussed in the preceding, the translation from high-level neural network specification to native hardware involves a diverse set of choices at design time and translation time.
 Any such choice made implicitly by the DL framework abstracts away intermediary details at the level of abstraction at which the choice is made.
 For example, in PyTorch, by default, convolutions include not only learnable filters but also a learnable bias.
 Naturally this increases the number of parameters for which gradients need to be kept account of and updated for.

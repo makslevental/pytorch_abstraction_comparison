@@ -29,4 +29,3 @@ int main() {
     dim3 numThreads(16, 16);
     matrix_sum<<blocks, threads>>(A, B, C, rows, cols);
 }
-
